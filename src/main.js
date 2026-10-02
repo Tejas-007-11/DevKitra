@@ -341,7 +341,7 @@ function renderHomePage() {
             <p>Small, dependable utilities for the little tasks that show up in every build.</p>
           </article>
           <article class="feature-note">
-            <span class="feature-mark feature-mark-brackets" aria-hidden="true">{ }</span>
+            <span class="feature-mark feature-mark-brackets" aria-hidden="true"><span>{</span><span>}</span></span>
             <p class="feature-kicker">02 / KEEP IT LOCAL</p>
             <h2>Your data stays<br />on your device.</h2>
             <p>Tool operations run in the browser. Nothing needs to be uploaded to get started.</p>

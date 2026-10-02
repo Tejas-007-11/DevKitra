@@ -264,6 +264,15 @@ html.dark .site-header .icon-button:hover {
   display: grid; place-items: center; color: #70a8ff;
   font: 18px ui-monospace, SFMono-Regular, Consolas, monospace;
 }
+.feature-mark-brackets {
+  display: flex;
+  width: 38px;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  white-space: nowrap;
+}
 .feature-mark-arrow { font-size: 19px; }
 .feature-kicker { margin: 19px 0 8px; color: #87919e; font: 9px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .08em; }
 .feature-note h2 { margin: 0; color: #f1f3f6; font-size: 23px; font-weight: 580; letter-spacing: -.045em; line-height: 1.2; }
