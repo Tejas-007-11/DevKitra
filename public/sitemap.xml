@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://example.com/</loc></url>
-  <url><loc>https://example.com/tools</loc></url>
-  <url><loc>https://example.com/tools/json-formatter</loc></url>
-  <url><loc>https://example.com/tools/json-minifier</loc></url>
-  <url><loc>https://example.com/tools/json-to-csv</loc></url>
-  <url><loc>https://example.com/tools/base64</loc></url>
-  <url><loc>https://example.com/tools/jwt-decoder</loc></url>
-  <url><loc>https://example.com/tools/uuid-generator</loc></url>
-  <url><loc>https://example.com/tools/timestamp-converter</loc></url>
-  <url><loc>https://example.com/tools/regex-tester</loc></url>
-  <url><loc>https://example.com/tools/url-encoder-decoder</loc></url>
-  <url><loc>https://example.com/tools/hash-generator</loc></url>
-  <url><loc>https://example.com/tools/sql-formatter</loc></url>
-  <url><loc>https://example.com/tools/xml-formatter</loc></url>
-  <url><loc>https://example.com/about</loc></url>
-  <url><loc>https://example.com/privacy</loc></url>
+  <url><loc>https://devkitra.in/</loc></url>
+  <url><loc>https://devkitra.in/tools</loc></url>
+  <url><loc>https://devkitra.in/tools/json-formatter</loc></url>
+  <url><loc>https://devkitra.in/tools/json-minifier</loc></url>
+  <url><loc>https://devkitra.in/tools/json-to-csv</loc></url>
+  <url><loc>https://devkitra.in/tools/base64</loc></url>
+  <url><loc>https://devkitra.in/tools/jwt-decoder</loc></url>
+  <url><loc>https://devkitra.in/tools/uuid-generator</loc></url>
+  <url><loc>https://devkitra.in/tools/timestamp-converter</loc></url>
+  <url><loc>https://devkitra.in/tools/regex-tester</loc></url>
+  <url><loc>https://devkitra.in/tools/url-encoder-decoder</loc></url>
+  <url><loc>https://devkitra.in/tools/hash-generator</loc></url>
+  <url><loc>https://devkitra.in/tools/sql-formatter</loc></url>
+  <url><loc>https://devkitra.in/tools/xml-formatter</loc></url>
+  <url><loc>https://devkitra.in/about</loc></url>
+  <url><loc>https://devkitra.in/privacy</loc></url>
 </urlset>
