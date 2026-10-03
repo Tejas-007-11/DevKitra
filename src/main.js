@@ -19,6 +19,80 @@ const tools = [
 ];
 
 const toolMap = new Map(tools.map((tool) => [tool.slug, tool]));
+const toolGuides = {
+  'json-formatter': {
+    intro: 'Use this when a JSON response or configuration file is hard to scan, or when you need to catch a syntax error before using it.',
+    steps: ['Paste JSON or choose Load sample to see the formatter in action.', 'Choose the indentation width, then select Format JSON.', 'Review the result or copy it into your editor.'],
+    example: '{"name":"Mina","active":true}  →  readable, indented JSON',
+    note: 'Formatting checks JSON syntax; it does not validate your data against an application schema.',
+  },
+  'json-minifier': {
+    intro: 'Minification removes insignificant whitespace from valid JSON. It is useful when you need a compact payload for transport or comparison.',
+    steps: ['Paste a complete JSON value into the input.', 'Select Minify JSON.', 'Copy the compact result where it is needed.'],
+    example: '{ "mode": "test", "enabled": true }  →  {"mode":"test","enabled":true}',
+    note: 'The JSON data remains the same, but the result is harder for people to read. Minification is not encryption.',
+  },
+  'json-to-csv': {
+    intro: 'Convert a JSON array into comma-separated values that can be opened in spreadsheet software.',
+    steps: ['Paste a JSON array, preferably an array of objects with similar fields.', 'Select Convert to CSV and review the header and rows.', 'Copy the result or use Download CSV to save it.'],
+    example: '[{"name":"Ada","role":"Engineer"}]  →  name,role\n                                      Ada,Engineer',
+    note: 'Object keys become columns. Missing values are blank; nested values are represented as JSON text in a cell.',
+  },
+  base64: {
+    intro: 'Base64 represents bytes as printable text, often for transporting data in text-only formats.',
+    steps: ['Enter the text to convert.', 'Choose Encode to create Base64, or Decode to turn Base64 text back into readable text.', 'Copy the output and verify it in the format that will consume it.'],
+    example: 'Hello, world!  →  SGVsbG8sIHdvcmxkIQ==',
+    note: 'Base64 is an encoding, not encryption. Anyone with the text can decode it, so never use it to protect secrets.',
+  },
+  'jwt-decoder': {
+    intro: 'Inspect the readable header and payload portions of a JSON Web Token when debugging authentication or claims.',
+    steps: ['Paste the complete three-part token, including its period separators.', 'Select Decode token.', 'Review the header, payload, and expiration status shown by the tool.'],
+    example: 'A JWT has the form header.payload.signature; the decoded payload may contain claims such as sub and exp.',
+    note: 'Decoding does not verify the signature, issuer, audience, or trustworthiness. Do not treat displayed claims as authenticated.',
+  },
+  'uuid-generator': {
+    intro: 'Generate UUID version 4 identifiers for records, test fixtures, or local development.',
+    steps: ['Select Generate ID for one identifier, or set a quantity and select Generate multiple.', 'Choose uppercase or hyphenated output if your destination requires it.', 'Copy the generated value or list.'],
+    example: 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx  (UUID v4 format)',
+    note: 'UUIDs are identifiers, not credentials or access tokens. Avoid using an identifier as proof of authorization.',
+  },
+  'timestamp-converter': {
+    intro: 'Translate between Unix timestamps and calendar dates when investigating logs, APIs, or scheduled events.',
+    steps: ['Enter a Unix timestamp and choose Convert to date, or select a local date and time and choose Convert to timestamp.', 'Use the output’s UTC or ISO 8601 value when sharing a timezone-independent time.', 'Copy the representation required by your system.'],
+    example: '1716356700 (seconds)  →  2024-05-22T05:45:00.000Z',
+    note: 'The tool accepts seconds or milliseconds for timestamp input. Date-time input is interpreted in the browser’s displayed local timezone.',
+  },
+  'regex-tester': {
+    intro: 'Try a JavaScript regular expression against sample text and inspect matches and captured groups before using it in code.',
+    steps: ['Enter the pattern without surrounding slash delimiters.', 'Set JavaScript flags such as g, i, or m in the Flags field.', 'Enter test text and select Run test; inspect matches and captured groups.'],
+    example: 'Pattern: \\b[A-Z][a-z]+\\b   Flags: g   Text: Ada met Lin.   →   Ada, Lin',
+    note: 'This tests JavaScript regular-expression behavior. Input is limited to 50,000 characters and each run has a one-second time limit.',
+  },
+  'url-encoder-decoder': {
+    intro: 'Encode or decode a URL component when placing user-provided text inside a query parameter or inspecting escaped text.',
+    steps: ['Paste the component or text into the input.', 'Select Encode to escape reserved characters, or Decode to read percent-encoded text.', 'Review the output before placing it into a URL.'],
+    example: 'name=Ada Lovelace  →  name%3DAda%20Lovelace',
+    note: 'This encodes the entire input as one component. Do not use it on a complete URL when you need to preserve its separators.',
+  },
+  'hash-generator': {
+    intro: 'Calculate a SHA digest of text for checksums, test vectors, or comparing known values.',
+    steps: ['Enter the exact text to hash.', 'Choose SHA-1, SHA-256, SHA-384, or SHA-512.', 'Select Generate hash and compare the output with a digest made using the same algorithm and exact bytes.'],
+    example: 'Input: hello  |  SHA-256: 2cf24dba… (64 hexadecimal characters)',
+    note: 'A plain SHA digest is not a password-storage scheme and does not encrypt data. SHA-1 is available for compatibility, not for new security designs.',
+  },
+  'sql-formatter': {
+    intro: 'Reflow a SQL statement to make clauses and expressions easier to review during development.',
+    steps: ['Paste a SQL statement into the input.', 'Select Format SQL.', 'Review the layout and copy the formatted statement into your editor or SQL client.'],
+    example: 'select id,name from users where active=true  →  SELECT id, name\n                                                   FROM users\n                                                   WHERE active = true',
+    note: 'This changes presentation only. It does not connect to a database, validate your schema, or execute the statement.',
+  },
+  'xml-formatter': {
+    intro: 'Make XML easier to inspect by formatting its element tree, or compact valid XML for transfer.',
+    steps: ['Paste a complete XML document into the input.', 'Choose Format XML to indent the structure or Minify to remove inter-element whitespace.', 'Review the result and copy it into the tool that needs it.'],
+    example: '<item><name>Desk</name></item>  →  nested, indented XML',
+    note: 'The browser parser checks well-formed XML, not validity against a DTD or XML Schema. Preserve and review whitespace-sensitive text content.',
+  },
+};
 const app = document.querySelector('#app');
 let navigationController;
 
@@ -228,6 +302,7 @@ function renderHeader() {
     { label: 'Tools', href: '/tools' },
     { label: 'About', href: '/about' },
     { label: 'Privacy', href: '/privacy' },
+    { label: 'Contact', href: '/contact' },
   ];
 
   const navMarkup = navItems
@@ -270,6 +345,7 @@ function renderFooter() {
           <a href="/tools" data-route>Tools</a>
           <a href="/privacy" data-route>Privacy</a>
           <a href="/about" data-route>About</a>
+          <a href="/contact" data-route>Contact</a>
         </div>
       </div>
     </footer>
@@ -434,6 +510,20 @@ function renderPrivacyPage() {
           <li><strong>Safe rendering:</strong> We avoid unsafe HTML insertion and use browser-native APIs to display user content.</li>
         </ul>
       </div>
+    </main>
+  `;
+}
+
+function renderContactPage() {
+  return `
+    <main class="container page-shell narrow-shell">
+      <section class="card about-card contact-card">
+        <p class="eyebrow">Contact</p>
+        <h1>Get in touch with DevKitra</h1>
+        <p>Have a question, found a problem, or want to suggest a tool? Email is the best way to reach us. Please include the tool name and the steps to reproduce a problem, if relevant.</p>
+        <a class="contact-email" href="mailto:tejaskrishna.as@gmail.com">tejaskrishna.as@gmail.com</a>
+        <p class="contact-note">Please do not email passwords, private keys, access tokens, or other sensitive information.</p>
+      </section>
     </main>
   `;
 }
@@ -788,6 +878,14 @@ function renderToolPageContent(slug) {
   if (!tool) return '<main class="container page-shell"><div class="empty-state">Tool not found.</div></main>';
 
   const related = tools.filter((item) => item.slug !== slug).slice(0, 4);
+  const guide = toolGuides[slug];
+  const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[character]);
 
   return `
     <main class="container page-shell tool-page">
@@ -812,6 +910,22 @@ function renderToolPageContent(slug) {
           <span>PROCESSING <b>LOCAL</b></span>
         </div>
         ${contentMap[slug]}
+      </section>
+      <section class="tool-guide" aria-labelledby="tool-guide-title">
+        <p class="eyebrow">PRACTICAL GUIDE</p>
+        <h2 id="tool-guide-title">How to use ${tool.name}</h2>
+        <p class="tool-guide-intro">${guide.intro}</p>
+        <div class="tool-guide-grid">
+          <div>
+            <h3>Steps</h3>
+            <ol>${guide.steps.map((step) => `<li>${step}</li>`).join('')}</ol>
+          </div>
+          <div class="tool-guide-example">
+            <h3>Example</h3>
+            <pre><code>${escapeHtml(guide.example)}</code></pre>
+            <p><strong>Good to know:</strong> ${guide.note}</p>
+          </div>
+        </div>
       </section>
       <div class="tool-meta-row">
         <span><span class="proof-mark" aria-hidden="true">✓</span> Runs locally in your browser. Your input stays on this device.</span>
@@ -1552,7 +1666,9 @@ function updatePageMetadata(path) {
         ? { title: 'About DevKitra | Developer tools. Simplified.', description: 'Learn about DevKitra’s lightweight developer utilities and browser-local processing approach.' }
         : path === '/privacy'
           ? { title: 'Privacy | DevKitra', description: 'Understand how DevKitra processes data locally in your browser and what the tools do not verify.' }
-          : tool
+            : path === '/contact'
+              ? { title: 'Contact DevKitra', description: 'Contact DevKitra with questions, bug reports, and suggestions for developer tools.' }
+            : tool
             ? { title: `${tool.name} | DevKitra`, description: tool.description }
             : { title: 'Page not found | DevKitra', description: 'The requested DevKitra page could not be found.' };
 
@@ -1608,7 +1724,9 @@ function renderCurrentPage() {
         ? renderAboutPage()
         : path === '/privacy'
           ? renderPrivacyPage()
-          : isTool
+            : path === '/contact'
+              ? renderContactPage()
+            : isTool
             ? renderToolPageContent(path.replace('/tools/', ''))
             : path === '/'
               ? renderHomePage()

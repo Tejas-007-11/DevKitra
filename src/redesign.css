@@ -568,6 +568,9 @@ input:focus, textarea:focus, select:focus { border-color: var(--blue); outline: 
   .workspace-topline { min-height: 37px; padding: 0 12px; font-size: 8px; }
   .tool-meta-row { align-items: flex-start; flex-direction: column; }
   .related-tools { justify-content: flex-start; }
+  .tool-guide { margin-top: 36px; padding-top: 25px; }
+  .tool-guide-grid { grid-template-columns: 1fr; gap: 12px; }
+  .tool-guide-grid > div { padding: 16px; }
   .directory-top { align-items: stretch; flex-direction: column; gap: 17px; }
   .directory-top h1 { font-size: 34px; }
   .search-input-wrap { width: 100%; }
@@ -661,6 +664,25 @@ input[type="text"], input[type="number"], input[type="datetime-local"], select, 
 .related-tools { gap: 10px 20px; }
 .related-tools > span, .related-tools a { font-size: 13px; }
 .related-tools a span { margin-left: 5px; }
+.tool-guide {
+  margin-top: 52px; border-top: 1px solid var(--line); padding-top: 32px;
+}
+.tool-guide h2 { margin: 9px 0 8px; font-size: clamp(25px, 3vw, 34px); letter-spacing: -.045em; }
+.tool-guide-intro { max-width: 760px; margin: 0; color: var(--ink-soft); line-height: 1.75; }
+.tool-guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 22px; }
+.tool-guide-grid > div { min-width: 0; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 20px; }
+.tool-guide-grid h3 { margin: 0 0 11px; font-size: 16px; }
+.tool-guide-grid ol { display: grid; gap: 9px; margin: 0; padding-left: 21px; color: var(--ink-soft); line-height: 1.7; }
+.tool-guide-example pre {
+  overflow-x: auto; margin: 0; border-radius: 6px; background: var(--surface-inset);
+  padding: 13px; color: var(--ink); font: 13px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.tool-guide-example p { margin: 14px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
+.tool-guide-example p strong { color: var(--ink); }
+.contact-email { display: inline-flex; margin-top: 18px; color: var(--blue); font-size: 18px; font-weight: 650; }
+.contact-email:hover { text-decoration: underline; text-underline-offset: 4px; }
+.contact-note { font-size: 14px !important; }
 .filter-chip { min-height: 40px; padding: 0 14px; font-size: 13px; }
 .directory-count { font-size: 12px; }
 .footer-inner, .footer-links a { font-size: 13px; }
