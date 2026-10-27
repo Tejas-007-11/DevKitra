@@ -48,6 +48,7 @@ a.back:hover { color: var(--text); }
 .btn { border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 700; cursor: pointer; font-size: 0.95rem; }
 .btn:hover { background: #4736e8; }
 @media (max-width: 420px) { header { padding: 0.5rem 0 0.75rem; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>

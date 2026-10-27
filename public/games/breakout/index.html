@@ -33,6 +33,7 @@ canvas { width: 100%; height: auto; display: block; border-radius: 10px; backgro
 .btn:hover { background: #4736e8; }
 .hint { margin-top: 0.8rem; font-size: 0.8rem; color: var(--muted); text-align: center; }
 @media (max-width: 420px) { header { padding: 0.5rem 0 0.75rem; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>

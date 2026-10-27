@@ -42,6 +42,7 @@ button.dpad:active { background: #1f2939; border-color: var(--accent); color: #9
 .btn.secondary { background: transparent; border-color: var(--line); color: var(--text); }
 .btn.secondary:hover { border-color: var(--accent); color: #9b89ff; }
 @media (max-width: 480px) { header { padding: 0.5rem 0 0.75rem; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>
@@ -168,6 +169,8 @@ function resumeGame() {
   clearInterval(timer);
   timer = setInterval(tick, speed);
 }
+
+function endGame() {
   running = false;
   paused = false;
   clearInterval(timer);

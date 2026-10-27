@@ -40,6 +40,7 @@ a.back:hover { color: var(--text); }
 .stat b { display: block; font-size: 1.1rem; color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .stat span { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
 @media (max-width: 420px) { header { padding: 0.5rem 0 0.75rem; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>

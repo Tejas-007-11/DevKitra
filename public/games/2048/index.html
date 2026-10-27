@@ -54,6 +54,7 @@ a.back:hover { color: var(--text); }
 .btn.secondary:hover { border-color: var(--accent); color: #9b89ff; }
 .hint { margin-top: 0.8rem; font-size: 0.8rem; color: var(--muted); text-align: center; }
 @media (max-width: 400px) { header { padding: 0.5rem 0 0.75rem; } .board { padding: 10px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>
@@ -284,7 +285,7 @@ boardEl.addEventListener('touchend', (event) => {
 }, { passive: true });
 document.getElementById('restart-btn').addEventListener('click', resetGame);
 document.getElementById('restart-win-btn').addEventListener('click', resetGame);
-document.getElementById('keep-btn').addEventListener('click', () => { won = false; winEl.style.display = 'none'; });
+document.getElementById('keep-btn').addEventListener('click', () => { won = false; running = true; winEl.style.display = 'none'; });
 window.addEventListener('resize', draw);
 
 resetGame();
