@@ -60,6 +60,10 @@ a.back:hover { color: var(--text); }
     <p id="result-text">Reaction time <b id="result-time">0</b> ms</p>
     <button class="btn" id="again-btn">Try again</button>
   </div>
+  <div id="pause" class="overlay">
+    <h2>Paused</h2>
+    <p>Resume to continue.</p>
+  </div>
   <div class="stats">
     <div class="stat"><b id="hist-count">0</b><span>plays</span></div>
     <div class="stat"><b id="hist-best">--</b><span>best</span></div>
@@ -82,12 +86,19 @@ let history = [];
 let state = 'idle'; // idle | waiting | ready
 let startTime = 0;
 let timerId = null;
+let paused = false;
+let prevState = 'idle';
+
+const embed = new URLSearchParams(window.location.search).has('embed');
+if (embed) { document.querySelector('header')?.remove(); document.getElementById('wrap').style.padding = '0.5rem'; }
 
 function post(payload) {
   if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*');
 }
 window.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'dk:restart') resetUI();
+  if (event.data && event.data.type === 'dk:restart') { resetUI(); paused = false; }
+  if (event.data && event.data.type === 'dk:pause') pauseGame();
+  if (event.data && event.data.type === 'dk:resume') resumeGame();
 });
 
 function updateStats() {
@@ -153,7 +164,32 @@ function finishReaction() {
   post({ type: 'dk:gameover', score: ms });
 }
 
+function pauseGame() {
+  if (state === 'paused' || state === 'idle') return;
+  paused = true;
+  prevState = state;
+  state = 'paused';
+  clearTimeout(timerId);
+  document.getElementById('pause').style.display = 'flex';
+}
+
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  document.getElementById('pause').style.display = 'none';
+  const was = prevState;
+  prevState = 'idle';
+  if (was === 'waiting') {
+    state = 'idle';
+    zone.className = 'waiting';
+    zone.textContent = 'Wait for green';
+  } else {
+    state = was;
+  }
+}
+
 function attempt() {
+  if (paused) return;
   if (state === 'waiting') { endTooEarly(); return; }
   if (state === 'ready') { finishReaction(); return; }
   if (state === 'idle') { startRound(); }

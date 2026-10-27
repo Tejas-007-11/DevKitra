@@ -53,6 +53,10 @@ canvas { width: 100%; height: auto; display: block; border-radius: 10px; backgro
     <p id="over-text">Final score <b id="final-score">0</b></p>
     <button class="btn" id="restart-btn">Play again</button>
   </div>
+  <div id="pause" class="overlay">
+    <h2>Paused</h2>
+    <p>Resume to continue.</p>
+  </div>
   <p class="hint">Move the paddle with the mouse, touch, or left/right arrow keys.</p>
 </div>
 <script>
@@ -72,7 +76,9 @@ function post(payload) {
   if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*');
 }
 window.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'dk:restart') resetGame();
+  if (event.data && event.data.type === 'dk:restart') { resetGame(); paused = false; }
+  if (event.data && event.data.type === 'dk:pause') pauseGame();
+  if (event.data && event.data.type === 'dk:resume') resumeGame();
 });
 
 const PADDLE_W = 90;
@@ -84,9 +90,12 @@ const BRICK_H = 22;
 const BRICK_GAP = 6;
 const BRICK_TOP = 40;
 
-let score, lives, running, timer;
+let score, lives, running, timer, paused = false;
 let paddleX, balls, bricks;
 let keys = {};
+
+const embed = new URLSearchParams(window.location.search).has('embed');
+if (embed) { document.querySelector('header')?.remove(); document.getElementById('wrap').style.padding = '0.5rem'; }
 
 function resetGame() {
   score = 0;
@@ -135,7 +144,7 @@ function resetBall() {
 }
 
 function tick() {
-  if (!running) return;
+  if (!running || paused) return;
   if (keys['ArrowLeft'] || keys['KeyA']) paddleX -= 6;
   if (keys['ArrowRight'] || keys['KeyD']) paddleX += 6;
   paddleX = Math.max(0, Math.min(canvas.width - PADDLE_W, paddleX));
@@ -192,12 +201,28 @@ function tick() {
 
 function endGame(won) {
   running = false;
+  paused = false;
   clearInterval(timer);
   overTitle.textContent = won ? 'All bricks cleared!' : 'Game over';
   overText.textContent = won ? 'Final score' : 'Final score';
   finalScoreEl.textContent = score;
   overEl.style.display = 'flex';
   post({ type: 'dk:gameover', score });
+}
+
+function pauseGame() {
+  if (!running || paused) return;
+  paused = true;
+  clearInterval(timer);
+  document.getElementById('pause').style.display = 'flex';
+}
+
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  document.getElementById('pause').style.display = 'none';
+  clearInterval(timer);
+  timer = setInterval(tick, 30);
 }
 
 function draw() {

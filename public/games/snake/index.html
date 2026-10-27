@@ -62,6 +62,11 @@ button.dpad:active { background: #1f2939; border-color: var(--accent); color: #9
     <p>Score <b id="final-score">0</b> <span style="opacity:0.4">·</span> Best <b id="final-best">0</b></p>
     <button class="btn" id="restart-btn">Play again</button>
   </div>
+  <div id="pause" class="overlay">
+    <h2>Paused</h2>
+    <p>Resume to continue.</p>
+  </div>
+</div>
   <div class="dpad">
     <button class="dpad up" data-dir="Up">▲</button>
     <button class="dpad left" data-dir="Left">◀</button>
@@ -83,13 +88,18 @@ const COLS = canvas.width / CELL;
 const ROWS = canvas.height / CELL;
 let best = Number(localStorage.getItem('dk:snake-best') || 0);
 bestEl.textContent = best;
-let snake, dir, nextDir, food, score, running, timer, speed, inputLocked;
+let snake, dir, nextDir, food, score, running, timer, speed, inputLocked, paused = false;
+
+const embed = new URLSearchParams(window.location.search).has('embed');
+if (embed) { document.querySelector('header')?.remove(); document.getElementById('wrap').style.padding = '0.5rem'; }
 
 function post(payload) {
   if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*');
 }
 window.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'dk:restart') resetGame();
+  if (event.data && event.data.type === 'dk:restart') { resetGame(); paused = false; }
+  if (event.data && event.data.type === 'dk:pause') pauseGame();
+  if (event.data && event.data.type === 'dk:resume') resumeGame();
 });
 
 function startLoop() {
@@ -120,7 +130,7 @@ function resetGame() {
 }
 
 function tick() {
-  if (!running) return;
+  if (!running || paused) return;
   dir = nextDir;
   inputLocked = false;
   const head = { x: snake[0].x, y: snake[0].y };
@@ -144,8 +154,22 @@ function tick() {
   draw();
 }
 
-function endGame() {
+function pauseGame() {
+  if (!running || paused) return;
+  paused = true;
+  clearInterval(timer);
+  document.getElementById('pause').style.display = 'flex';
+}
+
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  document.getElementById('pause').style.display = 'none';
+  clearInterval(timer);
+  timer = setInterval(tick, speed);
+}
   running = false;
+  paused = false;
   clearInterval(timer);
   if (score > best) {
     best = score;

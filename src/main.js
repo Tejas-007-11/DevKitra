@@ -183,7 +183,7 @@ function renderHeader(path) {
   }).join('');
 
   return `
-    <div class="app-layout">
+    <div class="layout">
       <div class="app-main">
         <header class="site-header">
           <div class="topbar">
@@ -229,9 +229,10 @@ function renderFooter() {
 /* Pages                                                              */
 /* ------------------------------------------------------------------ */
 
-function gameCard(game) {
+function gameCard(game, featured = false) {
+  const cls = `game-card${featured ? ' featured' : ''}`;
   return `
-    <a href="${game.route}" data-nav class="game-card">
+    <a href="${game.route}" data-nav class="${cls}">
       <div class="game-card-thumb">
         <img src="${game.thumbnail}" alt="" loading="lazy" />
         <span class="game-card-play" aria-hidden="true"></span>
@@ -253,6 +254,7 @@ function renderHomePage() {
   const featured = featuredGames();
   const recent = [...publishedGames()].sort((a, b) => (b.added || '').localeCompare(a.added || ''));
   const genreCount = genres.length;
+  const heroGame = featured[0];
 
   return `
     <main class="home-page page-shell">
@@ -263,7 +265,7 @@ function renderHomePage() {
             <h1>Play instantly.<br /><span>No downloads. No accounts.</span></h1>
             <p class="hero-description">A growing collection of original browser games built for quick sessions on desktop and mobile. Pick a game and start playing immediately.</p>
             <div class="hero-actions">
-              ${featured.length ? `<a href="${featured[0].route}" data-nav class="btn btn-primary">Play ${escapeHtml(featured[0].title)}</a>` : ''}
+              ${heroGame ? `<a href="${heroGame.route}" data-nav class="btn btn-primary">Play ${escapeHtml(heroGame.title)}</a>` : ''}
               <a href="/explore" data-nav class="btn btn-ghost">Browse the library</a>
             </div>
             <div class="hero-meta">
@@ -272,20 +274,8 @@ function renderHomePage() {
               <span><span aria-hidden="true">●</span>Runs locally in your browser</span>
             </div>
           </div>
-          <div class="hero-art">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" role="img" aria-label="Game controllers and play button">
-              <rect width="520" height="300" rx="20" fill="#151b26" />
-              <circle cx="140" cy="160" r="42" fill="#232a38" />
-              <circle cx="140" cy="160" r="20" fill="#7c7cff" />
-              <circle cx="185" cy="200" r="12" fill="#232a38" />
-              <circle cx="215" cy="170" r="12" fill="#232a38" />
-              <circle cx="200" cy="140" r="12" fill="#232a38" />
-              <circle cx="170" cy="130" r="12" fill="#232a38" />
-              <circle cx="380" cy="150" r="30" fill="#1c212e" />
-              <polygon points="372,132 400,150 372,168" fill="#7c7cff" />
-              <rect x="300" y="90" width="14" height="100" rx="7" fill="#232a38" />
-              <rect x="326" y="90" width="14" height="100" rx="7" fill="#232a38" />
-            </svg>
+          <div class="hero-game" aria-label="${escapeHtml(heroGame ? heroGame.title : 'Featured game')} preview">
+            <iframe class="hero-frame" src="${heroGame ? heroGame.standalone + (heroGame.pause ? '?embed=1' : '') : '#'}" loading="lazy" title="${escapeHtml(heroGame ? heroGame.title : 'Featured game')}" allowfullscreen></iframe>
           </div>
         </div>
       </section>
@@ -300,7 +290,7 @@ function renderHomePage() {
             <p>Games we recommend playing first.</p>
           </div>
         </div>
-        <div class="game-grid">${featured.map(gameCard).join('')}</div>
+        <div class="game-grid">${featured.map((g) => gameCard(g, true)).join('')}</div>
       </section>
         `
         : ''
@@ -326,7 +316,7 @@ function renderHomePage() {
           </div>
         </div>
         <div class="chip-list">
-          ${genres.map((g) => `<a href="/genre/${g.slug}" data-nav class="genre-chip">${escapeHtml(g.label)}</a>`).join('')}
+          ${genres.filter((g) => genreGameCount(g.slug) > 0).map((g) => `<a href="/genre/${g.slug}" data-nav class="genre-chip">${escapeHtml(g.label)}</a>`).join('')}
         </div>
       </section>
     </main>
@@ -334,7 +324,6 @@ function renderHomePage() {
 }
 
 function renderExplorePage() {
-  const query = '';
   const all = publishedGames();
 
   return `
@@ -353,7 +342,7 @@ function renderExplorePage() {
         </div>
         <div id="explore-genre-filters" class="chip-list">
           <button type="button" class="genre-chip active" data-genre="all" aria-pressed="true">All genres</button>
-          ${genres.map((g) => `<button type="button" class="genre-chip" data-genre="${g.slug}" aria-pressed="false">${escapeHtml(g.label)}</button>`).join('')}
+          ${genres.filter((g) => genreGameCount(g.slug) > 0).map((g) => `<button type="button" class="genre-chip" data-genre="${g.slug}" aria-pressed="false">${escapeHtml(g.label)}</button>`).join('')}
         </div>
         <div class="select-shell">
           <select id="explore-sort">
@@ -379,14 +368,14 @@ function setupExplore() {
   const count = document.getElementById('explore-count');
   const chips = [...document.querySelectorAll('#explore-genre-filters .genre-chip')];
   const sort = document.getElementById('explore-sort');
-  let genre = 'all';
+  let genreSel = 'all';
   let q = '';
 
   const all = publishedGames();
 
   const apply = () => {
     const filtered = all.filter((g) => {
-      const genreMatch = genre === 'all' || g.genres.includes(genre);
+      const genreMatch = genreSel === 'all' || g.genres.includes(genreSel);
       const textMatch = !q || `${g.title} ${g.description} ${g.tags.join(' ')} ${g.genres.map((ge) => genre(ge)?.label).join(' ')}`.toLowerCase().includes(q);
       return genreMatch && textMatch;
     });
@@ -407,7 +396,7 @@ function setupExplore() {
         c.classList.toggle('active', c === chip);
         c.setAttribute('aria-pressed', String(c === chip));
       });
-      genre = chip.dataset.genre || 'all';
+      genreSel = chip.dataset.genre || 'all';
       apply();
     });
   });
@@ -448,6 +437,10 @@ function renderGamePage(slug) {
     .filter((g) => g.id !== game.id && g.genres.some((ge) => game.genres.includes(ge)))
     .slice(0, 4);
 
+  const pauseMarkup = game.pause
+    ? `<button type="button" class="btn btn-sm btn-ghost" data-action="pause" aria-pressed="false">Pause</button>`
+    : '';
+
   return `
     <main class="game-page page-shell">
       <header class="game-header">
@@ -460,19 +453,20 @@ function renderGamePage(slug) {
           </div>
         </div>
         <div class="game-actions">
-          <button type="button" class="btn btn-primary" data-action="restart">Restart game</button>
-          <a href="/explore" data-nav class="btn btn-ghost">Browse library</a>
+          ${pauseMarkup}
+          <button type="button" class="btn btn-primary btn-sm" data-action="restart">Restart</button>
+          <a href="/explore" data-nav class="btn btn-ghost btn-sm">Browse library</a>
         </div>
       </header>
       <div class="game-body">
         <div class="game-frame-wrap" role="region" aria-label="${escapeHtml(game.title)} game">
-          <iframe class="game-frame" src="${game.standalone}" loading="lazy" title="${escapeHtml(game.title)}" allowfullscreen></iframe>
+          <iframe class="game-frame" src="${game.standalone}${game.pause ? '?embed=1' : ''}" loading="lazy" title="${escapeHtml(game.title)}" allowfullscreen></iframe>
         </div>
         <aside class="game-sidebar">
           <section class="game-section">
             <h2>How to play</h2>
             <p>${escapeHtml(game.description)}</p>
-            <h3 style="margin:0.75rem 0 0.25rem;font-size:0.85rem;color:var(--dk-ink-soft);text-transform:uppercase;letter-spacing:0.1em;">Controls</h3>
+            <h3 style="margin:0.75rem 0 0.25rem;font-size:0.82rem;color:var(--dk-ink-soft);text-transform:uppercase;letter-spacing:0.1em;">Controls</h3>
             <div class="controls-list">
               ${game.inputs.map((input) => `<span class="kbd">${escapeHtml(input)}</span>`).join('')}
             </div>
@@ -505,6 +499,7 @@ function setupGamePage(slug) {
 
   const frame = document.querySelector('.game-frame');
   const restart = document.querySelector('[data-action="restart"]');
+  const pauseBtn = document.querySelector('[data-action="pause"]');
   const origin = window.location.origin;
 
   function postToGame(payload) {
@@ -513,8 +508,27 @@ function setupGamePage(slug) {
     }
   }
 
+  let paused = false;
+
   if (restart) {
-    restart.addEventListener('click', () => postToGame({ type: 'dk:restart' }));
+    restart.addEventListener('click', () => {
+      paused = false;
+      if (pauseBtn) {
+        pauseBtn.textContent = 'Pause';
+        pauseBtn.setAttribute('aria-pressed', 'false');
+        pauseBtn.disabled = false;
+      }
+      postToGame({ type: 'dk:restart' });
+    });
+  }
+
+  if (pauseBtn && game.pause) {
+    pauseBtn.addEventListener('click', () => {
+      paused = !paused;
+      pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+      pauseBtn.setAttribute('aria-pressed', String(paused));
+      postToGame(paused ? { type: 'dk:pause' } : { type: 'dk:resume' });
+    });
   }
 }
 
@@ -529,7 +543,7 @@ window.addEventListener('message', (event) => {
 
 function renderAboutPage() {
   return `
-    <main class="page-shell narrow-shell" style="max-width:720px">
+    <main class="page-shell" style="max-width:720px;margin:0 auto;">
       <div style="border:1px solid var(--dk-line);border-radius:var(--dk-radius);background:var(--dk-card);padding:2rem;">
         <p class="eyebrow">About DevKitra Gaming</p>
         <h1>Instant games, locally run</h1>
@@ -548,7 +562,7 @@ function renderAboutPage() {
 
 function renderPrivacyPage() {
   return `
-    <main class="page-shell narrow-shell" style="max-width:720px">
+    <main class="page-shell" style="max-width:720px;margin:0 auto;">
       <div style="border:1px solid var(--dk-line);border-radius:var(--dk-radius);background:var(--dk-card);padding:2rem;">
         <p class="eyebrow">Privacy</p>
         <h1>How DevKitra Gaming handles your data</h1>
@@ -567,7 +581,7 @@ function renderPrivacyPage() {
 
 function renderContactPage() {
   return `
-    <main class="page-shell narrow-shell" style="max-width:720px">
+    <main class="page-shell" style="max-width:720px;margin:0 auto;">
       <div style="border:1px solid var(--dk-line);border-radius:var(--dk-radius);background:var(--dk-card);padding:2rem;">
         <p class="eyebrow">Contact</p>
         <h1>Get in touch with DevKitra Gaming</h1>
