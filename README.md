@@ -1,6 +1,16 @@
-# DevKitra
+# DevKitra Gaming
 
-DevKitra is a browser-based collection of developer utilities. Tool input is processed in the browser; the regex tester uses a Web Worker with a one-second execution limit.
+DevKitra Gaming is a browser-based instant-play gaming platform. Games run locally in the browser — no downloads, installations, or user accounts required.
+
+## Games
+
+- **Snake** — Arcade reflex game
+- **2048** — Number-merging puzzle
+- **Memory Match** — Card-pair memory game
+- **Breakout** — Paddle-and-ball arcade game
+- **Reaction Test** — Reflex challenge
+
+Each game is an independent, self-contained module under `public/games/<id>/` and is embedded on `/game/<id>` through an isolated iframe.
 
 ## Local development
 
@@ -8,6 +18,8 @@ DevKitra is a browser-based collection of developer utilities. Tool input is pro
 npm install
 npm run dev
 ```
+
+Open http://localhost:5173
 
 ## Tests and production build
 
@@ -17,18 +29,19 @@ npm run build
 npm run preview
 ```
 
-### Cloudflare Workers with GitHub auto-deploy
+## Publishing a new game
 
-This repository includes `wrangler.jsonc` for deploying the Vite `dist/` output as static assets on Workers. Its single-page-app setting serves `index.html` for application routes. Wrangler is a pinned project dev dependency so Cloudflare does not need to download an unpinned CLI during every build. Do not add a competing `_redirects` fallback file; Workers handles app routes from `wrangler.jsonc`.
+1. Create `public/games/<id>/` with a standalone `index.html` and `thumbnail.svg`.
+2. Add an entry to `src/games/registry.js` (id, title, description, genres, route `/game/<id>`, standalone path, tags, inputs, save support).
+3. Add any new genres to the registry genre list.
+4. Run `npm run dev` and verify `/game/<id>` works, including restart behavior and keyboard/touch controls.
+5. Run `npm test` and `npm run build`, then `npm run preview` to check the production output.
+6. Commit and push to `main`; Cloudflare Workers Builds deploys automatically (build: `npm run build`, deploy: `npx wrangler deploy`).
 
-In Cloudflare, connect this GitHub repository as a **Worker** and use:
+## Deployment
 
-- Production branch: `main`
-- Build command: `npm run build`
-- Deploy command: `npx wrangler deploy`
-- Root directory: `/` (or leave the default repository root)
-- Preview builds: optional
-- Cloudflare Access: off for a public website
-- API token: use Cloudflare's automatically created token; do not paste a token into a build variable
+Static hosting via Cloudflare Workers (`wrangler.jsonc`, `dist/` output, SPA fallback). Connect this repository as a Worker with production branch `main`. HTTPS is managed by the host.
 
-Commit and push changes to `main`; Workers Builds will build and deploy the Worker automatically. Cloudflare provides HTTPS on its `workers.dev` hostname. Test a nested tool route directly and refresh it after deployment.
+## Constraints
+
+Frontend only (HTML, CSS, vanilla JavaScript). No backend, database, authentication, API keys, or cloud functions. High scores are stored in browser local storage and are not globally verified leaderboards.

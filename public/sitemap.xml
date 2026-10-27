@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://devkitra.in/</loc></url>
-  <url><loc>https://devkitra.in/tools</loc></url>
-  <url><loc>https://devkitra.in/tools/json-formatter</loc></url>
-  <url><loc>https://devkitra.in/tools/json-minifier</loc></url>
-  <url><loc>https://devkitra.in/tools/json-to-csv</loc></url>
-  <url><loc>https://devkitra.in/tools/base64</loc></url>
-  <url><loc>https://devkitra.in/tools/jwt-decoder</loc></url>
-  <url><loc>https://devkitra.in/tools/uuid-generator</loc></url>
-  <url><loc>https://devkitra.in/tools/timestamp-converter</loc></url>
-  <url><loc>https://devkitra.in/tools/regex-tester</loc></url>
-  <url><loc>https://devkitra.in/tools/url-encoder-decoder</loc></url>
-  <url><loc>https://devkitra.in/tools/hash-generator</loc></url>
-  <url><loc>https://devkitra.in/tools/sql-formatter</loc></url>
-  <url><loc>https://devkitra.in/tools/xml-formatter</loc></url>
+  <url><loc>https://devkitra.in/explore</loc></url>
+  <url><loc>https://devkitra.in/genre/arcade</loc></url>
+  <url><loc>https://devkitra.in/genre/action</loc></url>
+  <url><loc>https://devkitra.in/genre/puzzle</loc></url>
+  <url><loc>https://devkitra.in/genre/casual</loc></url>
+  <url><loc>https://devkitra.in/genre/quick-play</loc></url>
+  <url><loc>https://devkitra.in/genre/racing</loc></url>
+  <url><loc>https://devkitra.in/genre/sports</loc></url>
+  <url><loc>https://devkitra.in/genre/strategy</loc></url>
+  <url><loc>https://devkitra.in/genre/board-card</loc></url>
+  <url><loc>https://devkitra.in/genre/adventure-rpg</loc></url>
+  <url><loc>https://devkitra.in/genre/simulation</loc></url>
+  <url><loc>https://devkitra.in/genre/physics-skill</loc></url>
+  <url><loc>https://devkitra.in/genre/word</loc></url>
+  <url><loc>https://devkitra.in/genre/idle</loc></url>
+  <url><loc>https://devkitra.in/genre/educational</loc></url>
+  <url><loc>https://devkitra.in/genre/platformers</loc></url>
+  <url><loc>https://devkitra.in/genre/survival</loc></url>
+  <url><loc>https://devkitra.in/genre/creative</loc></url>
+  <url><loc>https://devkitra.in/game/snake</loc></url>
+  <url><loc>https://devkitra.in/game/2048</loc></url>
+  <url><loc>https://devkitra.in/game/memory-match</loc></url>
+  <url><loc>https://devkitra.in/game/breakout</loc></url>
+  <url><loc>https://devkitra.in/game/reaction-test</loc></url>
   <url><loc>https://devkitra.in/about</loc></url>
   <url><loc>https://devkitra.in/privacy</loc></url>
   <url><loc>https://devkitra.in/contact</loc></url>

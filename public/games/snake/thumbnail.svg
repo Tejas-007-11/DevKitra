@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" role="img" aria-label="Snake thumbnail">
+  <defs>
+    <linearGradient id="snakeGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#22c55e"/></linearGradient>
+  </defs>
+  <rect width="520" height="300" rx="22" fill="#0f141c" />
+  <rect x="34" y="74" width="452" height="152" rx="12" fill="#131926" />
+  <path d="M90 140 L130 140 L130 100 L170 100 L170 140 L210 140" stroke="url(#snakeGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <circle cx="210" cy="140" r="11" fill="#4ade80" />
+  <circle cx="246" cy="140" r="6" fill="#f87171" />
+  <rect x="272" y="126" width="12" height="12" rx="3" fill="#f87171" />
+</svg>
