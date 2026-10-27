@@ -20,6 +20,62 @@ const NAV = [
 ];
 
 /* ------------------------------------------------------------------ */
+/* Web Audio API Sound Engine (Synthesized, 0 kB assets)              */
+/* ------------------------------------------------------------------ */
+
+let audioCtx = null;
+let soundEnabled = (() => {
+  try {
+    const s = localStorage.getItem('dk:sound');
+    return s !== 'false';
+  } catch (_) {
+    return true;
+  }
+})();
+
+function playUiSound(type) {
+  if (!soundEnabled) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+
+    if (type === 'hover') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(480, now);
+      gain.gain.setValueAtTime(0.02, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.035);
+      osc.start(now); osc.stop(now + 0.035);
+    } else if (type === 'click') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(620, now);
+      osc.frequency.exponentialRampToValueAtTime(940, now + 0.06);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.06);
+      osc.start(now); osc.stop(now + 0.06);
+    } else if (type === 'switch') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(380, now);
+      osc.frequency.exponentialRampToValueAtTime(680, now + 0.09);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.09);
+      osc.start(now); osc.stop(now + 0.09);
+    }
+  } catch (_) {}
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  try { localStorage.setItem('dk:sound', String(soundEnabled)); } catch (_) {}
+  if (soundEnabled) playUiSound('click');
+  return soundEnabled;
+}
+
+/* ------------------------------------------------------------------ */
 /* Theme                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -71,24 +127,24 @@ function siteUrl() {
 
 function updatePageMetadata(route) {
   const pages = {
-    '/': { title: `${SITE_NAME} — Instant browser games`, description: 'Play instant arcade, puzzle, and reflex games in your browser. No downloads, accounts, or installations required.' },
-    '/explore': { title: `Explore games | ${SITE_NAME}`, description: 'Browse the DevKitra Gaming library. Search, filter by genre, and sort the growing collection of instant-play browser games.' },
-    '/about': { title: `About | ${SITE_NAME}`, description: 'DevKitra Gaming is a free, browser-based platform for original instant-play games.' },
-    '/privacy': { title: `Privacy | ${SITE_NAME}`, description: 'DevKitra Gaming runs games locally in your browser. No accounts, no personal data collection.' },
-    '/contact': { title: `Contact | ${SITE_NAME}`, description: 'Get in touch with DevKitra Gaming for questions, bug reports, and game suggestions.' },
+    '/': { title: `${SITE_NAME} — Instant Browser Gaming Platform`, description: 'Play instant arcade, puzzle, physics and reflex games with zero installs or accounts.' },
+    '/explore': { title: `Explore Games Library | ${SITE_NAME}`, description: 'Browse and search DevKitra Gaming instant games catalogue.' },
+    '/about': { title: `About Platform | ${SITE_NAME}`, description: 'DevKitra Gaming is a standalone, client-side browser gaming destination.' },
+    '/privacy': { title: `Privacy Policy | ${SITE_NAME}`, description: 'Games run 100% locally in your browser. No trackers, no accounts.' },
+    '/contact': { title: `Contact & Feedback | ${SITE_NAME}`, description: 'Send feedback and bug reports to DevKitra Gaming.' },
   };
 
   let page;
   if (route.page === 'game' && gameByRoute(route.path)) {
     const g = gameByRoute(route.path);
-    page = { title: `${g.title} | ${SITE_NAME}`, description: g.description };
+    page = { title: `${g.title} — Play Free Online | ${SITE_NAME}`, description: g.description };
   } else if (route.page === 'genre' && genre(route.slug)) {
     const g = genre(route.slug);
-    page = { title: `${g.label} games | ${SITE_NAME}`, description: `Play ${g.label.toLowerCase()} browser games on DevKitra Gaming. ${g.description}` };
+    page = { title: `${g.label} Browser Games | ${SITE_NAME}`, description: `Play top ${g.label.toLowerCase()} games right in your browser.` };
   } else if (pages[route.path]) {
     page = pages[route.path];
   } else {
-    page = { title: `Page not found | ${SITE_NAME}`, description: 'That page does not exist.' };
+    page = { title: `Page Not Found | ${SITE_NAME}`, description: 'That address does not exist.' };
   }
 
   document.title = page.title;
@@ -156,7 +212,7 @@ function showToast(message, type = 'success') {
 }
 
 /* ------------------------------------------------------------------ */
-/* Shared components                                                  */
+/* Shared UI Components                                               */
 /* ------------------------------------------------------------------ */
 
 function brandMarkup() {
@@ -169,6 +225,13 @@ function brandMarkup() {
       </span>
     </a>
   `;
+}
+
+function soundIcon(enabled) {
+  if (enabled) {
+    return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M7 3L3.5 6H1v4h2.5L7 13V3z" fill="currentColor"/><path d="M10 5a4 4 0 010 6M12 3a7 7 0 010 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+  }
+  return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M7 3L3.5 6H1v4h2.5L7 13V3z" fill="currentColor"/><path d="M10 6l4 4M14 6l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 }
 
 function themeIcon(theme) {
@@ -209,6 +272,7 @@ function renderHeader(path) {
                 <div id="search-results" class="search-results hidden" role="listbox" aria-label="Game search results"></div>
               </div>
               <button id="search-toggle" type="button" class="icon-button" aria-label="Search games">${searchSvg()}</button>
+              <button id="sound-toggle" type="button" class="icon-button ${soundEnabled ? 'active' : ''}" aria-label="Toggle sound FX" title="Toggle sound FX">${soundIcon(soundEnabled)}</button>
               <button id="theme-toggle" type="button" class="icon-button" aria-label="Toggle color theme">${themeIcon(getTheme())}</button>
               <button id="nav-toggle" type="button" class="icon-button nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="main-nav">${menuSvg(false)}</button>
             </div>
@@ -224,7 +288,7 @@ function renderFooter() {
       <div class="footer-inner">
         <div>
           <div class="footer-brand">${SITE_NAME}</div>
-          <div class="brand-sub" style="margin-top:0.15rem;">Instant-play browser games</div>
+          <div class="brand-sub" style="margin-top:0.2rem;">Client-Side Gaming Architecture</div>
         </div>
         <div class="footer-links">
           <a href="/explore" data-nav>Explore</a>
@@ -233,7 +297,7 @@ function renderFooter() {
           <a href="/privacy" data-nav>Privacy</a>
         </div>
       </div>
-      <div class="footer-copy">© ${new Date().getFullYear()} DevKitra Gaming. All games run locally in your browser — no data leaves your device.</div>
+      <div class="footer-copy">© ${new Date().getFullYear()} DevKitra Gaming. Games run locally in browser memory. No tracking cookies. Zero installations.</div>
     </footer>
     </div></div>
   `;
@@ -243,18 +307,20 @@ function renderFooter() {
 /* Game card                                                          */
 /* ------------------------------------------------------------------ */
 
-function gameCard(game, featured = false) {
-  const cls = `game-card${featured ? ' featured' : ''}`;
+function gameCard(game, badge = '') {
   const genreLabels = game.genres.map((g) => genre(g)?.label).filter(Boolean).join(' · ') || 'Game';
   const thumb = game.thumbnail
-    ? `<img src="${game.thumbnail}" alt="" loading="lazy" />`
-    : `<div style="width:100%;height:100%;display:grid;place-items:center;color:var(--dk-quiet);font-size:1.5rem;font-weight:900;">${escapeHtml(game.title[0])}</div>`;
+    ? `<img src="${game.thumbnail}" alt="${escapeHtml(game.title)} cover" loading="lazy" />`
+    : `<div style="width:100%;height:100%;display:grid;place-items:center;color:var(--dk-quiet);font-size:1.6rem;font-weight:900;">${escapeHtml(game.title[0])}</div>`;
 
   return `
-    <a href="${game.route}" data-nav class="${cls}">
+    <a href="${game.route}" data-nav class="game-card" data-game-card="${game.id}">
       <div class="game-card-thumb">
         ${thumb}
-        <span class="game-card-play" aria-hidden="true"></span>
+        ${badge ? `<div class="game-badge">${badge}</div>` : ''}
+        <div class="game-card-play" aria-hidden="true">
+          <span class="play-pill">Play Game ▶</span>
+        </div>
       </div>
       <div class="game-card-body">
         <span class="game-card-genre">${genreLabels}</span>
@@ -262,8 +328,8 @@ function gameCard(game, featured = false) {
         <p class="game-card-desc">${escapeHtml(game.description)}</p>
       </div>
       <div class="game-card-foot">
-        <span>${game.inputs.join(' · ')}</span>
-        <span class="game-card-cta">Play →</span>
+        <span>${game.inputs.map((inp) => inp === 'keyboard' ? '⌨ Keyboard' : inp === 'touch' ? '📱 Touch' : '🖱 Mouse').join(' · ')}</span>
+        <span class="game-card-cta">Instant Play →</span>
       </div>
     </a>
   `;
@@ -276,66 +342,117 @@ function gameCard(game, featured = false) {
 function renderHomePage() {
   const featured = featuredGames();
   const all = [...publishedGames()].sort((a, b) => (b.added || '').localeCompare(a.added || ''));
-  const heroGame = featured[0];
   const populatedGenres = genres.filter((g) => genreGameCount(g.slug) > 0);
+  const activeSpotlight = featured[0] || all[0];
 
   return `
     <main class="page-shell home-page">
+      <!-- Hero Arcade Showcase -->
       <section class="hero">
         <div class="hero-inner">
           <div class="hero-copy">
-            <div class="eyebrow">${SITE_NAME}</div>
-            <h1>Play instantly.<br /><span>No downloads. No accounts.</span></h1>
-            <p class="hero-description">A growing collection of original browser games built for quick sessions. Pick a game and start playing — everything runs right here.</p>
+            <div class="eyebrow">DevKitra Arcade Arena</div>
+            <h1>Next-Gen Gaming.<br /><span>Instant Play. Zero Lag.</span></h1>
+            <p class="hero-description">Experience high-speed browser games designed with reactive controls, fluid physics, and zero downloads. Select any title to play immediately.</p>
             <div class="hero-actions">
-              ${heroGame ? `<a href="${heroGame.route}" data-nav class="btn btn-primary">Play ${escapeHtml(heroGame.title)}</a>` : ''}
-              <a href="/explore" data-nav class="btn btn-ghost">Explore games</a>
+              <a href="${activeSpotlight.route}" data-nav class="btn btn-primary" id="hero-play-btn">Play ${escapeHtml(activeSpotlight.title)} Now ▶</a>
+              <a href="/explore" data-nav class="btn btn-ghost">Browse Catalogue</a>
             </div>
             <div class="hero-meta">
-              <span><span class="dot"></span>${publishedGames().length} games</span>
-              <span><span class="dot"></span>${populatedGenres.length} genres</span>
-              <span><span class="dot"></span>Runs in your browser</span>
+              <span><span class="dot"></span>${all.length} Verified Games</span>
+              <span><span class="dot"></span>60fps Canvas Tech</span>
+              <span><span class="dot"></span>Local Highscores</span>
             </div>
           </div>
-          <div class="hero-game" aria-label="${escapeHtml(heroGame ? heroGame.title : 'Featured game')} preview">
-            <iframe class="hero-frame" src="${heroGame ? heroGame.standalone + '?embed=1' : '#'}" loading="lazy" title="${escapeHtml(heroGame ? heroGame.title : 'Featured game')}" tabindex="-1"></iframe>
+          <!-- Hero Arcade Cabinet Console -->
+          <div class="hero-arcade">
+            <div class="hero-tabs" id="hero-switcher">
+              ${all.map((g, idx) => `
+                <button type="button" class="hero-tab ${g.id === activeSpotlight.id ? 'active' : ''}" data-hero-id="${g.id}" data-hero-src="${g.standalone}?embed=1" data-hero-title="${escapeHtml(g.title)}" data-hero-route="${g.route}">
+                  ${g.id === 'snake' ? '🐍 Snake' : g.id === 'breakout' ? '🧱 Breakout' : g.id === 'reaction-test' ? '⚡ Reflex' : g.id === '2048' ? '🔢 2048' : '🃏 Memory'}
+                </button>
+              `).join('')}
+            </div>
+            <div class="hero-cabinet">
+              <iframe id="hero-cabinet-frame" src="${activeSpotlight.standalone}?embed=1" title="${escapeHtml(activeSpotlight.title)} preview" tabindex="-1"></iframe>
+              <button type="button" class="cabinet-overlay-btn" id="hero-fullscreen-btn" title="Fullscreen Play">Fullscreen ⛶</button>
+            </div>
           </div>
         </div>
       </section>
 
+      <!-- Category Dock -->
+      <section class="section" style="margin-top:2rem;">
+        <div class="category-dock">
+          <a href="/explore" data-nav class="cat-pill active"><span class="cat-icon">🎮</span> All Categories (${all.length})</a>
+          ${populatedGenres.map((g) => {
+            const icon = g.slug === 'arcade' ? '🕹️' : g.slug === 'puzzle' ? '🧩' : g.slug === 'quick-play' ? '⚡' : g.slug === 'board-card' ? '🃏' : '🪐';
+            return `<a href="/genre/${g.slug}" data-nav class="cat-pill"><span class="cat-icon">${icon}</span> ${escapeHtml(g.label)} (${genreGameCount(g.slug)})</a>`;
+          }).join('')}
+        </div>
+      </section>
+
+      <!-- Featured Picks -->
       ${featured.length ? `
       <section class="section">
         <div class="section-header">
-          <div class="eyebrow">Featured</div>
-          <h2>Games we recommend</h2>
-          <p>Tried and tested — start with these.</p>
+          <div class="copy">
+            <div class="eyebrow">Curated Showcase</div>
+            <h2>Featured Recommendations</h2>
+            <p>Hand-tuned games with particle effects, reactive physics, and instant action.</p>
+          </div>
         </div>
-        <div class="featured-grid">${featured.map((g) => gameCard(g, true)).join('')}</div>
+        <div class="featured-grid">${featured.map((g) => gameCard(g, 'TOP PICK')).join('')}</div>
       </section>
       ` : ''}
 
+      <!-- Complete Catalogue Grid -->
       <section class="section">
         <div class="section-header">
-          <div class="eyebrow">All games</div>
-          <h2>The full collection</h2>
-          <p>Every game in the library, newest first.</p>
+          <div class="copy">
+            <div class="eyebrow">The Arena</div>
+            <h2>Every Game Ready to Play</h2>
+            <p>Runs 100% client-side. Local score tracking active.</p>
+          </div>
+          <a href="/explore" data-nav class="btn btn-ghost btn-sm">Filter & Search →</a>
         </div>
-        <div class="game-grid">${all.map((g) => gameCard(g)).join('')}</div>
+        <div class="game-grid">${all.map((g) => gameCard(g, g.featured ? 'FEATURED' : '')).join('')}</div>
       </section>
-
-      ${populatedGenres.length ? `
-      <section class="section">
-        <div class="section-header">
-          <div class="eyebrow">Categories</div>
-          <h2>Browse by genre</h2>
-        </div>
-        <div class="chip-list">
-          ${populatedGenres.map((g) => `<a href="/genre/${g.slug}" data-nav class="genre-chip">${escapeHtml(g.label)}<span style="margin-left:0.3rem;opacity:0.6;font-size:0.7rem;">${genreGameCount(g.slug)}</span></a>`).join('')}
-        </div>
-      </section>
-      ` : ''}
     </main>
   `;
+}
+
+function setupHeroArcade() {
+  const tabs = document.querySelectorAll('#hero-switcher .hero-tab');
+  const frame = document.getElementById('hero-cabinet-frame');
+  const playBtn = document.getElementById('hero-play-btn');
+  const fsBtn = document.getElementById('hero-fullscreen-btn');
+  if (!tabs.length || !frame) return;
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      playUiSound('switch');
+      tabs.forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      const src = tab.dataset.heroSrc;
+      const title = tab.dataset.heroTitle;
+      const route = tab.dataset.heroRoute;
+      frame.src = src;
+      frame.title = `${title} preview`;
+      if (playBtn) {
+        playBtn.textContent = `Play ${title} Now ▶`;
+        playBtn.href = route;
+      }
+    });
+  });
+
+  if (fsBtn) {
+    fsBtn.addEventListener('click', () => {
+      playUiSound('click');
+      if (frame.requestFullscreen) frame.requestFullscreen();
+      else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+    });
+  }
 }
 
 function renderExplorePage() {
@@ -345,31 +462,33 @@ function renderExplorePage() {
   return `
     <main class="page-shell explore-page">
       <div class="section-header">
-        <div class="eyebrow">Game library</div>
-        <h1>Explore games</h1>
-        <p>Search, filter, and sort the full collection.</p>
+        <div class="copy">
+          <div class="eyebrow">DevKitra Games Vault</div>
+          <h1>Explore The Catalogue</h1>
+          <p>Search by title, genre, tags, or controls. Real-time filtering enabled.</p>
+        </div>
       </div>
       <div class="search-sort">
         <div class="search-shell explore-search">
-          <input id="explore-search" type="search" placeholder="Search games…" aria-label="Search games" />
+          <input id="explore-search" type="search" placeholder="Type title, genre, or tag (e.g. reflex, retro, arcade)…" aria-label="Search games" />
           ${searchSvg()}
         </div>
         <div class="select-shell">
           <select id="explore-sort" aria-label="Sort games">
-            <option value="added">Newest first</option>
-            <option value="title">A–Z</option>
+            <option value="added">Newest First</option>
+            <option value="title">Alphabetical (A–Z)</option>
           </select>
         </div>
       </div>
       <div id="explore-genre-filters" class="chip-list explore-filters">
-        <button type="button" class="genre-chip active" data-genre="all" aria-pressed="true">All genres</button>
-        ${populatedGenres.map((g) => `<button type="button" class="genre-chip" data-genre="${g.slug}" aria-pressed="false">${escapeHtml(g.label)}</button>`).join('')}
+        <button type="button" class="genre-chip active" data-genre="all" aria-pressed="true">All Genres (${all.length})</button>
+        ${populatedGenres.map((g) => `<button type="button" class="genre-chip" data-genre="${g.slug}" aria-pressed="false">${escapeHtml(g.label)} (${genreGameCount(g.slug)})</button>`).join('')}
       </div>
-      <p id="explore-count" class="directory-count">${all.length} games</p>
+      <p id="explore-count" class="directory-count">${all.length} games available</p>
       <div id="explore-results" class="game-grid">${all.map((g) => gameCard(g)).join('')}</div>
       <div id="explore-empty" class="empty-state hidden">
-        <h2>No games match your search.</h2>
-        <p>Try a different keyword or genre filter.</p>
+        <h2>No games found.</h2>
+        <p>Try searching for arcade, reflex, puzzle, or snake.</p>
       </div>
     </main>
   `;
@@ -401,11 +520,12 @@ function setupExplore() {
 
     results.innerHTML = sorted.map((g) => gameCard(g)).join('');
     empty.classList.toggle('hidden', sorted.length > 0);
-    count.textContent = `${sorted.length} ${sorted.length === 1 ? 'game' : 'games'}`;
+    count.textContent = `${sorted.length} ${sorted.length === 1 ? 'game available' : 'games available'}`;
   };
 
   chips.forEach((chip) => {
     chip.addEventListener('click', () => {
+      playUiSound('switch');
       chips.forEach((c) => {
         c.classList.toggle('active', c === chip);
         c.setAttribute('aria-pressed', String(c === chip));
@@ -419,7 +539,10 @@ function setupExplore() {
     q = event.target.value.trim().toLowerCase();
     apply();
   });
-  sort.addEventListener('change', apply);
+  sort.addEventListener('change', () => {
+    playUiSound('switch');
+    apply();
+  });
 }
 
 function renderGenrePage(slug) {
@@ -430,14 +553,16 @@ function renderGenrePage(slug) {
   return `
     <main class="page-shell genre-page">
       <div class="section-header">
-        <div class="eyebrow">${escapeHtml(g.label)}</div>
-        <h1>${escapeHtml(g.label)} games</h1>
-        <p>${escapeHtml(g.description)}</p>
+        <div class="copy">
+          <div class="eyebrow">${escapeHtml(g.label)}</div>
+          <h1>${escapeHtml(g.label)} Games</h1>
+          <p>${escapeHtml(g.description)}</p>
+        </div>
       </div>
-      <p class="directory-count">${list.length} game${list.length === 1 ? '' : 's'}</p>
+      <p class="directory-count">${list.length} game${list.length === 1 ? '' : 's'} in this category</p>
       ${list.length
         ? `<div class="game-grid">${list.map((game) => gameCard(game)).join('')}</div>`
-        : `<div class="empty-state"><h2>No ${escapeHtml(g.label)} games yet.</h2><p>Check back soon — new games are added regularly.</p></div>`
+        : `<div class="empty-state"><h2>No ${escapeHtml(g.label)} games yet.</h2><p>Check back soon — new games added regularly.</p></div>`
       }
     </main>
   `;
@@ -452,7 +577,7 @@ function renderGamePage(slug) {
     .slice(0, 4);
 
   const pauseMarkup = game.pause
-    ? `<button type="button" class="btn btn-sm btn-ghost" data-action="pause" aria-pressed="false">Pause</button>`
+    ? `<button type="button" class="btn btn-sm btn-ghost" data-action="pause" aria-pressed="false">Pause [P]</button>`
     : '';
 
   const genreLabels = game.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ');
@@ -470,28 +595,28 @@ function renderGamePage(slug) {
         </div>
         <div class="game-actions">
           ${pauseMarkup}
-          <button type="button" class="btn btn-primary btn-sm" data-action="restart">Restart</button>
-          <a href="/explore" data-nav class="btn btn-ghost btn-sm">All games</a>
+          <button type="button" class="btn btn-primary btn-sm" data-action="restart">Restart [R]</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-action="fullscreen" title="Fullscreen [F]">Fullscreen ⛶</button>
+          <a href="/explore" data-nav class="btn btn-ghost btn-sm">All Games</a>
         </div>
       </header>
       <div class="game-body">
-        <div class="game-frame-wrap" role="region" aria-label="${escapeHtml(game.title)} game">
-          <iframe class="game-frame" src="${game.standalone}${game.pause ? '?embed=1' : ''}" title="${escapeHtml(game.title)}"></iframe>
+        <div class="game-frame-wrap" id="game-container" role="region" aria-label="${escapeHtml(game.title)} game">
+          <iframe class="game-frame" id="active-game-frame" src="${game.standalone}${game.pause ? '?embed=1' : ''}" title="${escapeHtml(game.title)}" allowfullscreen></iframe>
         </div>
         <aside class="game-sidebar">
           <section class="game-section">
-            <h2>How to play</h2>
+            <h2>Controls & Instructions</h2>
             <p>${escapeHtml(game.description)}</p>
-            <h3 style="margin:0.65rem 0 0.2rem;font-size:0.75rem;font-weight:700;color:var(--dk-quiet);text-transform:uppercase;letter-spacing:0.1em;">Controls</h3>
             <div class="controls-list">
               ${game.inputs.map((input) => `<span class="kbd">${escapeHtml(input)}</span>`).join('')}
             </div>
             <p class="controls-hint">${escapeHtml(game.controls)}</p>
-            ${game.save ? '<p class="controls-hint"><span style="color:var(--dk-success);font-weight:700;">●</span> Progress saved locally on your device.</p>' : ''}
+            ${game.save ? '<p class="controls-hint"><span style="color:var(--dk-success);font-weight:800;">●</span> Highscores saved locally in your browser.</p>' : ''}
           </section>
           ${related.length ? `
           <section class="game-section">
-            <h2>Related games</h2>
+            <h2>Similar Titles</h2>
             <div class="related-grid">${related.map((r) => `
               <a href="${r.route}" data-nav class="related-card">
                 ${r.thumbnail ? `<img class="related-card-thumb" src="${r.thumbnail}" alt="" loading="lazy" />` : ''}
@@ -510,9 +635,11 @@ function setupGamePage(slug) {
   const game = gameByRoute(`/game/${slug}`);
   if (!game) return;
 
-  const frame = document.querySelector('.game-frame');
+  const wrap = document.getElementById('game-container');
+  const frame = document.getElementById('active-game-frame');
   const restart = document.querySelector('[data-action="restart"]');
   const pauseBtn = document.querySelector('[data-action="pause"]');
+  const fsBtn = document.querySelector('[data-action="fullscreen"]');
   const origin = window.location.origin;
 
   function postToGame(payload) {
@@ -525,34 +652,60 @@ function setupGamePage(slug) {
 
   if (restart) {
     restart.addEventListener('click', () => {
+      playUiSound('click');
       paused = false;
       if (pauseBtn) {
-        pauseBtn.textContent = 'Pause';
+        pauseBtn.textContent = 'Pause [P]';
         pauseBtn.setAttribute('aria-pressed', 'false');
         pauseBtn.disabled = false;
       }
       postToGame({ type: 'dk:restart' });
+      frame.focus();
     });
   }
 
   if (pauseBtn && game.pause) {
     pauseBtn.addEventListener('click', () => {
+      playUiSound('click');
       paused = !paused;
-      pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+      pauseBtn.textContent = paused ? 'Resume [P]' : 'Pause [P]';
       pauseBtn.setAttribute('aria-pressed', String(paused));
       postToGame(paused ? { type: 'dk:pause' } : { type: 'dk:resume' });
+      frame.focus();
     });
   }
 
-  /* Prevent arrow/space keys from scrolling the page while game is focused */
-  const gameKeys = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space']);
-  function preventGameKeyScroll(event) {
-    if (gameKeys.has(event.code) && document.querySelector('.game-page')) {
-      event.preventDefault();
-    }
+  if (fsBtn && wrap) {
+    fsBtn.addEventListener('click', () => {
+      playUiSound('click');
+      if (!document.fullscreenElement) {
+        if (wrap.requestFullscreen) wrap.requestFullscreen();
+        else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+      frame.focus();
+    });
   }
-  window.addEventListener('keydown', preventGameKeyScroll);
-  pageCleanups.push(() => window.removeEventListener('keydown', preventGameKeyScroll));
+
+  /* Hotkeys helper */
+  const onKeydown = (event) => {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) {
+      if (document.querySelector('.game-page')) event.preventDefault();
+    }
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+    if (event.key === 'r' || event.key === 'R') {
+      restart?.click();
+    } else if (event.key === 'p' || event.key === 'P') {
+      pauseBtn?.click();
+    } else if (event.key === 'f' || event.key === 'F') {
+      fsBtn?.click();
+    }
+  };
+
+  window.addEventListener('keydown', onKeydown);
+  pageCleanups.push(() => window.removeEventListener('keydown', onKeydown));
 }
 
 window.addEventListener('message', (event) => {
@@ -560,7 +713,7 @@ window.addEventListener('message', (event) => {
   if (event.origin !== origin) return;
   const { type, score } = event.data || {};
   if (type === 'dk:gameover' && score !== undefined && document.querySelector('.game-frame')) {
-    showToast(`Game over — score: ${score}`, 'error');
+    showToast(`Game Over! Score: ${score}`, 'error');
   }
 });
 
@@ -568,15 +721,15 @@ function renderAboutPage() {
   return `
     <main class="page-shell static-page">
       <div class="static-card">
-        <div class="eyebrow">About</div>
-        <h1>Instant games, locally run</h1>
-        <p>DevKitra Gaming is a free platform for original browser games. Every game runs entirely in your browser — nothing is downloaded, nothing is uploaded, and no account is required.</p>
-        <p>Games are independent, self-contained modules. New games can be added without rebuilding the site, and each game is isolated so it cannot affect the rest of the platform.</p>
-        <h2>Your data stays on your device</h2>
+        <div class="eyebrow">Architecture</div>
+        <h1>Instant Games, Client-Side Runtime</h1>
+        <p>DevKitra Gaming is a lightweight, zero-download gaming destination. Every title is compiled to run locally in browser memory with full hardware acceleration.</p>
+        <p>Games operate as isolated canvas sandbox modules, communicating via standardized postMessage protocols.</p>
+        <h2>Your Privacy is Absolute</h2>
         <ul>
-          <li>High scores and settings are stored in browser local storage only.</li>
-          <li>No personal data is collected by the games themselves.</li>
-          <li>There are no accounts, no logins, and no servers processing your data.</li>
+          <li>All gameplay loops, high scores, and settings reside in your device's local storage.</li>
+          <li>Zero tracking scripts, zero third-party advertising cookies, and zero user account requirements.</li>
+          <li>Instant performance on desktop, Chromebooks, tablets, and smartphones.</li>
         </ul>
       </div>
     </main>
@@ -587,16 +740,14 @@ function renderPrivacyPage() {
   return `
     <main class="page-shell static-page">
       <div class="static-card">
-        <div class="eyebrow">Privacy</div>
-        <h1>How DevKitra Gaming handles your data</h1>
+        <div class="eyebrow">Data & Security</div>
+        <h1>Privacy Guarantee</h1>
         <ul>
-          <li><strong>Local processing:</strong> All game logic runs inside your browser. Nothing is sent to a server.</li>
-          <li><strong>No account needed:</strong> There is no sign-up flow or user profile.</li>
-          <li><strong>Local storage only:</strong> Game high scores and settings may be saved to localStorage on your device. You can clear them anytime through your browser settings.</li>
-          <li><strong>No secret transmission:</strong> No passwords, keys, or tokens are used or collected.</li>
-          <li><strong>Analytics and ads:</strong> Hosting infrastructure may receive standard technical metadata. No intrusive advertising is served.</li>
+          <li><strong>Local Execution:</strong> 100% of game physics and logic execute on your client device.</li>
+          <li><strong>No Login Wall:</strong> No email, credentials, or personal profiles collected.</li>
+          <li><strong>Local Storage Scoped:</strong> Best scores are stored in your device's window.localStorage.</li>
+          <li><strong>Zero Remote Paywalls:</strong> Completely open and playable without fees or subscriptions.</li>
         </ul>
-        <p style="font-size:0.82rem;color:var(--dk-quiet);margin-top:1rem;">Scores are local to your device and are not globally verified leaderboards.</p>
       </div>
     </main>
   `;
@@ -606,11 +757,11 @@ function renderContactPage() {
   return `
     <main class="page-shell static-page">
       <div class="static-card">
-        <div class="eyebrow">Contact</div>
-        <h1>Get in touch</h1>
-        <p>Found a bug, have a game idea, or want to say hello? Email is the best way to reach us. Please include the game name and the steps to reproduce a problem if relevant.</p>
-        <a href="mailto:tejaskrishna.as@gmail.com" style="display:inline-block;margin-top:0.75rem;">tejaskrishna.as@gmail.com</a>
-        <p style="font-size:0.78rem;color:var(--dk-quiet);margin-top:0.4rem;">Please do not email passwords, private keys, access tokens, or other sensitive information.</p>
+        <div class="eyebrow">Connect</div>
+        <h1>Contact & Game Submissions</h1>
+        <p>Have an original browser game suggestion, performance feedback, or bug report? Reach out directly:</p>
+        <a href="mailto:tejaskrishna.as@gmail.com" style="display:inline-block;margin-top:0.75rem;font-size:1.1rem;">tejaskrishna.as@gmail.com</a>
+        <p style="font-size:0.8rem;color:var(--dk-quiet);margin-top:0.5rem;">Please include browser specifications and reproduction steps for bug reports.</p>
       </div>
     </main>
   `;
@@ -621,16 +772,16 @@ function renderNotFoundPage() {
     <main class="page-shell">
       <section class="not-found">
         <div class="eyebrow">404</div>
-        <h1>Page not found</h1>
-        <p>That address may have changed, or the page may not exist.</p>
-        <a href="/explore" data-nav class="btn btn-primary">Browse games</a>
+        <h1>Out of Bounds</h1>
+        <p>That level does not exist in the DevKitra rotation.</p>
+        <a href="/explore" data-nav class="btn btn-primary">Return to Games Vault ▶</a>
       </section>
     </main>
   `;
 }
 
 /* ------------------------------------------------------------------ */
-/* Global search (header)                                             */
+/* Global search                                                      */
 /* ------------------------------------------------------------------ */
 
 let pageCleanups = [];
@@ -652,7 +803,7 @@ function setupGlobalSearch() {
     );
     if (!matches.length) {
       list.classList.remove('hidden');
-      list.innerHTML = '<div class="search-empty">No games match your search.</div>';
+      list.innerHTML = '<div class="search-empty">No games match that query.</div>';
       return;
     }
     list.classList.remove('hidden');
@@ -661,6 +812,7 @@ function setupGlobalSearch() {
     ).join('');
     list.querySelectorAll('[data-search-link]').forEach((button) => {
       button.addEventListener('click', () => {
+        playUiSound('click');
         navigateTo(button.dataset.searchLink);
         input.value = '';
         list.classList.add('hidden');
@@ -675,6 +827,7 @@ function setupGlobalSearch() {
         (g) => `${g.title} ${g.description}`.toLowerCase().includes(input.value.trim().toLowerCase())
       );
       if (matches[0]) {
+        playUiSound('click');
         navigateTo(matches[0].route);
         input.value = '';
         list.classList.add('hidden');
@@ -697,12 +850,13 @@ function setupGlobalSearch() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Router                                                             */
+/* Router & Navigation                                                */
 /* ------------------------------------------------------------------ */
 
 let navigationController;
 
 function navigateTo(path) {
+  playUiSound('click');
   const normalized = normalizePath(path);
   window.history.pushState({}, '', normalized);
   renderCurrentPage();
@@ -740,10 +894,15 @@ function setupNavigationToggle() {
     toggle.innerHTML = menuSvg(open);
   };
 
-  toggle.addEventListener('click', () => setOpen(!header.classList.contains('nav-open')), { signal });
+  toggle.addEventListener('click', () => {
+    playUiSound('click');
+    setOpen(!header.classList.contains('nav-open'));
+  }, { signal });
+
   navigation.addEventListener('click', (event) => {
     if (event.target.closest('a')) setOpen(false);
   }, { signal });
+
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') setOpen(false);
   }, { signal });
@@ -756,6 +915,7 @@ function setupSearchToggle() {
   if (!searchToggle || !searchShell) return;
 
   searchToggle.addEventListener('click', () => {
+    playUiSound('click');
     const isOpen = searchShell.classList.toggle('open');
     if (isOpen && input) {
       input.focus();
@@ -771,14 +931,32 @@ function setupSearchToggle() {
   pageCleanups.push(() => document.removeEventListener('click', onSearchDocClick));
 }
 
+function setupSoundToggle() {
+  const toggle = document.getElementById('sound-toggle');
+  if (!toggle) return;
+  toggle.addEventListener('click', () => {
+    const enabled = toggleSound();
+    toggle.innerHTML = soundIcon(enabled);
+    toggle.classList.toggle('active', enabled);
+    showToast(enabled ? 'Sound FX Enabled 🔊' : 'Sound FX Muted 🔇');
+  });
+}
+
 function setupThemeToggle() {
   const toggle = document.getElementById('theme-toggle');
   if (!toggle) return;
   toggle.addEventListener('click', () => {
+    playUiSound('switch');
     const current = document.documentElement.classList.contains('light') ? 'light' : 'dark';
     const next = current === 'dark' ? 'light' : 'dark';
     setTheme(next);
     toggle.innerHTML = themeIcon(next);
+  });
+}
+
+function setupCardHoverSounds() {
+  document.querySelectorAll('.game-card, .btn, .cat-pill').forEach((el) => {
+    el.addEventListener('mouseenter', () => playUiSound('hover'), { passive: true });
   });
 }
 
@@ -813,9 +991,12 @@ function renderCurrentPage() {
 
   setupGlobalSearch();
   setupThemeToggle();
+  setupSoundToggle();
   setupNavigationToggle();
   setupSearchToggle();
+  setupCardHoverSounds();
 
+  if (route.page === 'home') setupHeroArcade();
   if (route.page === 'explore') setupExplore();
   if (route.page === 'game') setupGamePage(route.slug);
 }

@@ -9,39 +9,42 @@
 <style>
 * { box-sizing: border-box; }
 :root {
-  --ink: #0b0d11;
-  --panel: #10141c;
-  --line: #1f2939;
-  --text: #e8edf4;
-  --muted: #8a93a1;
-  --accent: #5b4bff;
-  --accent-soft: rgba(91, 75, 255, 0.18);
-  --snake-head: #4ade80;
-  --snake-body: #22c55e;
-  --food: #f87171;
+  --ink: #07090e;
+  --panel: #0d121c;
+  --line: #1c2638;
+  --text: #e8edf5;
+  --muted: #7e8b9f;
+  --accent: #00f0ff;
+  --accent-glow: rgba(0, 240, 255, 0.25);
+  --snake-head: #00f0ff;
+  --snake-body: #10b981;
+  --food: #ff3366;
+  --food-glow: rgba(255, 51, 102, 0.4);
 }
 html, body { margin: 0; height: 100%; background: var(--ink); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 1rem; }
-header { width: 100%; max-width: 460px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0 1rem; flex-wrap: wrap; }
-h1 { margin: 0; font-size: 1.1rem; letter-spacing: -0.02em; font-weight: 700; }
-a.back { color: var(--muted); text-decoration: none; font-size: 0.85rem; }
-a.back:hover { color: var(--text); }
-#wrap { position: relative; max-width: 460px; width: 100%; border-radius: 12px; padding: 0.5rem; background: var(--panel); border: 1px solid var(--line); }
-.hud { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.6rem; font-variant-numeric: tabular-nums; }
-.hud b { color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-canvas { width: 100%; height: auto; display: block; border-radius: 10px; background: #0c0f17; border: 1px solid var(--line); cursor: none; }
-.dpad { display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(2, 44px); gap: 8px; justify-content: center; margin-top: 10px; }
-button.dpad { border: 1px solid var(--line); border-radius: 10px; background: #131823; color: var(--text); font-size: 1.1rem; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-button.dpad:active { background: #1f2939; border-color: var(--accent); color: #9b89ff; }
+header { width: 100%; max-width: 440px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0 0.8rem; flex-wrap: wrap; }
+h1 { margin: 0; font-size: 1.15rem; letter-spacing: -0.02em; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; }
+h1::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--snake-head); box-shadow: 0 0 10px var(--snake-head); }
+a.back { color: var(--muted); text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 6px; border: 1px solid var(--line); transition: all 0.15s ease; }
+a.back:hover { color: var(--text); border-color: var(--accent); background: rgba(0, 240, 255, 0.08); }
+#wrap { position: relative; max-width: 440px; width: 100%; border-radius: 14px; padding: 0.75rem; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6); transition: transform 0.05s ease; }
+.hud { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.6rem; font-variant-numeric: tabular-nums; }
+.hud-item { display: flex; align-items: center; gap: 0.35rem; }
+.hud b { color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1rem; }
+.combo-badge { display: none; font-size: 0.72rem; font-weight: 800; color: #f59e0b; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.15rem 0.45rem; border-radius: 999px; text-transform: uppercase; animation: pulse 0.8s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } }
+canvas { width: 100%; height: auto; display: block; border-radius: 10px; background: #070a10; border: 1px solid var(--line); }
+.dpad { display: grid; grid-template-columns: repeat(3, 46px); grid-template-rows: repeat(2, 46px); gap: 8px; justify-content: center; margin-top: 12px; }
+button.dpad { border: 1px solid var(--line); border-radius: 10px; background: #111723; color: var(--text); font-size: 1.1rem; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: all 0.1s ease; }
+button.dpad:active { background: #1a2334; border-color: var(--accent); color: var(--accent); transform: scale(0.95); }
 .up { grid-column: 2; grid-row: 1; } .left { grid-column: 1; grid-row: 2; } .down { grid-column: 2; grid-row: 2; } .right { grid-column: 3; grid-row: 2; }
-.overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; background: rgba(11, 13, 17, 0.88); border-radius: 12px; z-index: 10; }
-.overlay h2 { margin: 0 0 0.5rem; font-size: 1.5rem; }
-.overlay p { margin: 0 0 1.25rem; color: var(--muted); font-size: 0.9rem; }
-.btn { border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 700; cursor: pointer; font-size: 0.95rem; }
-.btn:hover { background: #4736e8; }
-.btn.secondary { background: transparent; border-color: var(--line); color: var(--text); }
-.btn.secondary:hover { border-color: var(--accent); color: #9b89ff; }
-@media (max-width: 480px) { header { padding: 0.5rem 0 0.75rem; } }
+.overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; background: rgba(7, 9, 14, 0.92); backdrop-filter: blur(4px); border-radius: 14px; z-index: 10; text-align: center; padding: 1.5rem; }
+.overlay h2 { margin: 0 0 0.4rem; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.03em; color: var(--text); }
+.overlay p { margin: 0 0 1.25rem; color: var(--muted); font-size: 0.88rem; max-width: 280px; line-height: 1.5; }
+.btn { border: 1px solid var(--accent); background: var(--accent); color: #07090e; border-radius: 8px; padding: 0.65rem 1.4rem; font-weight: 800; cursor: pointer; font-size: 0.95rem; box-shadow: 0 0 20px var(--accent-glow); transition: all 0.15s ease; }
+.btn:hover { background: #38f8ff; transform: translateY(-1px); box-shadow: 0 0 25px rgba(0, 240, 255, 0.4); }
+@media (max-width: 480px) { header { padding: 0.4rem 0 0.6rem; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 </style>
 </head>
@@ -51,37 +54,77 @@ button.dpad:active { background: #1f2939; border-color: var(--accent); color: #9
   <a class="back" href="/game/snake">← Library</a>
 </header>
 <div id="wrap">
-  <div class="hud">Score <b id="score">0</b> <span style="opacity:0.4">·</span> Best <b id="best">0</b></div>
+  <div class="hud">
+    <div class="hud-item">Score <b id="score">0</b></div>
+    <span class="combo-badge" id="combo-badge">Combo x2</span>
+    <div class="hud-item">Best <b id="best">0</b></div>
+  </div>
   <canvas id="game" width="400" height="400"></canvas>
   <div id="start" class="overlay">
-    <h2>Snake</h2>
-    <p>Eat the food, grow longer, and do not hit the walls or your tail.</p>
-    <button class="btn" id="start-btn">Start game</button>
+    <h2>Cyber Snake</h2>
+    <p>Eat food to grow. Move fast for combo multipliers. Don't hit walls or your tail.</p>
+    <button class="btn" id="start-btn">Play Now</button>
   </div>
   <div id="over" class="overlay">
-    <h2>Game over</h2>
-    <p>Score <b id="final-score">0</b> <span style="opacity:0.4">·</span> Best <b id="final-best">0</b></p>
-    <button class="btn" id="restart-btn">Play again</button>
+    <h2>Game Over</h2>
+    <p>Score: <b id="final-score" style="color:var(--accent);">0</b> · Best: <b id="final-best">0</b></p>
+    <button class="btn" id="restart-btn">Try Again</button>
   </div>
   <div id="pause" class="overlay">
     <h2>Paused</h2>
-    <p>Resume to continue.</p>
+    <p>Press Pause or spacebar to resume.</p>
   </div>
 </div>
-  <div class="dpad">
-    <button class="dpad up" data-dir="Up">▲</button>
-    <button class="dpad left" data-dir="Left">◀</button>
-    <button class="dpad down" data-dir="Down">▼</button>
-    <button class="dpad right" data-dir="Right">▶</button>
-  </div>
+<div class="dpad">
+  <button class="dpad up" data-dir="Up" aria-label="Up">▲</button>
+  <button class="dpad left" data-dir="Left" aria-label="Left">◀</button>
+  <button class="dpad down" data-dir="Down" aria-label="Down">▼</button>
+  <button class="dpad right" data-dir="Right" aria-label="Right">▶</button>
 </div>
 <script>
+/* Simple Web Audio synth sound generator */
+let audioCtx = null;
+function playSound(type) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    if (type === 'eat') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(740, now + 0.12);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.12);
+      osc.start(now); osc.stop(now + 0.12);
+    } else if (type === 'turn') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(220, now);
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.04);
+      osc.start(now); osc.stop(now + 0.04);
+    } else if (type === 'over') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.35);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.35);
+      osc.start(now); osc.stop(now + 0.35);
+    }
+  } catch (_) {}
+}
+
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const bestEl = document.getElementById('best');
 const startEl = document.getElementById('start');
 const overEl = document.getElementById('over');
+const wrapEl = document.getElementById('wrap');
+const comboEl = document.getElementById('combo-badge');
 const startBtn = document.getElementById('start-btn');
 const restartBtn = document.getElementById('restart-btn');
 const CELL = 20;
@@ -90,9 +133,13 @@ const ROWS = canvas.height / CELL;
 let best = Number(localStorage.getItem('dk:snake-best') || 0);
 bestEl.textContent = best;
 let snake, dir, nextDir, food, score, running, timer, speed, inputLocked, paused = false;
+let combo = 1;
+let lastEatTime = 0;
+let particles = [];
+let floaters = [];
 
 const embed = new URLSearchParams(window.location.search).has('embed');
-if (embed) { document.querySelector('header')?.remove(); document.getElementById('wrap').style.padding = '0.5rem'; }
+if (embed) { document.querySelector('header')?.remove(); wrapEl.style.padding = '0.5rem'; }
 
 function post(payload) {
   if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*');
@@ -103,13 +150,39 @@ window.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'dk:resume') resumeGame();
 });
 
+function shakeScreen() {
+  wrapEl.style.transform = 'translate(-4px, 2px)';
+  setTimeout(() => { wrapEl.style.transform = 'translate(4px, -2px)'; }, 40);
+  setTimeout(() => { wrapEl.style.transform = 'translate(-2px, 3px)'; }, 80);
+  setTimeout(() => { wrapEl.style.transform = 'translate(0, 0)'; }, 140);
+}
+
+function spawnParticles(x, y, color) {
+  for (let i = 0; i < 14; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const spd = 1.5 + Math.random() * 3.5;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd,
+      alpha: 1,
+      size: 2 + Math.random() * 3,
+      color,
+    });
+  }
+}
+
+function spawnFloater(text, x, y, color) {
+  floaters.push({ text, x, y, alpha: 1, vy: -1.2, color });
+}
+
 function startLoop() {
   running = true;
   startEl.style.display = 'none';
   overEl.style.display = 'none';
   clearInterval(timer);
   timer = setInterval(tick, speed);
-  draw();
+  requestAnimationFrame(animFrame);
 }
 
 function placeFood() {
@@ -121,9 +194,13 @@ function resetGame() {
   snake = [{ x: 10, y: 10 }, { x: 10, y: 11 }, { x: 10, y: 12 }];
   dir = 'Up'; nextDir = 'Up';
   score = 0; inputLocked = false;
+  combo = 1;
+  particles = [];
+  floaters = [];
   scoreEl.textContent = score;
+  comboEl.style.display = 'none';
   placeFood();
-  speed = 130;
+  speed = 120;
   startEl.style.display = 'flex';
   overEl.style.display = 'none';
   post({ type: 'dk:ready', id: 'snake', title: 'Snake' });
@@ -139,20 +216,44 @@ function tick() {
   else if (dir === 'Right') head.x += 1;
   else if (dir === 'Up') head.y -= 1;
   else head.y += 1;
-  if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS || snake.some((s) => s.x === head.x && s.y === head.y)) { endGame(); return; }
+
+  if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS || snake.some((s) => s.x === head.x && s.y === head.y)) {
+    endGame();
+    return;
+  }
+
   snake.unshift(head);
   if (head.x === food.x && head.y === food.y) {
-    score += 10; scoreEl.textContent = score;
+    const now = performance.now();
+    if (now - lastEatTime < 3200) {
+      combo = Math.min(5, combo + 1);
+      comboEl.textContent = `Combo x${combo}`;
+      comboEl.style.display = 'inline-block';
+    } else {
+      combo = 1;
+      comboEl.style.display = 'none';
+    }
+    lastEatTime = now;
+
+    const gained = 10 * combo;
+    score += gained;
+    scoreEl.textContent = score;
+    playSound('eat');
+
+    const fx = food.x * CELL + CELL / 2;
+    const fy = food.y * CELL + CELL / 2;
+    spawnParticles(fx, fy, '#00f0ff');
+    spawnFloater(`+${gained}`, fx, fy - 6, combo > 1 ? '#f59e0b' : '#00f0ff');
+
     if (score % 50 === 0) {
       clearInterval(timer);
-      speed = Math.max(55, speed - 10);
+      speed = Math.max(50, speed - 8);
       timer = setInterval(tick, speed);
     }
     placeFood();
   } else {
     snake.pop();
   }
-  draw();
 }
 
 function pauseGame() {
@@ -174,6 +275,8 @@ function endGame() {
   running = false;
   paused = false;
   clearInterval(timer);
+  playSound('over');
+  shakeScreen();
   if (score > best) {
     best = score;
     try { localStorage.setItem('dk:snake-best', String(best)); } catch (_) {}
@@ -186,26 +289,106 @@ function endGame() {
 }
 
 function draw() {
-  ctx.fillStyle = '#0c0f17';
+  ctx.fillStyle = '#070a10';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = '#131926';
+
+  /* Subtle cyber grid lines */
+  ctx.strokeStyle = '#0e1522';
   ctx.lineWidth = 1;
   for (let x = 0; x <= canvas.width; x += CELL) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
   for (let y = 0; y <= canvas.height; y += CELL) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
-  ctx.fillStyle = '#f87171';
+
+  /* Food with pulsating glow */
+  const pulse = Math.sin(performance.now() * 0.008) * 2;
+  const foodRadius = Math.max(2, CELL / 2 - 3 + pulse * 0.5);
+  const fx = food.x * CELL + CELL / 2;
+  const fy = food.y * CELL + CELL / 2;
+
+  ctx.fillStyle = 'rgba(255, 51, 102, 0.2)';
   ctx.beginPath();
-  ctx.arc(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL / 2 - 2, 0, Math.PI * 2);
+  ctx.arc(fx, fy, foodRadius + 4, 0, Math.PI * 2);
   ctx.fill();
+
+  ctx.fillStyle = '#ff3366';
+  ctx.beginPath();
+  ctx.arc(fx, fy, foodRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* Snake */
   snake.forEach((segment, index) => {
-    const r = 4;
     const x = segment.x * CELL + 2;
     const y = segment.y * CELL + 2;
     const size = CELL - 4;
-    ctx.fillStyle = index === 0 ? '#4ade80' : '#22c55e';
-    ctx.beginPath();
-    ctx.roundRect(x, y, size, size, r);
-    ctx.fill();
+    const r = index === 0 ? 6 : 4;
+
+    if (index === 0) {
+      /* Head with cyber cyan glow */
+      ctx.fillStyle = '#00f0ff';
+      ctx.beginPath();
+      ctx.roundRect(x, y, size, size, r);
+      ctx.fill();
+
+      /* Eyes */
+      ctx.fillStyle = '#070a10';
+      const eyeSize = 3;
+      let e1x = x + 4, e1y = y + 4, e2x = x + size - 7, e2y = y + 4;
+      if (dir === 'Left') { e1x = x + 3; e2x = x + 3; e1y = y + 3; e2y = y + size - 6; }
+      else if (dir === 'Right') { e1x = x + size - 6; e2x = x + size - 6; e1y = y + 3; e2y = y + size - 6; }
+      else if (dir === 'Down') { e1y = y + size - 6; e2y = y + size - 6; }
+      ctx.fillRect(e1x, e1y, eyeSize, eyeSize);
+      ctx.fillRect(e2x, e2y, eyeSize, eyeSize);
+    } else {
+      /* Body gradient fading down tail */
+      const ratio = 1 - index / (snake.length + 4);
+      ctx.fillStyle = `rgba(16, 185, 129, ${Math.max(0.4, ratio)})`;
+      ctx.beginPath();
+      ctx.roundRect(x, y, size, size, r);
+      ctx.fill();
+    }
   });
+
+  /* Particles */
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.alpha -= 0.035;
+    if (p.alpha <= 0) {
+      particles.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* Floaters */
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const f = floaters[i];
+    f.y += f.vy;
+    f.alpha -= 0.025;
+    if (f.alpha <= 0) {
+      floaters.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha = f.alpha;
+    ctx.fillStyle = f.color;
+    ctx.font = 'bold 13px ui-monospace, monospace';
+    ctx.fillText(f.text, f.x, f.y);
+    ctx.restore();
+  }
+}
+
+function animFrame() {
+  if (running && !paused) {
+    draw();
+    requestAnimationFrame(animFrame);
+  }
 }
 
 function setDir(code) {
@@ -217,16 +400,26 @@ function setDir(code) {
   if (d === opposites[dir]) return;
   nextDir = d;
   inputLocked = true;
+  playSound('turn');
 }
+
 window.addEventListener('keydown', (event) => {
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) event.preventDefault();
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) event.preventDefault();
+  if (event.code === 'Space') {
+    if (!running) { resetGame(); startLoop(); }
+    else if (paused) resumeGame();
+    else pauseGame();
+    return;
+  }
   setDir(event.code);
 });
+
 document.querySelectorAll('.dpad').forEach((button) => {
   const activate = (event) => { event.preventDefault(); setDir(button.dataset.dir); };
   button.addEventListener('pointerdown', activate);
   button.addEventListener('touchstart', activate);
 });
+
 startBtn.addEventListener('click', () => { resetGame(); startLoop(); });
 restartBtn.addEventListener('click', () => { resetGame(); startLoop(); });
 
