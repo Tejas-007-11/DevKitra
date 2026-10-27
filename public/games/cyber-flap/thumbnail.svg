@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" role="img" aria-label="Cyber Flap thumbnail">
+  <defs>
+    <linearGradient id="cfBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#05141e"/>
+      <stop offset="100%" stop-color="#04060c"/>
+    </linearGradient>
+  </defs>
+  <rect width="520" height="300" rx="16" fill="url(#cfBg)"/>
+  <!-- Cyber Stars -->
+  <circle cx="80" cy="50" r="1.5" fill="#fff" opacity="0.6"/>
+  <circle cx="210" cy="80" r="2" fill="#fff" opacity="0.4"/>
+  <circle cx="360" cy="40" r="1.5" fill="#fff" opacity="0.8"/>
+  <circle cx="460" cy="90" r="2" fill="#fff" opacity="0.5"/>
+  <!-- Laser Gates -->
+  <g stroke="#00f0ff" stroke-width="2">
+    <!-- Pipe 1 -->
+    <rect x="140" y="0" width="46" height="90" fill="#0f172a"/>
+    <rect x="140" y="210" width="46" height="90" fill="#0f172a"/>
+    <line x1="163" y1="90" x2="163" y2="210" stroke="rgba(0,240,255,0.2)" stroke-width="20"/>
+
+    <!-- Pipe 2 -->
+    <rect x="360" y="0" width="46" height="130" fill="#0f172a"/>
+    <rect x="360" y="250" width="46" height="50" fill="#0f172a"/>
+    <line x1="383" y1="130" x2="383" y2="250" stroke="rgba(0,240,255,0.2)" stroke-width="20"/>
+  </g>
+  <!-- Cyber Jet Bird -->
+  <g transform="translate(230, 150) rotate(-10)">
+    <circle cx="-10" cy="0" r="14" fill="rgba(0, 240, 255, 0.3)"/>
+    <polygon points="20,0 -14,-13 -8,0 -14,13" fill="#00f0ff"/>
+    <ellipse cx="2" cy="-3" rx="6" ry="4" fill="#ffffff"/>
+  </g>
+  <!-- Thrust Particles -->
+  <circle cx="205" cy="154" r="5" fill="#ec4899"/>
+  <circle cx="192" cy="158" r="4" fill="#00f0ff"/>
+  <circle cx="180" cy="162" r="3" fill="#f59e0b"/>
+  <!-- Title & Badge -->
+  <g font-family="system-ui, sans-serif" font-weight="900">
+    <text x="44" y="240" fill="#00f0ff" font-size="26" letter-spacing="-0.03em">CYBER FLAP</text>
+    <rect x="44" y="252" width="80" height="20" rx="4" fill="rgba(0,240,255,0.14)" stroke="rgba(0,240,255,0.3)"/>
+    <text x="84" y="266" fill="#00f0ff" font-size="10" text-anchor="middle" font-weight="800">ARCADE</text>
+  </g>
+</svg>
+

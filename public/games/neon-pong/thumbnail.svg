@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="pong-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#030712"/>
+      <stop offset="50%" stop-color="#0b1329"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <filter id="cyan-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="rose-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Arena Background -->
+  <rect width="600" height="400" fill="url(#pong-bg)"/>
+
+  <!-- Field border -->
+  <rect x="25" y="25" width="550" height="350" rx="12" fill="none" stroke="rgba(56, 189, 248, 0.2)" stroke-width="2"/>
+
+  <!-- Center dashed division line -->
+  <line x1="300" y1="25" x2="300" y2="375" stroke="rgba(56, 189, 248, 0.25)" stroke-width="3" stroke-dasharray="12,12"/>
+
+  <!-- Center Court Circle -->
+  <circle cx="300" cy="200" r="60" fill="none" stroke="rgba(56, 189, 248, 0.15)" stroke-width="2"/>
+
+  <!-- Player Paddle (Cyan) -->
+  <g filter="url(#cyan-glow)">
+    <rect x="55" y="140" width="18" height="120" rx="8" fill="#38bdf8" stroke="#7dd3fc" stroke-width="2"/>
+    <rect x="59" y="145" width="10" height="110" rx="4" fill="rgba(255, 255, 255, 0.5)"/>
+  </g>
+
+  <!-- AI Paddle (Rose Red) -->
+  <g filter="url(#rose-glow)">
+    <rect x="527" y="160" width="18" height="120" rx="8" fill="#f43f5e" stroke="#fda4af" stroke-width="2"/>
+    <rect x="531" y="165" width="10" height="110" rx="4" fill="rgba(255, 255, 255, 0.5)"/>
+  </g>
+
+  <!-- Laser Ball with Motion Trail -->
+  <path d="M 120 220 Q 220 200 380 185" fill="none" stroke="rgba(56, 189, 248, 0.4)" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="260" cy="200" r="6" fill="#38bdf8" opacity="0.5"/>
+  <circle cx="330" cy="192" r="8" fill="#7dd3fc" opacity="0.8"/>
+  <g filter="url(#cyan-glow)">
+    <circle cx="380" cy="185" r="14" fill="#ffffff" stroke="#38bdf8" stroke-width="3"/>
+  </g>
+
+  <!-- Particle sparks on player side -->
+  <g fill="#38bdf8" filter="url(#cyan-glow)">
+    <circle cx="80" cy="190" r="4"/>
+    <circle cx="95" cy="175" r="3"/>
+    <circle cx="85" cy="215" r="3.5"/>
+  </g>
+
+  <!-- Mode Badge -->
+  <g transform="translate(300, 70)">
+    <rect x="-70" y="-16" width="140" height="32" rx="16" fill="rgba(15, 23, 42, 0.85)" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="0" y="5" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="12" fill="#38bdf8" letter-spacing="2">3 AI MODES</text>
+  </g>
+</svg>

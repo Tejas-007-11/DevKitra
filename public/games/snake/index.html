@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Snake — DevKitra Gaming</title>
-<meta name="description" content="Eat food, grow longer, and avoid your own tail. Play Snake instantly in your browser." />
+<meta name="description" content="Eat food, grow longer, and avoid your own tail. Play Snake with multi-arena levels and speed modes." />
 <link rel="canonical" href="https://devkitra.in/game/snake" />
 <style>
 * { box-sizing: border-box; }
@@ -29,6 +29,9 @@ h1::before { content: ''; width: 8px; height: 8px; border-radius: 50%; backgroun
 a.back { color: var(--muted); text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 6px; border: 1px solid var(--line); transition: all 0.15s ease; }
 a.back:hover { color: var(--text); border-color: var(--accent); background: rgba(0, 240, 255, 0.08); }
 #wrap { position: relative; max-width: 440px; width: 100%; border-radius: 14px; padding: 0.75rem; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6); transition: transform 0.05s ease; }
+.mode-bar { display: flex; gap: 4px; margin-bottom: 0.55rem; background: #080c14; padding: 4px; border-radius: 8px; border: 1px solid var(--line); }
+.mode-btn { flex: 1; padding: 4px 6px; font-size: 11px; font-weight: 800; color: var(--muted); border-radius: 6px; border: none; background: transparent; cursor: pointer; text-transform: uppercase; transition: all 0.12s; }
+.mode-btn.active { color: #070a10; background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
 .hud { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.6rem; font-variant-numeric: tabular-nums; }
 .hud-item { display: flex; align-items: center; gap: 0.35rem; }
 .hud b { color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1rem; }
@@ -39,10 +42,10 @@ canvas { width: 100%; height: auto; display: block; border-radius: 10px; backgro
 button.dpad { border: 1px solid var(--line); border-radius: 10px; background: #111723; color: var(--text); font-size: 1.1rem; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: all 0.1s ease; }
 button.dpad:active { background: #1a2334; border-color: var(--accent); color: var(--accent); transform: scale(0.95); }
 .up { grid-column: 2; grid-row: 1; } .left { grid-column: 1; grid-row: 2; } .down { grid-column: 2; grid-row: 2; } .right { grid-column: 3; grid-row: 2; }
-.overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; background: rgba(7, 9, 14, 0.92); backdrop-filter: blur(4px); border-radius: 14px; z-index: 10; text-align: center; padding: 1.5rem; }
+.overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; background: rgba(7, 9, 14, 0.94); backdrop-filter: blur(4px); border-radius: 14px; z-index: 10; text-align: center; padding: 1.5rem; }
 .overlay h2 { margin: 0 0 0.4rem; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.03em; color: var(--text); }
 .overlay p { margin: 0 0 1.25rem; color: var(--muted); font-size: 0.88rem; max-width: 280px; line-height: 1.5; }
-.btn { border: 1px solid var(--accent); background: var(--accent); color: #07090e; border-radius: 8px; padding: 0.65rem 1.4rem; font-weight: 800; cursor: pointer; font-size: 0.95rem; box-shadow: 0 0 20px var(--accent-glow); transition: all 0.15s ease; }
+.btn { border: 1px solid var(--accent); background: var(--accent); color: #07090e; border-radius: 8px; padding: 0.65rem 1.4rem; font-weight: 800; cursor: pointer; font-size: 0.95rem; box-shadow: 0 0 20px var(--accent-glow); transition: all 0.15s ease; text-transform: uppercase; }
 .btn:hover { background: #38f8ff; transform: translateY(-1px); box-shadow: 0 0 25px rgba(0, 240, 255, 0.4); }
 @media (max-width: 480px) { header { padding: 0.4rem 0 0.6rem; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
@@ -50,10 +53,15 @@ button.dpad:active { background: #1a2334; border-color: var(--accent); color: va
 </head>
 <body>
 <header>
-  <h1>Snake</h1>
+  <h1>Cyber Snake</h1>
   <a class="back" href="/game/snake">← Library</a>
 </header>
 <div id="wrap">
+  <div class="mode-bar">
+    <button class="mode-btn active" data-mode="box">Perimeter Wall</button>
+    <button class="mode-btn" data-mode="warp">Warp Pass</button>
+    <button class="mode-btn" data-mode="maze">Obstacle Maze</button>
+  </div>
   <div class="hud">
     <div class="hud-item">Score <b id="score">0</b></div>
     <span class="combo-badge" id="combo-badge">Combo x2</span>
@@ -62,8 +70,8 @@ button.dpad:active { background: #1a2334; border-color: var(--accent); color: va
   <canvas id="game" width="400" height="400"></canvas>
   <div id="start" class="overlay">
     <h2>Cyber Snake</h2>
-    <p>Eat food to grow. Move fast for combo multipliers. Don't hit walls or your tail.</p>
-    <button class="btn" id="start-btn">Play Now</button>
+    <p>Choose an arena mode above. Eat food, build combos, and avoid obstacles.</p>
+    <button class="btn" id="start-btn">Start Game</button>
   </div>
   <div id="over" class="overlay">
     <h2>Game Over</h2>
@@ -82,7 +90,6 @@ button.dpad:active { background: #1a2334; border-color: var(--accent); color: va
   <button class="dpad right" data-dir="Right" aria-label="Right">▶</button>
 </div>
 <script>
-/* Simple Web Audio synth sound generator */
 let audioCtx = null;
 function playSound(type) {
   try {
@@ -127,9 +134,14 @@ const wrapEl = document.getElementById('wrap');
 const comboEl = document.getElementById('combo-badge');
 const startBtn = document.getElementById('start-btn');
 const restartBtn = document.getElementById('restart-btn');
+const modeBtns = document.querySelectorAll('.mode-btn');
+
 const CELL = 20;
 const COLS = canvas.width / CELL;
 const ROWS = canvas.height / CELL;
+
+let arenaMode = 'box'; // 'box' | 'warp' | 'maze'
+let obstacles = [];
 let best = Number(localStorage.getItem('dk:snake-best') || 0);
 bestEl.textContent = best;
 let snake, dir, nextDir, food, score, running, timer, speed, inputLocked, paused = false;
@@ -150,6 +162,30 @@ window.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'dk:resume') resumeGame();
 });
 
+modeBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    modeBtns.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    arenaMode = btn.dataset.mode;
+    resetGame();
+  });
+});
+
+function initObstacles() {
+  obstacles = [];
+  if (arenaMode === 'maze') {
+    /* 4 cross pillars */
+    const pts = [
+      {x:5, y:5}, {x:5, y:6}, {x:6, y:5},
+      {x:14, y:5}, {x:14, y:6}, {x:13, y:5},
+      {x:5, y:14}, {x:5, y:13}, {x:6, y:14},
+      {x:14, y:14}, {x:14, y:13}, {x:13, y:14},
+      {x:9, y:9}, {x:10, y:9}, {x:9, y:10}, {x:10, y:10}
+    ];
+    obstacles = pts;
+  }
+}
+
 function shakeScreen() {
   wrapEl.style.transform = 'translate(-4px, 2px)';
   setTimeout(() => { wrapEl.style.transform = 'translate(4px, -2px)'; }, 40);
@@ -162,12 +198,8 @@ function spawnParticles(x, y, color) {
     const angle = Math.random() * Math.PI * 2;
     const spd = 1.5 + Math.random() * 3.5;
     particles.push({
-      x, y,
-      vx: Math.cos(angle) * spd,
-      vy: Math.sin(angle) * spd,
-      alpha: 1,
-      size: 2 + Math.random() * 3,
-      color,
+      x, y, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+      alpha: 1, size: 2 + Math.random() * 3, color,
     });
   }
 }
@@ -187,10 +219,13 @@ function startLoop() {
 
 function placeFood() {
   food = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
-  if (snake.some((s) => s.x === food.x && s.y === food.y)) placeFood();
+  if (snake.some((s) => s.x === food.x && s.y === food.y) || obstacles.some((o) => o.x === food.x && o.y === food.y)) {
+    placeFood();
+  }
 }
 
 function resetGame() {
+  initObstacles();
   snake = [{ x: 10, y: 10 }, { x: 10, y: 11 }, { x: 10, y: 12 }];
   dir = 'Up'; nextDir = 'Up';
   score = 0; inputLocked = false;
@@ -200,7 +235,7 @@ function resetGame() {
   scoreEl.textContent = score;
   comboEl.style.display = 'none';
   placeFood();
-  speed = 120;
+  speed = arenaMode === 'maze' ? 130 : 115;
   startEl.style.display = 'flex';
   overEl.style.display = 'none';
   post({ type: 'dk:ready', id: 'snake', title: 'Snake' });
@@ -217,7 +252,20 @@ function tick() {
   else if (dir === 'Up') head.y -= 1;
   else head.y += 1;
 
-  if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS || snake.some((s) => s.x === head.x && s.y === head.y)) {
+  if (arenaMode === 'warp') {
+    if (head.x < 0) head.x = COLS - 1;
+    else if (head.x >= COLS) head.x = 0;
+    if (head.y < 0) head.y = ROWS - 1;
+    else if (head.y >= ROWS) head.y = 0;
+  } else {
+    if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+      endGame();
+      return;
+    }
+  }
+
+  /* Collision with tail or obstacles */
+  if (snake.some((s) => s.x === head.x && s.y === head.y) || obstacles.some((o) => o.x === head.x && o.y === head.y)) {
     endGame();
     return;
   }
@@ -292,13 +340,23 @@ function draw() {
   ctx.fillStyle = '#070a10';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  /* Subtle cyber grid lines */
+  /* Grid lines */
   ctx.strokeStyle = '#0e1522';
   ctx.lineWidth = 1;
   for (let x = 0; x <= canvas.width; x += CELL) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
   for (let y = 0; y <= canvas.height; y += CELL) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
 
-  /* Food with pulsating glow */
+  /* Obstacles in Maze mode */
+  if (obstacles.length) {
+    ctx.fillStyle = '#ff3366';
+    obstacles.forEach((o) => {
+      ctx.fillRect(o.x * CELL + 2, o.y * CELL + 2, CELL - 4, CELL - 4);
+      ctx.strokeStyle = 'rgba(255, 51, 102, 0.4)';
+      ctx.strokeRect(o.x * CELL + 1, o.y * CELL + 1, CELL - 2, CELL - 2);
+    });
+  }
+
+  /* Food */
   const pulse = Math.sin(performance.now() * 0.008) * 2;
   const foodRadius = Math.max(2, CELL / 2 - 3 + pulse * 0.5);
   const fx = food.x * CELL + CELL / 2;
@@ -322,13 +380,11 @@ function draw() {
     const r = index === 0 ? 6 : 4;
 
     if (index === 0) {
-      /* Head with cyber cyan glow */
       ctx.fillStyle = '#00f0ff';
       ctx.beginPath();
       ctx.roundRect(x, y, size, size, r);
       ctx.fill();
 
-      /* Eyes */
       ctx.fillStyle = '#070a10';
       const eyeSize = 3;
       let e1x = x + 4, e1y = y + 4, e2x = x + size - 7, e2y = y + 4;
@@ -338,7 +394,6 @@ function draw() {
       ctx.fillRect(e1x, e1y, eyeSize, eyeSize);
       ctx.fillRect(e2x, e2y, eyeSize, eyeSize);
     } else {
-      /* Body gradient fading down tail */
       const ratio = 1 - index / (snake.length + 4);
       ctx.fillStyle = `rgba(16, 185, 129, ${Math.max(0.4, ratio)})`;
       ctx.beginPath();
@@ -350,13 +405,9 @@ function draw() {
   /* Particles */
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
+    p.x += p.vx; p.y += p.vy;
     p.alpha -= 0.035;
-    if (p.alpha <= 0) {
-      particles.splice(i, 1);
-      continue;
-    }
+    if (p.alpha <= 0) { particles.splice(i, 1); continue; }
     ctx.save();
     ctx.globalAlpha = p.alpha;
     ctx.fillStyle = p.color;
@@ -371,10 +422,7 @@ function draw() {
     const f = floaters[i];
     f.y += f.vy;
     f.alpha -= 0.025;
-    if (f.alpha <= 0) {
-      floaters.splice(i, 1);
-      continue;
-    }
+    if (f.alpha <= 0) { floaters.splice(i, 1); continue; }
     ctx.save();
     ctx.globalAlpha = f.alpha;
     ctx.fillStyle = f.color;

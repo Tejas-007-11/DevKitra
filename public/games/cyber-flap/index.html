@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cyber Flap — DevKitra Gaming</title>
+<meta name="description" content="Thrust through laser gates in this high-speed neon cyber flyer." />
+<link rel="canonical" href="https://devkitra.in/game/cyber-flap" />
+<style>
+* { box-sizing: border-box; }
+:root {
+  --ink: #07090e;
+  --panel: #0d121c;
+  --line: #1c2638;
+  --text: #e8edf5;
+  --muted: #7e8b9f;
+  --accent: #00f0ff;
+  --accent-glow: rgba(0, 240, 255, 0.35);
+}
+html, body { margin: 0; height: 100%; background: var(--ink); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 1rem; }
+header { width: 100%; max-width: 440px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0 0.8rem; flex-wrap: wrap; }
+h1 { margin: 0; font-size: 1.15rem; letter-spacing: -0.02em; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; }
+h1::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+a.back { color: var(--muted); text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 6px; border: 1px solid var(--line); transition: all 0.15s ease; }
+a.back:hover { color: var(--text); border-color: var(--accent); background: rgba(0, 240, 255, 0.08); }
+#wrap { position: relative; max-width: 440px; width: 100%; border-radius: 14px; padding: 0.75rem; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6); transition: transform 0.05s ease; }
+.hud { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.6rem; font-variant-numeric: tabular-nums; }
+.hud b { color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1rem; }
+canvas { width: 100%; height: auto; display: block; border-radius: 10px; background: #070a10; border: 1px solid var(--line); cursor: pointer; touch-action: manipulation; }
+.overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; background: rgba(7, 9, 14, 0.94); backdrop-filter: blur(4px); border-radius: 14px; z-index: 10; text-align: center; padding: 1.5rem; }
+.overlay h2 { margin: 0 0 0.4rem; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.03em; color: var(--text); }
+.overlay p { margin: 0 0 1.25rem; color: var(--muted); font-size: 0.88rem; max-width: 280px; line-height: 1.5; }
+.btn { border: 1px solid var(--accent); background: var(--accent); color: #07090e; border-radius: 8px; padding: 0.65rem 1.4rem; font-weight: 800; cursor: pointer; font-size: 0.95rem; box-shadow: 0 0 20px var(--accent-glow); transition: all 0.15s ease; text-transform: uppercase; }
+.btn:hover { background: #38f8ff; transform: translateY(-1px); }
+.hint { margin-top: 0.75rem; font-size: 0.78rem; color: var(--muted); text-align: center; }
+@media (max-width: 440px) { header { padding: 0.4rem 0 0.6rem; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Cyber Flap</h1>
+  <a class="back" href="/game/cyber-flap">← Library</a>
+</header>
+<div id="wrap">
+  <div class="hud">
+    <div>Gates Cleared <b id="score">0</b></div>
+    <div>Best <b id="best">0</b></div>
+  </div>
+  <canvas id="game" width="400" height="520"></canvas>
+  <div id="start" class="overlay">
+    <h2>Cyber Flap</h2>
+    <p>Tap, Click, or press Spacebar to fire thrusters and navigate laser gates.</p>
+    <button class="btn" id="start-btn">Launch Jet ▶</button>
+  </div>
+  <div id="over" class="overlay">
+    <h2>Ship Down!</h2>
+    <p>Gates Cleared: <b id="final-score" style="color:var(--accent);">0</b> · Best: <b id="final-best">0</b></p>
+    <button class="btn" id="restart-btn">Try Again</button>
+  </div>
+  <div id="pause" class="overlay">
+    <h2>Paused</h2>
+    <p>Press spacebar to resume flight.</p>
+  </div>
+  <p class="hint">Tap screen or press Spacebar to flap thrusters.</p>
+</div>
+<script>
+let audioCtx = null;
+function playSound(type) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    if (type === 'flap') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(420, now);
+      osc.frequency.exponentialRampToValueAtTime(700, now + 0.08);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.08);
+      osc.start(now); osc.stop(now + 0.08);
+    } else if (type === 'pass') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.12);
+      gain.gain.setValueAtTime(0.16, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.12);
+      osc.start(now); osc.stop(now + 0.12);
+    } else if (type === 'crash') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.exponentialRampToValueAtTime(70, now + 0.3);
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.3);
+      osc.start(now); osc.stop(now + 0.3);
+    }
+  } catch (_) {}
+}
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const bestEl = document.getElementById('best');
+const startEl = document.getElementById('start');
+const overEl = document.getElementById('over');
+const finalScoreEl = document.getElementById('final-score');
+const finalBestEl = document.getElementById('final-best');
+const startBtn = document.getElementById('start-btn');
+const restartBtn = document.getElementById('restart-btn');
+const wrapEl = document.getElementById('wrap');
+
+let best = Number(localStorage.getItem('dk:flap-best') || 0);
+bestEl.textContent = best;
+let score = 0, running = false, paused = false;
+
+const GRAVITY = 0.34;
+const JUMP = -6.4;
+let bird = { x: 80, y: 220, vy: 0, r: 13, angle: 0 };
+let pipes = [];
+let particles = [];
+let stars = [];
+let spawnTimer = 0;
+
+/* Parallax skyline stars */
+for (let i = 0; i < 35; i++) {
+  stars.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * (canvas.height - 100),
+    size: Math.random() * 2 + 0.8,
+    speed: Math.random() * 0.4 + 0.1,
+  });
+}
+
+const embed = new URLSearchParams(window.location.search).has('embed');
+if (embed) { document.querySelector('header')?.remove(); wrapEl.style.padding = '0.5rem'; }
+
+function post(payload) {
+  if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*');
+}
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'dk:restart') { resetGame(); startLoop(); }
+  if (event.data && event.data.type === 'dk:pause') pauseGame();
+  if (event.data && event.data.type === 'dk:resume') resumeGame();
+});
+
+function shakeScreen() {
+  wrapEl.style.transform = 'translate(-4px, 2px)';
+  setTimeout(() => { wrapEl.style.transform = 'translate(4px, -2px)'; }, 40);
+  setTimeout(() => { wrapEl.style.transform = 'translate(0, 0)'; }, 90);
+}
+
+function spawnFlapParticles(x, y) {
+  for (let i = 0; i < 8; i++) {
+    particles.push({
+      x: x - 10, y: y + (Math.random() * 6 - 3),
+      vx: -2.5 - Math.random() * 2.5,
+      vy: Math.random() * 3 - 1.5,
+      size: 3 + Math.random() * 3,
+      alpha: 1,
+      color: Math.random() > 0.4 ? '#00f0ff' : '#ec4899',
+    });
+  }
+}
+
+function resetGame() {
+  score = 0;
+  scoreEl.textContent = score;
+  bird = { x: 80, y: 220, vy: 0, r: 13, angle: 0 };
+  pipes = [];
+  particles = [];
+  spawnTimer = 0;
+  running = false;
+  startEl.style.display = 'flex';
+  overEl.style.display = 'none';
+  post({ type: 'dk:ready', id: 'cyber-flap', title: 'Cyber Flap' });
+  draw();
+}
+
+function flap() {
+  if (!running) return;
+  bird.vy = JUMP;
+  playSound('flap');
+  spawnFlapParticles(bird.x, bird.y);
+}
+
+function tick() {
+  if (!running || paused) return;
+
+  bird.vy += GRAVITY;
+  bird.y += bird.vy;
+  bird.angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 5, bird.vy * 0.08));
+
+  /* Floor & Ceiling Collision */
+  if (bird.y + bird.r >= canvas.height - 15 || bird.y - bird.r <= 0) {
+    endGame();
+    return;
+  }
+
+  /* Pipe spawning */
+  spawnTimer++;
+  if (spawnTimer >= 95) {
+    spawnTimer = 0;
+    const gap = 125;
+    const minTop = 60;
+    const maxTop = canvas.height - 180;
+    const topH = Math.floor(minTop + Math.random() * (maxTop - minTop));
+    pipes.push({
+      x: canvas.width,
+      w: 48,
+      top: topH,
+      bottom: topH + gap,
+      passed: false,
+    });
+  }
+
+  /* Update pipes */
+  for (let i = pipes.length - 1; i >= 0; i--) {
+    const p = pipes[i];
+    p.x -= 2.6;
+
+    /* Collision Check */
+    if (bird.x + bird.r > p.x && bird.x - bird.r < p.x + p.w) {
+      if (bird.y - bird.r < p.top || bird.y + bird.r > p.bottom) {
+        endGame();
+        return;
+      }
+    }
+
+    /* Score check */
+    if (!p.passed && p.x + p.w < bird.x) {
+      p.passed = true;
+      score++;
+      scoreEl.textContent = score;
+      playSound('pass');
+    }
+
+    if (p.x + p.w < -10) pipes.splice(i, 1);
+  }
+}
+
+function endGame() {
+  running = false;
+  paused = false;
+  playSound('crash');
+  shakeScreen();
+  if (score > best) {
+    best = score;
+    try { localStorage.setItem('dk:flap-best', String(best)); } catch (_) {}
+    bestEl.textContent = best;
+  }
+  finalScoreEl.textContent = score;
+  finalBestEl.textContent = best;
+  overEl.style.display = 'flex';
+  post({ type: 'dk:gameover', score });
+}
+
+function pauseGame() {
+  if (!running || paused) return;
+  paused = true;
+  document.getElementById('pause').style.display = 'flex';
+}
+
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  document.getElementById('pause').style.display = 'none';
+}
+
+function draw() {
+  ctx.fillStyle = '#070a10';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  /* Stars */
+  ctx.fillStyle = '#ffffff';
+  for (const s of stars) {
+    if (running && !paused) {
+      s.x -= s.speed;
+      if (s.x < 0) s.x = canvas.width;
+    }
+    ctx.fillRect(s.x, s.y, s.size, s.size);
+  }
+
+  /* Pipes (Laser Gates) */
+  for (const p of pipes) {
+    /* Top Gate */
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(p.x, 0, p.w, p.top);
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(p.x, -2, p.w, p.top + 2);
+
+    /* Laser Node Top */
+    ctx.fillStyle = '#00f0ff';
+    ctx.fillRect(p.x - 3, p.top - 10, p.w + 6, 10);
+
+    /* Bottom Gate */
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(p.x, p.bottom, p.w, canvas.height - p.bottom);
+    ctx.strokeRect(p.x, p.bottom, p.w, canvas.height - p.bottom + 2);
+
+    /* Laser Node Bottom */
+    ctx.fillRect(p.x - 3, p.bottom, p.w + 6, 10);
+
+    /* Laser Beam Aura */
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.06)';
+    ctx.fillRect(p.x + 8, p.top, p.w - 16, p.bottom - p.top);
+  }
+
+  /* Particles */
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const pt = particles[i];
+    pt.x += pt.vx;
+    pt.y += pt.vy;
+    pt.alpha -= 0.04;
+    if (pt.alpha <= 0) {
+      particles.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha = pt.alpha;
+    ctx.fillStyle = pt.color;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* Cyber Jet Bird */
+  ctx.save();
+  ctx.translate(bird.x, bird.y);
+  ctx.rotate(bird.angle);
+
+  /* Engine glow */
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.3)';
+  ctx.beginPath();
+  ctx.arc(-8, 0, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* Fuselage */
+  ctx.fillStyle = '#00f0ff';
+  ctx.beginPath();
+  ctx.moveTo(14, 0);
+  ctx.lineTo(-10, -9);
+  ctx.lineTo(-6, 0);
+  ctx.lineTo(-10, 9);
+  ctx.closePath();
+  ctx.fill();
+
+  /* Cockpit Visor */
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.ellipse(2, -2, 5, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  /* Cyber Grid Ground */
+  ctx.fillStyle = '#090d16';
+  ctx.fillRect(0, canvas.height - 15, canvas.width, 15);
+  ctx.strokeStyle = '#00f0ff';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height - 15);
+  ctx.lineTo(canvas.width, canvas.height - 15);
+  ctx.stroke();
+}
+
+function loop() {
+  tick();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function startLoop() {
+  running = true;
+  startEl.style.display = 'none';
+  overEl.style.display = 'none';
+  flap();
+  post({ type: 'dk:ready', id: 'cyber-flap', title: 'Cyber Flap' });
+}
+
+window.addEventListener('keydown', (event) => {
+  if (event.code === 'Space' || event.code === 'ArrowUp') {
+    event.preventDefault();
+    if (!running) startLoop();
+    else flap();
+  }
+});
+
+canvas.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  if (!running) startLoop();
+  else flap();
+});
+
+startBtn.addEventListener('click', startLoop);
+restartBtn.addEventListener('click', () => { resetGame(); startLoop(); });
+
+resetGame();
+loop();
+post({ type: 'dk:ready', id: 'cyber-flap', title: 'Cyber Flap' });
+</script>
+</body>
+</html>
+
