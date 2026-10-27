@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Speed Dash — Devkitra Gaming</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #02040a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #top-bar {
+      height: 48px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(11, 15, 25, 0.95);
+      border-bottom: 1px solid rgba(244, 63, 94, 0.2);
+      z-index: 10;
+    }
+    .hud-block {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .hud-item {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+    .hud-lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      font-weight: 700;
+    }
+    .hud-val {
+      font-size: 16px;
+      font-weight: 800;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      color: #38bdf8;
+    }
+    .hud-val.speed { color: #f43f5e; text-shadow: 0 0 10px rgba(244, 63, 94, 0.4); }
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: calc(100% - 48px);
+      background: #02040a;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 4, 10, 0.85);
+      backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    .overlay.hidden { display: none; }
+    .card {
+      background: #0d1322;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px rgba(244, 63, 94, 0.2);
+      border-radius: 16px;
+      padding: 36px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+    .card h2 {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      color: #f43f5e;
+      text-shadow: 0 0 14px rgba(244, 63, 94, 0.5);
+    }
+    .card p {
+      color: #94a3b8;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .start-btn {
+      background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+      color: #ffffff;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(244, 63, 94, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(244, 63, 94, 0.6);
+    }
+    .mobile-controls {
+      display: none;
+      position: absolute;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      padding: 0 28px;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 15;
+    }
+    @media (pointer: coarse) {
+      .mobile-controls { display: flex; }
+    }
+    .m-btn {
+      pointer-events: auto;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(13, 19, 34, 0.75);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      color: #ffffff;
+      font-size: 22px;
+      font-weight: 900;
+      display: grid;
+      place-items: center;
+    }
+    .m-btn:active {
+      background: rgba(244, 63, 94, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <header id="top-bar">
+    <div class="hud-block">
+      <div class="hud-item">
+        <span class="hud-lbl">Velocity</span>
+        <span id="speed-display" class="hud-val speed">320 KM/H</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-lbl">Gear</span>
+        <span id="gear-display" class="hud-val">MACH 1</span>
+      </div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-item" style="text-align: right;">
+        <span class="hud-lbl">Distance</span>
+        <span id="dist-display" class="hud-val">0 M</span>
+      </div>
+    </div>
+  </header>
+
+  <main id="canvas-wrap">
+    <canvas id="roadCanvas"></canvas>
+
+    <div class="mobile-controls">
+      <button class="m-btn" id="btn-left">◀</button>
+      <button class="m-btn" id="btn-right">▶</button>
+    </div>
+
+    <div id="overlay" class="overlay">
+      <div class="card">
+        <h2 id="card-heading">SPEED DASH</h2>
+        <p id="card-desc">Switch lanes with Left/Right Arrows or A/D keys. Dodge incoming laser barricades and collect hyper orbs!</p>
+        <button id="start-btn" class="start-btn">ENGAGE ENGINE</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      var audioCtx = null;
+      function initAudio() {
+        if (!audioCtx) {
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch(e) {}
+        }
+      }
+      function playTone(freq, type, dur, gainVal) {
+        if (!audioCtx) return;
+        try {
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+          osc.type = type || 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(gainVal || 0.1, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + dur);
+        } catch(e) {}
+      }
+
+      function sfxShift() { playTone(440, 'triangle', 0.08, 0.08); }
+      function sfxOrb() {
+        playTone(660, 'sine', 0.1, 0.12);
+        setTimeout(function() { playTone(990, 'sine', 0.18, 0.12); }, 70);
+      }
+      function sfxCrash() {
+        playTone(180, 'sawtooth', 0.3, 0.2);
+        setTimeout(function() { playTone(80, 'sawtooth', 0.45, 0.2); }, 150);
+      }
+
+      var canvas = document.getElementById('roadCanvas');
+      var ctx = canvas.getContext('2d');
+      var container = document.getElementById('canvas-wrap');
+
+      var speedDisplay = document.getElementById('speed-display');
+      var gearDisplay = document.getElementById('gear-display');
+      var distDisplay = document.getElementById('dist-display');
+      var overlay = document.getElementById('overlay');
+      var cardHeading = document.getElementById('card-heading');
+      var cardDesc = document.getElementById('card-desc');
+      var startBtn = document.getElementById('start-btn');
+
+      var W = 800;
+      var H = 600;
+
+      function resize() {
+        var rect = container.getBoundingClientRect();
+        canvas.width = rect.width * (window.devicePixelRatio || 1);
+        canvas.height = rect.height * (window.devicePixelRatio || 1);
+        W = rect.width;
+        H = rect.height;
+        ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // State
+      var isRunning = false;
+      var isPaused = false;
+      var distance = 0;
+      var speed = 320;
+      var lane = 1; // 0: Left, 1: Center, 2: Right
+      var playerX = 0;
+      var targetX = 0;
+
+      var roadOffset = 0;
+      var obstacles = [];
+      var orbs = [];
+      var particles = [];
+
+      function getLaneX(l, depth) {
+        var cx = W / 2;
+        var spread = (W * 0.4) * depth;
+        if (l === 0) return cx - spread;
+        if (l === 1) return cx;
+        return cx + spread;
+      }
+
+      function switchLane(dir) {
+        if (!isRunning || isPaused) return;
+        var nextLane = Math.max(0, Math.min(2, lane + dir));
+        if (nextLane !== lane) {
+          lane = nextLane;
+          sfxShift();
+        }
+      }
+
+      window.addEventListener('keydown', function(e) {
+        if (['ArrowLeft', 'KeyA'].includes(e.code)) { e.preventDefault(); switchLane(-1); }
+        if (['ArrowRight', 'KeyD'].includes(e.code)) { e.preventDefault(); switchLane(1); }
+      });
+
+      document.getElementById('btn-left').addEventListener('click', function() { switchLane(-1); });
+      document.getElementById('btn-right').addEventListener('click', function() { switchLane(1); });
+
+      var spawnTimer = 0;
+
+      function update() {
+        if (!isRunning || isPaused) return;
+
+        // Speed ramp up
+        distance += Math.round(speed / 60);
+        speed = Math.min(840, 320 + Math.floor(distance / 50));
+
+        speedDisplay.textContent = speed + ' KM/H';
+        distDisplay.textContent = distance + ' M';
+
+        if (speed < 450) gearDisplay.textContent = 'MACH 1';
+        else if (speed < 680) gearDisplay.textContent = 'MACH 2';
+        else gearDisplay.textContent = 'WARP SPEED';
+
+        roadOffset = (roadOffset + (speed * 0.04)) % 60;
+
+        // Smooth steering interpolation
+        targetX = getLaneX(lane, 1);
+        playerX += (targetX - playerX) * 0.25;
+
+        // Spawning obstacles & orbs
+        spawnTimer++;
+        if (spawnTimer > Math.max(28, 65 - Math.floor(speed / 20))) {
+          spawnTimer = 0;
+          var obsLane = Math.floor(Math.random() * 3);
+          obstacles.push({
+            lane: obsLane,
+            z: 0.05, // 0 to 1
+            w: 40,
+            h: 20
+          });
+
+          // Occasionally spawn energy orb in other lane
+          if (Math.random() > 0.4) {
+            var orbLane = (obsLane + (Math.random() > 0.5 ? 1 : 2)) % 3;
+            orbs.push({
+              lane: orbLane,
+              z: 0.05,
+              r: 12
+            });
+          }
+        }
+
+        // Update obstacles
+        var roadSpeed = (speed * 0.00006);
+        for (var i = obstacles.length - 1; i >= 0; i--) {
+          var obs = obstacles[i];
+          obs.z += roadSpeed * (1 + obs.z * 2.5);
+
+          // Collision check near player
+          if (obs.z >= 0.88 && obs.z <= 0.98) {
+            if (obs.lane === lane) {
+              triggerCrash();
+              return;
+            }
+          }
+
+          if (obs.z > 1.1) obstacles.splice(i, 1);
+        }
+
+        // Update orbs
+        for (var o = orbs.length - 1; o >= 0; o--) {
+          var orb = orbs[o];
+          orb.z += roadSpeed * (1 + orb.z * 2.5);
+
+          if (orb.z >= 0.85 && orb.z <= 0.98) {
+            if (orb.lane === lane) {
+              sfxOrb();
+              distance += 250;
+              // Starburst particles
+              for (var p = 0; p < 12; p++) {
+                var ang = Math.random() * Math.PI * 2;
+                particles.push({
+                  x: playerX,
+                  y: H * 0.84,
+                  vx: Math.cos(ang) * (Math.random() * 5 + 2),
+                  vy: Math.sin(ang) * (Math.random() * 5 + 2),
+                  color: '#38bdf8',
+                  alpha: 1
+                });
+              }
+              orbs.splice(o, 1);
+              continue;
+            }
+          }
+
+          if (orb.z > 1.1) orbs.splice(o, 1);
+        }
+
+        // Particles
+        for (var pt = particles.length - 1; pt >= 0; pt--) {
+          var p = particles[pt];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= 0.04;
+          if (p.alpha <= 0) particles.splice(pt, 1);
+        }
+      }
+
+      function triggerCrash() {
+        isRunning = false;
+        sfxCrash();
+        overlay.classList.remove('hidden');
+        cardHeading.textContent = "BARRIER IMPACT!";
+        cardDesc.textContent = "High-speed collision at " + speed + " KM/H. Total distance: " + distance + " meters.";
+        startBtn.textContent = "ENGAGE AGAIN";
+
+        window.parent.postMessage({ type: 'dk:gameover', score: distance }, '*');
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, W, H);
+
+        var horizonY = H * 0.35;
+        var roadBottomY = H * 0.95;
+
+        // Cyber Horizon Grid
+        ctx.strokeStyle = "rgba(244, 63, 94, 0.15)";
+        ctx.lineWidth = 1;
+        for (var y = horizonY; y < roadBottomY; y += 20) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(W, y);
+          ctx.stroke();
+        }
+
+        // Highway bounds perspective
+        var topW = W * 0.15;
+        var botW = W * 0.85;
+
+        ctx.fillStyle = '#060a17';
+        ctx.beginPath();
+        ctx.moveTo(W / 2 - topW, horizonY);
+        ctx.lineTo(W / 2 + topW, horizonY);
+        ctx.lineTo(W / 2 + botW, roadBottomY);
+        ctx.lineTo(W / 2 - botW, roadBottomY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Neon Highway Side Rails
+        ctx.save();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#f43f5e';
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(W / 2 - topW, horizonY);
+        ctx.lineTo(W / 2 - botW, roadBottomY);
+        ctx.moveTo(W / 2 + topW, horizonY);
+        ctx.lineTo(W / 2 + botW, roadBottomY);
+        ctx.stroke();
+        ctx.restore();
+
+        // Lane markers
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([16, 16]);
+        ctx.lineDashOffset = -roadOffset;
+
+        // Lane Divider 1
+        ctx.beginPath();
+        ctx.moveTo(W / 2 - topW * 0.33, horizonY);
+        ctx.lineTo(W / 2 - botW * 0.33, roadBottomY);
+        ctx.stroke();
+
+        // Lane Divider 2
+        ctx.beginPath();
+        ctx.moveTo(W / 2 + topW * 0.33, horizonY);
+        ctx.lineTo(W / 2 + botW * 0.33, roadBottomY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Render Obstacles
+        for (var i = 0; i < obstacles.length; i++) {
+          var obs = obstacles[i];
+          var curY = horizonY + (roadBottomY - horizonY) * obs.z;
+          var curX = getLaneX(obs.lane, obs.z);
+          var curW = 20 + 80 * obs.z;
+          var curH = 12 + 35 * obs.z;
+
+          ctx.save();
+          ctx.shadowBlur = 12 * obs.z;
+          ctx.shadowColor = '#f43f5e';
+          ctx.fillStyle = '#e11d48';
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2 * obs.z;
+          ctx.fillRect(curX - curW / 2, curY - curH, curW, curH);
+          ctx.strokeRect(curX - curW / 2, curY - curH, curW, curH);
+          ctx.restore();
+        }
+
+        // Render Energy Orbs
+        for (var o = 0; o < orbs.length; o++) {
+          var orb = orbs[o];
+          var oy = horizonY + (roadBottomY - horizonY) * orb.z;
+          var ox = getLaneX(orb.lane, orb.z);
+          var or = 6 + 18 * orb.z;
+
+          ctx.save();
+          ctx.shadowBlur = 16 * orb.z;
+          ctx.shadowColor = '#38bdf8';
+          ctx.fillStyle = '#7dd3fc';
+          ctx.beginPath();
+          ctx.arc(ox, oy - or, or, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Particles
+        for (var p = 0; p < particles.length; p++) {
+          var pt = particles[p];
+          ctx.fillStyle = pt.color;
+          ctx.globalAlpha = Math.max(0, pt.alpha);
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // Player Cyber Hovercraft
+        var py = roadBottomY - 45;
+        ctx.save();
+        ctx.translate(playerX, py);
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#38bdf8';
+
+        // Thruster flame
+        ctx.fillStyle = '#0ea5e9';
+        ctx.beginPath();
+        ctx.moveTo(-16, 15);
+        ctx.lineTo(0, 30 + Math.random() * 8);
+        ctx.lineTo(16, 15);
+        ctx.closePath();
+        ctx.fill();
+
+        // Craft body
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, -22);
+        ctx.lineTo(34, 15);
+        ctx.lineTo(18, 12);
+        ctx.lineTo(0, 16);
+        ctx.lineTo(-18, 12);
+        ctx.lineTo(-34, 15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Cockpit glow
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.ellipse(0, -4, 8, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        update();
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+
+      function startGame() {
+        initAudio();
+        distance = 0;
+        speed = 320;
+        lane = 1;
+        obstacles = [];
+        orbs = [];
+        particles = [];
+        overlay.classList.add('hidden');
+        isRunning = true;
+        isPaused = false;
+      }
+
+      startBtn.addEventListener('click', startGame);
+
+      window.addEventListener('message', function(e) {
+        if (!e.data) return;
+        if (e.data.type === 'dk:restart') startGame();
+        else if (e.data.type === 'dk:pause') isPaused = true;
+        else if (e.data.type === 'dk:resume') isPaused = false;
+      });
+
+      window.parent.postMessage({ type: 'dk:ready' }, '*');
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="space-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#02040a"/>
+      <stop offset="60%" stop-color="#071026"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <filter id="ship-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Deep Cosmos Background -->
+  <rect width="600" height="400" fill="url(#space-grad)"/>
+
+  <!-- Stars -->
+  <g fill="#ffffff" opacity="0.6">
+    <circle cx="80" cy="60" r="1.5"/>
+    <circle cx="210" cy="40" r="1"/>
+    <circle cx="480" cy="90" r="1.5"/>
+    <circle cx="530" cy="220" r="2"/>
+    <circle cx="340" cy="330" r="1"/>
+    <circle cx="120" cy="290" r="1.5"/>
+    <circle cx="260" cy="210" r="1"/>
+    <circle cx="410" cy="50" r="2"/>
+  </g>
+
+  <!-- Asteroid Field -->
+  <polygon points="120,160 145,145 165,170 150,195 125,185" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+  <polygon points="440,240 470,225 490,250 480,280 445,270" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+  <polygon points="320,80 340,70 355,90 345,110 325,100" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+
+  <!-- Energy Cores (Yellow Glow) -->
+  <g filter="url(#ship-glow)">
+    <circle cx="280" cy="180" r="10" fill="#fef08a" stroke="#fbbf24" stroke-width="2"/>
+    <circle cx="420" cy="120" r="10" fill="#fef08a" stroke="#fbbf24" stroke-width="2"/>
+  </g>
+
+  <!-- Warp Portal -->
+  <g transform="translate(510, 160)">
+    <circle cx="0" cy="0" r="32" fill="rgba(52, 211, 153, 0.15)" stroke="#34d399" stroke-width="3" stroke-dasharray="10,6"/>
+    <circle cx="0" cy="0" r="18" fill="none" stroke="#6ee7b7" stroke-width="1.5"/>
+  </g>
+
+  <!-- Player Spaceship with Plasma Exhaust -->
+  <g transform="translate(200, 260) rotate(-35)">
+    <!-- Exhaust flame -->
+    <polygon points="-16,-6 -34,0 -16,6" fill="#38bdf8" filter="url(#ship-glow)"/>
+    <!-- Ship Hull -->
+    <polygon points="24,0 -16,-16 -10,0 -16,16" fill="#ffffff" stroke="#38bdf8" stroke-width="2.5" filter="url(#ship-glow)"/>
+  </g>
+
+  <!-- Sector Badge -->
+  <g transform="translate(300, 60)">
+    <rect x="-70" y="-14" width="140" height="28" rx="14" fill="rgba(11, 18, 36, 0.85)" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="0" y="5" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="11" fill="#38bdf8" letter-spacing="2">3 SECTORS</text>
+  </g>
+</svg>

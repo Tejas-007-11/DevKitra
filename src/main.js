@@ -13,22 +13,24 @@ const app = document.querySelector('#app');
 const SITE_NAME = 'DevKitra Gaming';
 
 const NAV = [
-  { label: 'Home', href: '/' },
-  { label: 'Explore', href: '/explore' },
-  { label: 'About', href: '/about' },
+  { label: 'Featured', href: '/' },
+  { label: 'All Games', href: '/explore' },
+  { label: 'Architecture', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
 
-/* Custom Game Badges for Rich Visual Differentiation */
+/* Professional Metadata Badges */
 const GAME_BADGES = {
-  'snake': '3 ARENAS',
-  'breakout': '4 LEVELS',
-  'cyber-flap': 'NEW · ARCADE',
-  'tower-stack': 'NEW · STACK',
+  'astro-drift': '3 SECTORS',
+  'speed-dash': 'HIGH SPEED',
+  'cyber-flap': 'ARCADE FLIGHT',
   'neon-pong': '3 AI TIERS',
-  'memory-match': '3 MODES',
+  'tower-stack': 'PHYSICS TIMING',
+  'breakout': '4 LEVELS',
+  'snake': '3 ARENAS',
+  '2048': 'LOGIC MATRIX',
   'reaction-test': 'RADAR TIERS',
-  '2048': 'NEON MATRIX',
+  'memory-match': '3 MODES',
 };
 
 /* ------------------------------------------------------------------ */
@@ -58,34 +60,32 @@ function playUiSound(type) {
 
     if (type === 'hover') {
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(520, now);
+      osc.frequency.setValueAtTime(540, now);
       gain.gain.setValueAtTime(0.015, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.03);
-      osc.start(now); osc.stop(now + 0.03);
+      gain.gain.linearRampToValueAtTime(0, now + 0.025);
+      osc.start(now); osc.stop(now + 0.025);
     } else if (type === 'click') {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(580, now);
-      osc.frequency.exponentialRampToValueAtTime(960, now + 0.06);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.06);
-      osc.start(now); osc.stop(now + 0.06);
+      osc.frequency.exponentialRampToValueAtTime(960, now + 0.05);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.05);
+      osc.start(now); osc.stop(now + 0.05);
     } else if (type === 'switch') {
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(340, now);
-      osc.frequency.exponentialRampToValueAtTime(720, now + 0.08);
-      gain.gain.setValueAtTime(0.05, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.08);
-      osc.start(now); osc.stop(now + 0.08);
-    } else if (type === 'random') {
-      // Fun ascending synth chime
+      osc.frequency.setValueAtTime(360, now);
+      osc.frequency.exponentialRampToValueAtTime(720, now + 0.06);
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.06);
+      osc.start(now); osc.stop(now + 0.06);
+    } else if (type === 'launch') {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(440, now);
-      osc.frequency.setValueAtTime(554.37, now + 0.05);
-      osc.frequency.setValueAtTime(659.25, now + 0.1);
-      osc.frequency.setValueAtTime(880, now + 0.15);
-      gain.gain.setValueAtTime(0.09, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
-      osc.start(now); osc.stop(now + 0.28);
+      osc.frequency.setValueAtTime(660, now + 0.06);
+      osc.frequency.setValueAtTime(880, now + 0.12);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.start(now); osc.stop(now + 0.25);
     }
   } catch (_) {}
 }
@@ -141,11 +141,11 @@ function matchRoute(path) {
 /* ------------------------------------------------------------------ */
 
 function launchRandomGame(excludeId = '') {
-  playUiSound('random');
+  playUiSound('launch');
   const all = publishedGames().filter((g) => g.id !== excludeId);
   if (!all.length) return;
   const picked = all[Math.floor(Math.random() * all.length)];
-  showToast(`🎲 Launching ${picked.title}!`, 'success');
+  showToast(`Launching ${picked.title}...`, 'success');
   navigateTo(picked.route);
 }
 
@@ -162,20 +162,20 @@ function siteUrl() {
 
 function updatePageMetadata(route) {
   const pages = {
-    '/': { title: `${SITE_NAME} — Authentic Browser Gaming Arena`, description: 'Play instant action, arcade, physics and puzzle browser games with zero installs or accounts.' },
-    '/explore': { title: `Explore Games Vault | ${SITE_NAME}`, description: 'Search and filter the complete DevKitra instant games catalogue.' },
-    '/about': { title: `About Platform | ${SITE_NAME}`, description: 'DevKitra Gaming is a standalone, client-side browser gaming destination.' },
-    '/privacy': { title: `Privacy Guarantee | ${SITE_NAME}`, description: 'Games run 100% locally in your browser. Zero tracking, zero logins.' },
-    '/contact': { title: `Contact & Submissions | ${SITE_NAME}`, description: 'Send feedback, bug reports, and game suggestions to DevKitra Gaming.' },
+    '/': { title: `${SITE_NAME} — High-Performance Browser Gaming Platform`, description: 'Play instant, zero-install browser games crafted with 60fps canvas physics and client-side isolation.' },
+    '/explore': { title: `All Games | ${SITE_NAME}`, description: 'Search and filter the complete DevKitra instant games collection.' },
+    '/about': { title: `Architecture & Privacy | ${SITE_NAME}`, description: 'DevKitra Gaming operates as a standalone, client-side browser runtime.' },
+    '/privacy': { title: `Privacy Guarantee | ${SITE_NAME}`, description: 'All game progress and scores run 100% locally in your browser.' },
+    '/contact': { title: `Contact & Submissions | ${SITE_NAME}`, description: 'Contact DevKitra Gaming for suggestions and technical inquiries.' },
   };
 
   let page;
   if (route.page === 'game' && gameByRoute(route.path)) {
     const g = gameByRoute(route.path);
-    page = { title: `${g.title} — Play Free Online | ${SITE_NAME}`, description: g.description };
+    page = { title: `${g.title} — Play Online | ${SITE_NAME}`, description: g.description };
   } else if (route.page === 'genre' && genre(route.slug)) {
     const g = genre(route.slug);
-    page = { title: `${g.label} Browser Games | ${SITE_NAME}`, description: `Play top ${g.label.toLowerCase()} games right in your browser.` };
+    page = { title: `${g.label} Games | ${SITE_NAME}`, description: `Browse verified ${g.label.toLowerCase()} games.` };
   } else if (pages[route.path]) {
     page = pages[route.path];
   } else {
@@ -216,7 +216,6 @@ function updatePageMetadata(route) {
   } catch (error) {
     canonical?.remove();
     document.querySelector('meta[property="og:url"]')?.remove();
-    console.error(`Unable to set canonical metadata: ${error.message}`);
   }
 }
 
@@ -243,26 +242,26 @@ function showToast(message, type = 'success') {
   toast.dataset.type = type;
   toast.classList.add('show');
   clearTimeout(showToast.timer);
-  showToast.timer = setTimeout(() => toast.classList.remove('show'), 2400);
+  showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
 }
 
 /* ------------------------------------------------------------------ */
-/* Shared UI Components                                               */
+/* Header & Footer Components                                         */
 /* ------------------------------------------------------------------ */
 
 function brandMarkup() {
   return `
     <a href="/" data-nav class="brand" aria-label="${SITE_NAME} home">
       <span class="brand-mark">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 2 7 12 12 22 7 12 2"/>
           <polyline points="2 17 12 22 22 17"/>
           <polyline points="2 12 12 17 22 12"/>
         </svg>
       </span>
       <span class="brand-name">
-        <span class="brand-main">DevKitra</span>
-        <span class="brand-sub">Gaming</span>
+        <span class="brand-main">DEVKITRA</span>
+        <span class="brand-sub">GAMING</span>
       </span>
     </a>
   `;
@@ -270,16 +269,16 @@ function brandMarkup() {
 
 function soundIcon(enabled) {
   if (enabled) {
-    return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M7 3L3.5 6H1v4h2.5L7 13V3z" fill="currentColor"/><path d="M10 5a4 4 0 010 6M12 3a7 7 0 010 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+    return `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M7 3L3.5 6H1v4h2.5L7 13V3z" fill="currentColor"/><path d="M10 5a4 4 0 010 6M12 3a7 7 0 010 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
   }
-  return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M7 3L3.5 6H1v4h2.5L7 13V3z" fill="currentColor"/><path d="M10 6l4 4M14 6l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+  return `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M7 3L3.5 6H1v4h2.5L7 13V3z" fill="currentColor"/><path d="M10 6l4 4M14 6l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 }
 
 function themeIcon(theme) {
   if (theme === 'light') {
-    return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="3.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5v1.5m0 10v1.5m-4.6-11.1 1.06 1.06m7.08 7.08 1.06 1.06M1.5 8H3m10 0h1.5M3.4 12.6l1.06-1.06m7.08-7.08 1.06-1.06" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+    return `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="3.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5v1.5m0 10v1.5m-4.6-11.1 1.06 1.06m7.08 7.08 1.06 1.06M1.5 8H3m10 0h1.5M3.4 12.6l1.06-1.06m7.08-7.08 1.06-1.06" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
   }
-  return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M14 9.2A6 6 0 0 1 6.8 2a6 6 0 1 0 7.2 7.2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M14 9.2A6 6 0 0 1 6.8 2a6 6 0 1 0 7.2 7.2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
 function searchSvg() {
@@ -287,7 +286,7 @@ function searchSvg() {
 }
 
 function diceSvg() {
-  return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/></svg>`;
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/></svg>`;
 }
 
 function menuSvg(open) {
@@ -311,9 +310,9 @@ function renderHeader(path) {
             ${brandMarkup()}
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">${navMarkup}</nav>
             <div class="header-actions">
-              <button id="surprise-btn" type="button" class="btn-surprise" title="Play Random Game">
+              <button id="surprise-btn" type="button" class="btn-surprise" title="Launch Random Game">
                 ${diceSvg()}
-                <span class="btn-surprise-text">Surprise Me</span>
+                <span class="btn-surprise-text">Random Game</span>
               </button>
               <div class="search-shell header-search" id="header-search">
                 <input id="global-search" type="search" placeholder="Search games (Press /)…" aria-label="Search games" />
@@ -337,23 +336,23 @@ function renderFooter() {
       <div class="footer-inner">
         <div>
           <div class="footer-brand">${SITE_NAME}</div>
-          <div class="brand-sub" style="margin-top:0.25rem;">Next-Gen Browser Gaming Platform</div>
+          <div class="brand-sub" style="margin-top:0.25rem;">Browser Gaming Platform · Standalone Client Architecture</div>
         </div>
         <div class="footer-links">
-          <a href="/explore" data-nav>Explore Vault</a>
+          <a href="/explore" data-nav>Games Catalogue</a>
           <a href="/about" data-nav>Architecture</a>
           <a href="/contact" data-nav>Submissions</a>
           <a href="/privacy" data-nav>Privacy Guarantee</a>
         </div>
       </div>
-      <div class="footer-copy">© ${new Date().getFullYear()} DevKitra Gaming. All titles run 100% locally in browser memory. Zero tracking cookies. Zero downloads.</div>
+      <div class="footer-copy">© ${new Date().getFullYear()} DevKitra Gaming. All titles run client-side in browser memory with zero tracking cookies and zero installations.</div>
     </footer>
     </div></div>
   `;
 }
 
 /* ------------------------------------------------------------------ */
-/* Game card                                                          */
+/* Game Card                                                          */
 /* ------------------------------------------------------------------ */
 
 function gameCard(game, customBadge = '') {
@@ -378,7 +377,7 @@ function gameCard(game, customBadge = '') {
         <p class="game-card-desc">${escapeHtml(game.description)}</p>
       </div>
       <div class="game-card-foot">
-        <span>${game.inputs.map((inp) => inp === 'keyboard' ? '⌨ Keys' : inp === 'touch' ? '📱 Touch' : '🖱 Mouse').join(' · ')}</span>
+        <span>${game.inputs.map((inp) => inp === 'keyboard' ? 'Keyboard' : inp === 'touch' ? 'Touch' : 'Mouse').join(' · ')}</span>
         <span class="game-card-cta">Instant Play →</span>
       </div>
     </a>
@@ -393,131 +392,132 @@ function renderHomePage() {
   const all = [...publishedGames()];
   const featured = featuredGames();
   const populatedGenres = genres.filter((g) => genreGameCount(g.slug) > 0);
-  const activeSpotlight = all.find((g) => g.id === 'breakout') || all[0];
+  const spotlightGame = all.find((g) => g.id === 'astro-drift') || all[0];
 
-  // Curated lists
-  const hotPicks = all.filter((g) => ['cyber-flap', 'breakout', 'tower-stack', 'neon-pong'].includes(g.id));
-  const reflexPicks = all.filter((g) => ['snake', 'reaction-test', 'breakout', 'cyber-flap'].includes(g.id));
-  const puzzlePicks = all.filter((g) => ['2048', 'memory-match', 'tower-stack'].includes(g.id));
+  const actionPicks = all.filter((g) => ['astro-drift', 'speed-dash', 'cyber-flap', 'neon-pong'].includes(g.id));
+  const arcadePicks = all.filter((g) => ['breakout', 'tower-stack', 'snake', 'reaction-test'].includes(g.id));
+  const puzzlePicks = all.filter((g) => ['2048', 'memory-match'].includes(g.id));
 
   return `
     <main class="page-shell home-page">
-      <!-- High-Energy Gaming Hero Marquee -->
-      <section class="hero">
-        <div class="hero-inner">
-          <div class="hero-copy">
-            <div class="hero-beacon">
-              <span class="beacon-dot"></span>
-              <span class="beacon-text">INSTANT BROWSER PLAY · 0 DOWNLOADS</span>
+      <!-- High-End Marquee Hero Showcase -->
+      <section class="hero-showcase">
+        <div class="spotlight-banner">
+          <div class="spotlight-poster">
+            <img src="${spotlightGame.thumbnail}" alt="${escapeHtml(spotlightGame.title)}" id="spotlight-bg-img" />
+            <div class="spotlight-overlay"></div>
+          </div>
+          <div class="spotlight-content">
+            <div class="spotlight-tag">
+              <span class="status-indicator"></span>
+              <span id="spotlight-badge">FEATURED RELEASE · 60 FPS ENGINE</span>
             </div>
-            <h1>Next-Level Gaming.<br /><span>Zero Lag. Pure Arcade.</span></h1>
-            <p class="hero-description">Immerse yourself in high-speed, particle-accelerated browser games crafted with reactive physics and zero waiting. Pick a match and dive right in.</p>
-            <div class="hero-actions">
-              <a href="${activeSpotlight.route}" data-nav class="btn btn-primary" id="hero-play-btn">Play ${escapeHtml(activeSpotlight.title)} Now ▶</a>
-              <button type="button" class="btn btn-ghost" id="hero-random-btn">${diceSvg()} Random Game</button>
-            </div>
-            <div class="hero-stats">
-              <div class="stat-item">
-                <span class="stat-num">${all.length}</span>
-                <span class="stat-lbl">Original Games</span>
-              </div>
-              <div class="stat-div"></div>
-              <div class="stat-item">
-                <span class="stat-num">60</span>
-                <span class="stat-lbl">FPS Canvas</span>
-              </div>
-              <div class="stat-div"></div>
-              <div class="stat-item">
-                <span class="stat-num">0 KB</span>
-                <span class="stat-lbl">Install Weight</span>
-              </div>
-              <div class="stat-div"></div>
-              <div class="stat-item">
-                <span class="stat-num">100%</span>
-                <span class="stat-lbl">Client-Side</span>
-              </div>
+            <h1 id="spotlight-title">${escapeHtml(spotlightGame.title)}</h1>
+            <p id="spotlight-desc" class="spotlight-summary">${escapeHtml(spotlightGame.description)}</p>
+            <div class="spotlight-actions">
+              <a href="${spotlightGame.route}" data-nav class="btn btn-primary" id="spotlight-play-btn">Launch Game ▶</a>
+              <a href="/explore" data-nav class="btn btn-ghost">Browse Catalogue</a>
+              <button type="button" class="btn btn-ghost" id="hero-random-btn">${diceSvg()} Random Match</button>
             </div>
           </div>
+        </div>
 
-          <!-- Hero Live Interactive Arcade Cabinet -->
-          <div class="hero-arcade">
-            <div class="hero-tabs" id="hero-switcher">
-              ${all.map((g) => `
-                <button type="button" class="hero-tab ${g.id === activeSpotlight.id ? 'active' : ''}" data-hero-id="${g.id}" data-hero-src="${g.standalone}?embed=1" data-hero-title="${escapeHtml(g.title)}" data-hero-route="${g.route}">
-                  ${g.id === 'snake' ? '🐍 Snake' : g.id === 'breakout' ? '🧱 Breakout' : g.id === 'cyber-flap' ? '🚀 Cyber Flap' : g.id === 'tower-stack' ? '🏗️ Stack' : g.id === 'neon-pong' ? '🏓 Pong AI' : g.id === '2048' ? '🔢 2048' : g.id === 'reaction-test' ? '⚡ Reflex' : '🃏 Memory'}
-                </button>
-              `).join('')}
-            </div>
-            <div class="hero-cabinet">
-              <div class="cabinet-bezel">
-                <iframe id="hero-cabinet-frame" src="${activeSpotlight.standalone}?embed=1" title="${escapeHtml(activeSpotlight.title)} preview" tabindex="-1"></iframe>
-                <div class="cabinet-footer">
-                  <span class="cabinet-status">● LIVE ARENA PREVIEW</span>
-                  <button type="button" class="cabinet-overlay-btn" id="hero-fullscreen-btn" title="Fullscreen Play">Fullscreen ⛶</button>
-                </div>
-              </div>
-            </div>
+        <!-- Spotlight Quick Selector Carousel Strip -->
+        <div class="spotlight-selector" id="spotlight-selector">
+          ${featured.slice(0, 5).map((g, idx) => `
+            <button type="button" class="spotlight-tab ${g.id === spotlightGame.id ? 'active' : ''}"
+              data-id="${g.id}"
+              data-title="${escapeHtml(g.title)}"
+              data-desc="${escapeHtml(g.description)}"
+              data-route="${g.route}"
+              data-thumb="${g.thumbnail}"
+              data-badge="${GAME_BADGES[g.id] || 'FEATURED'}">
+              <span class="tab-index">0${idx + 1}</span>
+              <span class="tab-title">${escapeHtml(g.title)}</span>
+            </button>
+          `).join('')}
+        </div>
+
+        <!-- Metric Specs Strip -->
+        <div class="specs-bar">
+          <div class="spec-unit">
+            <span class="spec-value">${all.length}</span>
+            <span class="spec-label">Native Games</span>
+          </div>
+          <div class="spec-divider"></div>
+          <div class="spec-unit">
+            <span class="spec-value">60 FPS</span>
+            <span class="spec-label">Hardware Render</span>
+          </div>
+          <div class="spec-divider"></div>
+          <div class="spec-unit">
+            <span class="spec-value">0 KB</span>
+            <span class="spec-label">Install Footprint</span>
+          </div>
+          <div class="spec-divider"></div>
+          <div class="spec-unit">
+            <span class="spec-value">100%</span>
+            <span class="spec-label">Local Client Privacy</span>
           </div>
         </div>
       </section>
 
       <!-- Category Dock -->
-      <section class="section" style="margin-top:2.25rem;">
+      <section class="section" style="margin-top: 2rem;">
         <div class="category-dock">
-          <a href="/explore" data-nav class="cat-pill active"><span class="cat-icon">🎮</span> All Games (${all.length})</a>
-          ${populatedGenres.map((g) => {
-            const icon = g.slug === 'arcade' ? '🕹️' : g.slug === 'puzzle' ? '🧩' : g.slug === 'quick-play' ? '⚡' : g.slug === 'sports' ? '🏓' : g.slug === 'board-card' ? '🃏' : g.slug === 'physics-skill' ? '🎯' : '🪐';
-            return `<a href="/genre/${g.slug}" data-nav class="cat-pill"><span class="cat-icon">${icon}</span> ${escapeHtml(g.label)} (${genreGameCount(g.slug)})</a>`;
-          }).join('')}
+          <a href="/explore" data-nav class="cat-pill active">All Categories (${all.length})</a>
+          ${populatedGenres.map((g) => `
+            <a href="/genre/${g.slug}" data-nav class="cat-pill">${escapeHtml(g.label)} (${genreGameCount(g.slug)})</a>
+          `).join('')}
         </div>
       </section>
 
-      <!-- Shelf 1: 🔥 Trending & Hot -->
+      <!-- Curated Shelf 1: Action & Speed -->
       <section class="section">
         <div class="section-header">
           <div class="copy">
-            <div class="eyebrow">🔥 Hot Rotation</div>
-            <h2>Trending & New Releases</h2>
-            <p>The newest high-voltage arcade games featuring custom physics, synth audio, and multiple levels.</p>
+            <div class="eyebrow">High Velocity</div>
+            <h2>Action & Speed Arcades</h2>
+            <p>Rapid navigation, particle thrusters, laser barriers, and responsive momentum.</p>
           </div>
-          <a href="/explore" data-nav class="btn btn-ghost btn-sm">View Vault →</a>
+          <a href="/explore" data-nav class="btn btn-ghost btn-sm">Explore All →</a>
         </div>
-        <div class="featured-grid">${hotPicks.map((g) => gameCard(g)).join('')}</div>
+        <div class="featured-grid">${actionPicks.map((g) => gameCard(g)).join('')}</div>
       </section>
 
-      <!-- Shelf 2: ⚡ High Reflex & Arcade -->
+      <!-- Curated Shelf 2: Skill & Timing -->
       <section class="section">
         <div class="section-header">
           <div class="copy">
-            <div class="eyebrow">⚡ High Intensity</div>
-            <h2>Reflex & Speed Arcades</h2>
-            <p>Fast fingers required. Dodge lasers, smash brick fortresses, and race millisecond radar.</p>
+            <div class="eyebrow">Precision Timing</div>
+            <h2>Skill, Reflection & Accuracy</h2>
+            <p>Brick fortresses, slab stacking, agile snake arenas, and neurological radar testing.</p>
           </div>
         </div>
-        <div class="game-grid">${reflexPicks.map((g) => gameCard(g)).join('')}</div>
+        <div class="game-grid">${arcadePicks.map((g) => gameCard(g)).join('')}</div>
       </section>
 
-      <!-- Shelf 3: 🧠 Mind Benders & Strategy -->
+      <!-- Curated Shelf 3: Logic & Strategy -->
       <section class="section">
         <div class="section-header">
           <div class="copy">
-            <div class="eyebrow">🧠 Brain Gym</div>
-            <h2>Puzzles & Tactical Precision</h2>
-            <p>Sharpen your mind with precision tile slides, pattern memory grids, and rhythmic timing.</p>
+            <div class="eyebrow">Cognitive Focus</div>
+            <h2>Logic & Memory Puzzles</h2>
+            <p>Spatial calculation, tile merging, and paired glyph sequences.</p>
           </div>
         </div>
         <div class="game-grid">${puzzlePicks.map((g) => gameCard(g)).join('')}</div>
       </section>
 
-      <!-- Shelf 4: Complete Games Vault -->
+      <!-- Complete Collection Shelf -->
       <section class="section">
         <div class="section-header">
           <div class="copy">
-            <div class="eyebrow">🎮 Complete Collection</div>
-            <h2>The Full Arena Vault</h2>
+            <div class="eyebrow">Complete Catalogue</div>
+            <h2>All Verified Games</h2>
             <p>Every title built for zero downloads, offline memory saves, and maximum frame rates.</p>
           </div>
-          <button type="button" class="btn btn-primary btn-sm" id="section-random-btn">${diceSvg()} Pick Random</button>
+          <button type="button" class="btn btn-primary btn-sm" id="section-random-btn">${diceSvg()} Random Match</button>
         </div>
         <div class="game-grid">${all.map((g) => gameCard(g)).join('')}</div>
       </section>
@@ -525,11 +525,13 @@ function renderHomePage() {
   `;
 }
 
-function setupHeroArcade() {
-  const tabs = document.querySelectorAll('#hero-switcher .hero-tab');
-  const frame = document.getElementById('hero-cabinet-frame');
-  const playBtn = document.getElementById('hero-play-btn');
-  const fsBtn = document.getElementById('hero-fullscreen-btn');
+function setupHeroShowcase() {
+  const tabs = document.querySelectorAll('#spotlight-selector .spotlight-tab');
+  const bgImg = document.getElementById('spotlight-bg-img');
+  const titleEl = document.getElementById('spotlight-title');
+  const descEl = document.getElementById('spotlight-desc');
+  const playBtn = document.getElementById('spotlight-play-btn');
+  const badgeEl = document.getElementById('spotlight-badge');
   const randomHeroBtn = document.getElementById('hero-random-btn');
   const randomSecBtn = document.getElementById('section-random-btn');
 
@@ -540,32 +542,27 @@ function setupHeroArcade() {
     randomSecBtn.addEventListener('click', () => launchRandomGame());
   }
 
-  if (!tabs.length || !frame) return;
+  if (!tabs.length) return;
 
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
       playUiSound('switch');
       tabs.forEach((t) => t.classList.remove('active'));
       tab.classList.add('active');
-      const src = tab.dataset.heroSrc;
-      const title = tab.dataset.heroTitle;
-      const route = tab.dataset.heroRoute;
-      frame.src = src;
-      frame.title = `${title} preview`;
-      if (playBtn) {
-        playBtn.textContent = `Play ${title} Now ▶`;
-        playBtn.href = route;
-      }
+
+      const title = tab.dataset.title;
+      const desc = tab.dataset.desc;
+      const route = tab.dataset.route;
+      const thumb = tab.dataset.thumb;
+      const badge = tab.dataset.badge;
+
+      if (titleEl) titleEl.textContent = title;
+      if (descEl) descEl.textContent = desc;
+      if (playBtn) playBtn.href = route;
+      if (bgImg && thumb) bgImg.src = thumb;
+      if (badgeEl) badgeEl.textContent = `${badge} · 60 FPS ENGINE`;
     });
   });
-
-  if (fsBtn) {
-    fsBtn.addEventListener('click', () => {
-      playUiSound('click');
-      if (frame.requestFullscreen) frame.requestFullscreen();
-      else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
-    });
-  }
 }
 
 function renderExplorePage() {
@@ -576,20 +573,20 @@ function renderExplorePage() {
     <main class="page-shell explore-page">
       <div class="section-header">
         <div class="copy">
-          <div class="eyebrow">DevKitra Games Vault</div>
-          <h1>Explore The Complete Catalogue</h1>
+          <div class="eyebrow">DevKitra Games Library</div>
+          <h1>All Browser Games</h1>
           <p>Instant search by title, category, tags, or control mechanics. Filter with real-time responsive speed.</p>
         </div>
-        <button type="button" class="btn btn-primary btn-sm" id="explore-random-btn">${diceSvg()} Surprise Pick</button>
+        <button type="button" class="btn btn-primary btn-sm" id="explore-random-btn">${diceSvg()} Random Pick</button>
       </div>
       <div class="search-sort">
         <div class="search-shell explore-search">
-          <input id="explore-search" type="search" placeholder="Search by game title, genre, or tag (e.g. arcade, reflex, flight, stack, ai)…" aria-label="Search games" />
+          <input id="explore-search" type="search" placeholder="Search by game title, genre, or tag (e.g. space, racing, arcade, puzzle)…" aria-label="Search games" />
           ${searchSvg()}
         </div>
         <div class="select-shell">
           <select id="explore-sort" aria-label="Sort games">
-            <option value="added">Newest Releases</option>
+            <option value="added">Newest First</option>
             <option value="title">Alphabetical (A–Z)</option>
           </select>
         </div>
@@ -602,7 +599,7 @@ function renderExplorePage() {
       <div id="explore-results" class="game-grid">${all.map((g) => gameCard(g)).join('')}</div>
       <div id="explore-empty" class="empty-state hidden">
         <h2>No games found.</h2>
-        <p>Try searching for "arcade", "reflex", "stack", or "pong".</p>
+        <p>Try searching for "space", "racing", "arcade", or "pong".</p>
       </div>
     </main>
   `;
@@ -693,6 +690,10 @@ function renderGenrePage(slug) {
   `;
 }
 
+/* ------------------------------------------------------------------ */
+/* Game Screen Console / Theater Architecture                        */
+/* ------------------------------------------------------------------ */
+
 function renderGamePage(slug) {
   const game = gameByRoute(`/game/${slug}`);
   if (!game) return renderNotFoundPage();
@@ -702,63 +703,80 @@ function renderGamePage(slug) {
     .slice(0, 4);
 
   const pauseMarkup = game.pause
-    ? `<button type="button" class="btn btn-sm btn-ghost" data-action="pause" aria-pressed="false">Pause [P]</button>`
+    ? `<button type="button" class="console-btn" data-action="pause" aria-pressed="false" title="Pause / Resume [P]"><span class="btn-icon">⏸</span> Pause</button>`
     : '';
 
   const genreLabels = game.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ');
 
   return `
-    <main class="page-shell game-page">
-      <header class="game-header">
-        <div class="game-identity">
-          ${game.thumbnail ? `<img class="game-thumb" src="${game.thumbnail}" alt="${escapeHtml(game.title)}" />` : ''}
-          <div class="copy">
-            <span class="game-eyebrow">${genreLabels}</span>
-            <h1>${escapeHtml(game.title)}</h1>
-            <p class="game-lede">${escapeHtml(game.description)}</p>
+    <main class="page-shell game-page" id="game-page-root">
+      <!-- Game Info Header -->
+      <div class="game-meta-header">
+        <div class="meta-left">
+          <a href="/explore" data-nav class="back-link">← Games Library</a>
+          <span class="meta-genre">${genreLabels}</span>
+          <h1 class="game-main-title">${escapeHtml(game.title)}</h1>
+          <p class="game-main-lede">${escapeHtml(game.description)}</p>
+        </div>
+        <div class="meta-right">
+          <button type="button" class="btn btn-ghost btn-sm" id="game-next-btn">${diceSvg()} Next Game</button>
+        </div>
+      </div>
+
+      <!-- Gaming Console Theater Stage -->
+      <div class="console-stage" id="console-stage">
+        <!-- Floating HUD Control Ribbon -->
+        <div class="console-ribbon">
+          <div class="ribbon-left">
+            <span class="status-chip running" id="console-status"><span class="chip-dot"></span> LIVE RUNTIME</span>
+            <span class="fps-badge">60 FPS</span>
+          </div>
+          <div class="ribbon-actions">
+            ${pauseMarkup}
+            <button type="button" class="console-btn" data-action="restart" title="Restart Match [R]"><span class="btn-icon">↺</span> Restart</button>
+            <button type="button" class="console-btn" data-action="theater" id="theater-toggle" title="Toggle Cinema Theater Mode [T]"><span class="btn-icon">⛶</span> Theater Mode</button>
+            <button type="button" class="console-btn" data-action="fullscreen" id="fs-toggle" title="Full Screen [F]"><span class="btn-icon">⛶</span> Fullscreen</button>
+            <button type="button" class="console-btn ${soundEnabled ? 'active' : ''}" id="game-sound-btn" title="Toggle Game Audio">${soundIcon(soundEnabled)}</button>
           </div>
         </div>
-        <div class="game-actions">
-          ${pauseMarkup}
-          <button type="button" class="btn btn-primary btn-sm" data-action="restart">Restart [R]</button>
-          <button type="button" class="btn btn-ghost btn-sm" data-action="fullscreen" title="Fullscreen [F]">Fullscreen ⛶</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="game-next-btn" title="Play Another Game">${diceSvg()} Next Game</button>
-          <a href="/explore" data-nav class="btn btn-ghost btn-sm">Vault ↩</a>
+
+        <!-- Frame Viewport -->
+        <div class="game-viewport-wrap" id="game-viewport" role="region" aria-label="${escapeHtml(game.title)} gameplay canvas">
+          <iframe class="game-viewport-frame" id="active-game-frame" src="${game.standalone}${game.pause ? '?embed=1' : ''}" title="${escapeHtml(game.title)}" allowfullscreen></iframe>
         </div>
-      </header>
-      <div class="game-body">
-        <div class="game-frame-wrap" id="game-container" role="region" aria-label="${escapeHtml(game.title)} game">
-          <iframe class="game-frame" id="active-game-frame" src="${game.standalone}${game.pause ? '?embed=1' : ''}" title="${escapeHtml(game.title)}" allowfullscreen></iframe>
-        </div>
-        <aside class="game-sidebar">
-          <section class="game-section">
-            <h2>Controls & Mechanics</h2>
-            <div class="controls-list">
-              ${game.inputs.map((input) => `<span class="kbd">${escapeHtml(input)}</span>`).join('')}
-            </div>
-            <p class="controls-hint">${escapeHtml(game.controls)}</p>
-            ${game.save ? '<p class="controls-hint"><span style="color:var(--dk-success);font-weight:800;">●</span> Highscores saved locally in your browser.</p>' : ''}
-            <div class="hotkeys-guide">
-              <span class="hotkey-pill"><kbd>R</kbd> Restart</span>
-              ${game.pause ? '<span class="hotkey-pill"><kbd>P</kbd> Pause</span>' : ''}
-              <span class="hotkey-pill"><kbd>F</kbd> Fullscreen</span>
-            </div>
-          </section>
-          ${related.length ? `
-          <section class="game-section">
-            <h2>More Games To Play</h2>
-            <div class="related-grid">${related.map((r) => `
-              <a href="${r.route}" data-nav class="related-card">
-                ${r.thumbnail ? `<img class="related-card-thumb" src="${r.thumbnail}" alt="" loading="lazy" />` : ''}
-                <div class="related-card-info">
-                  <span class="related-card-title">${escapeHtml(r.title)}</span>
-                  <span class="related-card-badge">${GAME_BADGES[r.id] || 'PLAY'}</span>
-                </div>
-              </a>
-            `).join('')}</div>
-          </section>
-          ` : ''}
-        </aside>
+      </div>
+
+      <!-- Controls & Details Section -->
+      <div class="game-details-layout">
+        <section class="details-card">
+          <h2>Controls & Instructions</h2>
+          <div class="controls-list">
+            ${game.inputs.map((input) => `<span class="kbd">${escapeHtml(input)}</span>`).join('')}
+          </div>
+          <p class="controls-hint">${escapeHtml(game.controls)}</p>
+          ${game.save ? '<p class="controls-hint" style="color:var(--dk-success);font-weight:700;margin-top:0.75rem;">● Highscores and session progress are stored locally on your device.</p>' : ''}
+          <div class="hotkeys-guide">
+            <span class="hotkey-pill"><kbd>R</kbd> Restart</span>
+            ${game.pause ? '<span class="hotkey-pill"><kbd>P</kbd> Pause</span>' : ''}
+            <span class="hotkey-pill"><kbd>T</kbd> Theater Mode</span>
+            <span class="hotkey-pill"><kbd>F</kbd> Fullscreen</span>
+          </div>
+        </section>
+
+        <!-- Recommended Games Shelf -->
+        <section class="details-card">
+          <h2>More Titles In Rotation</h2>
+          <div class="related-stack">${related.map((r) => `
+            <a href="${r.route}" data-nav class="related-tile">
+              ${r.thumbnail ? `<img class="related-tile-thumb" src="${r.thumbnail}" alt="" loading="lazy" />` : ''}
+              <div class="related-tile-info">
+                <span class="related-tile-title">${escapeHtml(r.title)}</span>
+                <span class="related-tile-genre">${r.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ') || 'Game'}</span>
+              </div>
+              <span class="related-tile-badge">${GAME_BADGES[r.id] || 'PLAY'}</span>
+            </a>
+          `).join('')}</div>
+        </section>
       </div>
     </main>
   `;
@@ -768,12 +786,16 @@ function setupGamePage(slug) {
   const game = gameByRoute(`/game/${slug}`);
   if (!game) return;
 
-  const wrap = document.getElementById('game-container');
+  const stage = document.getElementById('console-stage');
+  const viewport = document.getElementById('game-viewport');
   const frame = document.getElementById('active-game-frame');
   const restart = document.querySelector('[data-action="restart"]');
   const pauseBtn = document.querySelector('[data-action="pause"]');
-  const fsBtn = document.querySelector('[data-action="fullscreen"]');
+  const fsBtn = document.getElementById('fs-toggle');
+  const theaterBtn = document.getElementById('theater-toggle');
   const nextBtn = document.getElementById('game-next-btn');
+  const soundBtn = document.getElementById('game-sound-btn');
+  const statusChip = document.getElementById('console-status');
   const origin = window.location.origin;
 
   if (nextBtn) {
@@ -793,9 +815,12 @@ function setupGamePage(slug) {
       playUiSound('click');
       paused = false;
       if (pauseBtn) {
-        pauseBtn.textContent = 'Pause [P]';
+        pauseBtn.innerHTML = '<span class="btn-icon">⏸</span> Pause';
         pauseBtn.setAttribute('aria-pressed', 'false');
-        pauseBtn.disabled = false;
+      }
+      if (statusChip) {
+        statusChip.className = 'status-chip running';
+        statusChip.innerHTML = '<span class="chip-dot"></span> LIVE RUNTIME';
       }
       postToGame({ type: 'dk:restart' });
       frame.focus();
@@ -806,23 +831,52 @@ function setupGamePage(slug) {
     pauseBtn.addEventListener('click', () => {
       playUiSound('click');
       paused = !paused;
-      pauseBtn.textContent = paused ? 'Resume [P]' : 'Pause [P]';
+      pauseBtn.innerHTML = paused ? '<span class="btn-icon">▶</span> Resume' : '<span class="btn-icon">⏸</span> Pause';
       pauseBtn.setAttribute('aria-pressed', String(paused));
+      if (statusChip) {
+        statusChip.className = paused ? 'status-chip paused' : 'status-chip running';
+        statusChip.innerHTML = paused ? '<span class="chip-dot"></span> PAUSED' : '<span class="chip-dot"></span> LIVE RUNTIME';
+      }
       postToGame(paused ? { type: 'dk:pause' } : { type: 'dk:resume' });
       frame.focus();
     });
   }
 
-  if (fsBtn && wrap) {
+  // Theater Mode Toggle
+  if (theaterBtn && stage) {
+    theaterBtn.addEventListener('click', () => {
+      playUiSound('click');
+      const isTheater = stage.classList.toggle('theater-mode');
+      theaterBtn.classList.toggle('active', isTheater);
+      theaterBtn.innerHTML = isTheater ? '<span class="btn-icon">🗗</span> Standard View' : '<span class="btn-icon">⛶</span> Theater Mode';
+      if (isTheater) {
+        stage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      frame.focus();
+    });
+  }
+
+  // Fullscreen Mode
+  if (fsBtn && viewport) {
     fsBtn.addEventListener('click', () => {
       playUiSound('click');
       if (!document.fullscreenElement) {
-        if (wrap.requestFullscreen) wrap.requestFullscreen();
-        else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+        if (viewport.requestFullscreen) viewport.requestFullscreen();
+        else if (viewport.webkitRequestFullscreen) viewport.webkitRequestFullscreen();
       } else {
         if (document.exitFullscreen) document.exitFullscreen();
       }
       frame.focus();
+    });
+  }
+
+  // Audio Toggle on Game Bar
+  if (soundBtn) {
+    soundBtn.addEventListener('click', () => {
+      const enabled = toggleSound();
+      soundBtn.innerHTML = soundIcon(enabled);
+      soundBtn.classList.toggle('active', enabled);
+      showToast(enabled ? 'Sound FX Enabled' : 'Sound FX Muted');
     });
   }
 
@@ -839,6 +893,8 @@ function setupGamePage(slug) {
       pauseBtn?.click();
     } else if (event.key === 'f' || event.key === 'F') {
       fsBtn?.click();
+    } else if (event.key === 't' || event.key === 'T') {
+      theaterBtn?.click();
     }
   };
 
@@ -850,8 +906,8 @@ window.addEventListener('message', (event) => {
   const origin = siteUrl() || window.location.origin;
   if (event.origin !== origin) return;
   const { type, score } = event.data || {};
-  if (type === 'dk:gameover' && score !== undefined && document.querySelector('.game-frame')) {
-    showToast(`Game Over! Final Score: ${score}`, 'error');
+  if (type === 'dk:gameover' && score !== undefined && document.querySelector('.game-viewport-frame')) {
+    showToast(`Game Over · Final Score: ${score}`, 'error');
   }
 });
 
@@ -861,13 +917,13 @@ function renderAboutPage() {
       <div class="static-card">
         <div class="eyebrow">Engine Architecture</div>
         <h1>Instant Games, Client-Side Runtime</h1>
-        <p>DevKitra Gaming is engineered for instant gratification. No 50 GB downloads, no loading bars, and no sign-up gates. Every title is compiled to run locally in your browser memory with full GPU acceleration.</p>
-        <p>Games operate as isolated canvas sandbox modules, communicating via secure postMessage protocols for state synchronization and restart events.</p>
-        <h2>Your Privacy is Absolute</h2>
+        <p>DevKitra Gaming is engineered for instantaneous playability. No 50 GB downloads, no loading screens, and zero registration walls. Every title is executed locally within isolated browser canvas memory with GPU acceleration.</p>
+        <p>Games operate as isolated sandbox modules, communicating with the platform frame via standardized postMessage protocols for state synchronization and event dispatching.</p>
+        <h2>Data & Privacy Standards</h2>
         <ul>
-          <li>All gameplay loops, high scores, and settings reside in your device's window.localStorage.</li>
-          <li>Zero tracking scripts, zero third-party advertising trackers, and zero user account obligations.</li>
-          <li>Silky smooth performance on desktop, Chromebooks, iPads, and mobile smartphones.</li>
+          <li>All gameplay loops, high scores, and preferences reside solely in your device's window.localStorage.</li>
+          <li>Zero tracking scripts, zero third-party advertising cookies, and zero user account requirements.</li>
+          <li>Compatible with modern desktop browsers, mobile touch devices, Chromebooks, and tablets.</li>
         </ul>
       </div>
     </main>
@@ -882,7 +938,7 @@ function renderPrivacyPage() {
         <h1>Privacy Guarantee</h1>
         <ul>
           <li><strong>Local Execution:</strong> 100% of game physics and logic execute on your client device.</li>
-          <li><strong>No Login Wall:</strong> No email, credentials, or personal profiles collected.</li>
+          <li><strong>No Login Wall:</strong> No email, credentials, or personal profiles are collected.</li>
           <li><strong>Local Storage Scoped:</strong> Best scores are stored in your device's window.localStorage.</li>
           <li><strong>Zero Remote Paywalls:</strong> Completely open and playable without fees or subscriptions.</li>
         </ul>
@@ -897,7 +953,7 @@ function renderContactPage() {
       <div class="static-card">
         <div class="eyebrow">Connect</div>
         <h1>Contact & Game Submissions</h1>
-        <p>Have an original browser game suggestion, performance feedback, or bug report? Reach out directly:</p>
+        <p>Have an original browser game suggestion, performance feedback, or technical inquiry? Reach out directly:</p>
         <a href="mailto:tejaskrishna.as@gmail.com" style="display:inline-block;margin-top:0.75rem;font-size:1.1rem;color:var(--dk-primary);font-weight:700;">tejaskrishna.as@gmail.com</a>
         <p style="font-size:0.85rem;color:var(--dk-quiet);margin-top:0.75rem;">Please include browser specifications and reproduction steps for bug reports.</p>
       </div>
@@ -910,16 +966,16 @@ function renderNotFoundPage() {
     <main class="page-shell">
       <section class="not-found">
         <div class="eyebrow">404 ERROR</div>
-        <h1>Out of Bounds</h1>
-        <p>That level does not exist in the DevKitra rotation.</p>
-        <a href="/explore" data-nav class="btn btn-primary">Return to Games Vault ▶</a>
+        <h1>Page Not Found</h1>
+        <p>The requested destination does not exist in the DevKitra rotation.</p>
+        <a href="/explore" data-nav class="btn btn-primary">Return to Games Library ▶</a>
       </section>
     </main>
   `;
 }
 
 /* ------------------------------------------------------------------ */
-/* Global search                                                      */
+/* Global Search                                                      */
 /* ------------------------------------------------------------------ */
 
 let pageCleanups = [];
@@ -993,7 +1049,6 @@ function setupGlobalSearch() {
   document.addEventListener('click', onDocClick);
   pageCleanups.push(() => document.removeEventListener('click', onDocClick));
 
-  // Global keydown for '/' shortcut to search
   const onGlobalSlash = (e) => {
     if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
       e.preventDefault();
@@ -1093,7 +1148,7 @@ function setupSoundToggle() {
     const enabled = toggleSound();
     toggle.innerHTML = soundIcon(enabled);
     toggle.classList.toggle('active', enabled);
-    showToast(enabled ? 'Sound FX Enabled 🔊' : 'Sound FX Muted 🔇');
+    showToast(enabled ? 'Sound FX Enabled' : 'Sound FX Muted');
   });
 }
 
@@ -1116,13 +1171,12 @@ function setupSurpriseButton() {
 }
 
 function setupCardHoverSounds() {
-  document.querySelectorAll('.game-card, .btn, .cat-pill, .btn-surprise, .hero-tab').forEach((el) => {
+  document.querySelectorAll('.game-card, .btn, .cat-pill, .btn-surprise, .spotlight-tab').forEach((el) => {
     el.addEventListener('mouseenter', () => playUiSound('hover'), { passive: true });
   });
 }
 
 function renderCurrentPage() {
-  /* Clean up previous page event listeners */
   pageCleanups.forEach((fn) => fn());
   pageCleanups = [];
 
@@ -1147,7 +1201,6 @@ function renderCurrentPage() {
 
   app.innerHTML = `${renderHeader(path)}${pageContent}${renderFooter()}`;
 
-  /* Scroll to top on navigation */
   window.scrollTo(0, 0);
 
   setupGlobalSearch();
@@ -1158,7 +1211,7 @@ function renderCurrentPage() {
   setupSearchToggle();
   setupCardHoverSounds();
 
-  if (route.page === 'home') setupHeroArcade();
+  if (route.page === 'home') setupHeroShowcase();
   if (route.page === 'explore') setupExplore();
   if (route.page === 'game') setupGamePage(route.slug);
 }
