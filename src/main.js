@@ -13,28 +13,27 @@ const app = document.querySelector('#app');
 const SITE_NAME = 'DevKitra Gaming';
 
 const NAV = [
-  { label: 'Featured', href: '/' },
+  { label: 'Home', href: '/' },
   { label: 'All Games', href: '/explore' },
-  { label: 'Architecture', href: '/about' },
+  { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
 
-/* Professional Metadata Badges */
-const GAME_BADGES = {
-  'astro-drift': '3 SECTORS',
-  'speed-dash': 'HIGH SPEED',
-  'cyber-flap': 'ARCADE FLIGHT',
-  'neon-pong': '3 AI TIERS',
-  'tower-stack': 'PHYSICS TIMING',
-  'breakout': '4 LEVELS',
-  'snake': '3 ARENAS',
-  '2048': 'LOGIC MATRIX',
-  'reaction-test': 'RADAR TIERS',
-  'memory-match': '3 MODES',
+const GAME_TAGS = {
+  'tetris': 'CLASSIC',
+  'sky-jump': 'POPULAR',
+  'snake': 'RETRO',
+  '2048': 'PUZZLE',
+  'breakout': 'ARCADE',
+  'tower-stack': 'CASUAL',
+  'neon-pong': '2-PLAYER AI',
+  'cyber-flap': 'REFLEX',
+  'memory-match': 'MEMORY',
+  'reaction-test': 'BENCHMARK',
 };
 
 /* ------------------------------------------------------------------ */
-/* Web Audio API Sound Engine (Synthesized, 0 kB assets)              */
+/* Web Audio API Sound Engine (Gentle, Decent & Tasteful)              */
 /* ------------------------------------------------------------------ */
 
 let audioCtx = null;
@@ -60,32 +59,24 @@ function playUiSound(type) {
 
     if (type === 'hover') {
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(540, now);
+      osc.frequency.setValueAtTime(420, now);
       gain.gain.setValueAtTime(0.015, now);
       gain.gain.linearRampToValueAtTime(0, now + 0.025);
       osc.start(now); osc.stop(now + 0.025);
     } else if (type === 'click') {
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(580, now);
-      osc.frequency.exponentialRampToValueAtTime(960, now + 0.05);
-      gain.gain.setValueAtTime(0.06, now);
+      osc.frequency.setValueAtTime(520, now);
+      osc.frequency.exponentialRampToValueAtTime(780, now + 0.05);
+      gain.gain.setValueAtTime(0.05, now);
       gain.gain.linearRampToValueAtTime(0, now + 0.05);
       osc.start(now); osc.stop(now + 0.05);
     } else if (type === 'switch') {
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(360, now);
-      osc.frequency.exponentialRampToValueAtTime(720, now + 0.06);
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(640, now + 0.06);
       gain.gain.setValueAtTime(0.04, now);
       gain.gain.linearRampToValueAtTime(0, now + 0.06);
       osc.start(now); osc.stop(now + 0.06);
-    } else if (type === 'launch') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, now);
-      osc.frequency.setValueAtTime(660, now + 0.06);
-      osc.frequency.setValueAtTime(880, now + 0.12);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-      osc.start(now); osc.stop(now + 0.25);
     }
   } catch (_) {}
 }
@@ -141,11 +132,11 @@ function matchRoute(path) {
 /* ------------------------------------------------------------------ */
 
 function launchRandomGame(excludeId = '') {
-  playUiSound('launch');
+  playUiSound('click');
   const all = publishedGames().filter((g) => g.id !== excludeId);
   if (!all.length) return;
   const picked = all[Math.floor(Math.random() * all.length)];
-  showToast(`Launching ${picked.title}...`, 'success');
+  showToast(`Opening ${picked.title}...`, 'info');
   navigateTo(picked.route);
 }
 
@@ -162,24 +153,24 @@ function siteUrl() {
 
 function updatePageMetadata(route) {
   const pages = {
-    '/': { title: `${SITE_NAME} — High-Performance Browser Gaming Platform`, description: 'Play instant, zero-install browser games crafted with 60fps canvas physics and client-side isolation.' },
-    '/explore': { title: `All Games | ${SITE_NAME}`, description: 'Search and filter the complete DevKitra instant games collection.' },
-    '/about': { title: `Architecture & Privacy | ${SITE_NAME}`, description: 'DevKitra Gaming operates as a standalone, client-side browser runtime.' },
-    '/privacy': { title: `Privacy Guarantee | ${SITE_NAME}`, description: 'All game progress and scores run 100% locally in your browser.' },
-    '/contact': { title: `Contact & Submissions | ${SITE_NAME}`, description: 'Contact DevKitra Gaming for suggestions and technical inquiries.' },
+    '/': { title: `${SITE_NAME} — Free Instant Browser Games`, description: 'Play instant arcade, puzzle, classic, and reflex games right in your browser. Zero installs, no accounts needed.' },
+    '/explore': { title: `All Games | ${SITE_NAME}`, description: 'Browse and search our complete collection of free instant browser games.' },
+    '/about': { title: `About | ${SITE_NAME}`, description: 'DevKitra Gaming is a standalone, lightweight client-side browser gaming destination.' },
+    '/privacy': { title: `Privacy Policy | ${SITE_NAME}`, description: 'Games run 100% locally in your browser. No trackers, no cookies.' },
+    '/contact': { title: `Contact & Feedback | ${SITE_NAME}`, description: 'Send feedback and bug reports to DevKitra Gaming.' },
   };
 
   let page;
   if (route.page === 'game' && gameByRoute(route.path)) {
     const g = gameByRoute(route.path);
-    page = { title: `${g.title} — Play Online | ${SITE_NAME}`, description: g.description };
+    page = { title: `${g.title} — Play Free Online | ${SITE_NAME}`, description: g.description };
   } else if (route.page === 'genre' && genre(route.slug)) {
     const g = genre(route.slug);
-    page = { title: `${g.label} Games | ${SITE_NAME}`, description: `Browse verified ${g.label.toLowerCase()} games.` };
+    page = { title: `${g.label} Games | ${SITE_NAME}`, description: `Play top ${g.label.toLowerCase()} games online for free.` };
   } else if (pages[route.path]) {
     page = pages[route.path];
   } else {
-    page = { title: `Page Not Found | ${SITE_NAME}`, description: 'That address does not exist.' };
+    page = { title: `Page Not Found | ${SITE_NAME}`, description: 'That page does not exist.' };
   }
 
   document.title = page.title;
@@ -246,22 +237,20 @@ function showToast(message, type = 'success') {
 }
 
 /* ------------------------------------------------------------------ */
-/* Header & Footer Components                                         */
+/* Header & Footer                                                    */
 /* ------------------------------------------------------------------ */
 
 function brandMarkup() {
   return `
     <a href="/" data-nav class="brand" aria-label="${SITE_NAME} home">
-      <span class="brand-mark">
+      <span class="brand-logo">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-          <polyline points="2 17 12 22 22 17"/>
-          <polyline points="2 12 12 17 22 12"/>
+          <polygon points="5 3 19 12 5 21 5 3"/>
         </svg>
       </span>
-      <span class="brand-name">
-        <span class="brand-main">DEVKITRA</span>
-        <span class="brand-sub">GAMING</span>
+      <span class="brand-text">
+        <span class="brand-name">Devkitra</span>
+        <span class="brand-tag">GAMES</span>
       </span>
     </a>
   `;
@@ -310,9 +299,9 @@ function renderHeader(path) {
             ${brandMarkup()}
             <nav class="main-nav" id="main-nav" aria-label="Main navigation">${navMarkup}</nav>
             <div class="header-actions">
-              <button id="surprise-btn" type="button" class="btn-surprise" title="Launch Random Game">
+              <button id="surprise-btn" type="button" class="btn-random" title="Play a random game">
                 ${diceSvg()}
-                <span class="btn-surprise-text">Random Game</span>
+                <span class="btn-random-text">Random</span>
               </button>
               <div class="search-shell header-search" id="header-search">
                 <input id="global-search" type="search" placeholder="Search games (Press /)…" aria-label="Search games" />
@@ -336,16 +325,16 @@ function renderFooter() {
       <div class="footer-inner">
         <div>
           <div class="footer-brand">${SITE_NAME}</div>
-          <div class="brand-sub" style="margin-top:0.25rem;">Browser Gaming Platform · Standalone Client Architecture</div>
+          <div class="footer-sub">Free Instant Browser Gaming Platform</div>
         </div>
         <div class="footer-links">
-          <a href="/explore" data-nav>Games Catalogue</a>
-          <a href="/about" data-nav>Architecture</a>
-          <a href="/contact" data-nav>Submissions</a>
-          <a href="/privacy" data-nav>Privacy Guarantee</a>
+          <a href="/explore" data-nav>All Games</a>
+          <a href="/about" data-nav>About Platform</a>
+          <a href="/contact" data-nav>Contact & Submissions</a>
+          <a href="/privacy" data-nav>Privacy Policy</a>
         </div>
       </div>
-      <div class="footer-copy">© ${new Date().getFullYear()} DevKitra Gaming. All titles run client-side in browser memory with zero tracking cookies and zero installations.</div>
+      <div class="footer-copy">© ${new Date().getFullYear()} DevKitra Gaming. All games execute 100% client-side in browser memory with zero tracking cookies and zero downloads.</div>
     </footer>
     </div></div>
   `;
@@ -355,12 +344,12 @@ function renderFooter() {
 /* Game Card                                                          */
 /* ------------------------------------------------------------------ */
 
-function gameCard(game, customBadge = '') {
-  const badgeText = customBadge || GAME_BADGES[game.id] || (game.featured ? 'FEATURED' : '');
+function gameCard(game) {
+  const badgeText = GAME_TAGS[game.id] || (game.featured ? 'POPULAR' : '');
   const genreLabels = game.genres.map((g) => genre(g)?.label).filter(Boolean).join(' · ') || 'Game';
   const thumb = game.thumbnail
     ? `<img src="${game.thumbnail}" alt="${escapeHtml(game.title)} cover" loading="lazy" />`
-    : `<div style="width:100%;height:100%;display:grid;place-items:center;color:var(--dk-quiet);font-size:1.6rem;font-weight:900;">${escapeHtml(game.title[0])}</div>`;
+    : `<div class="card-fallback">${escapeHtml(game.title[0])}</div>`;
 
   return `
     <a href="${game.route}" data-nav class="game-card" data-game-card="${game.id}">
@@ -368,7 +357,7 @@ function gameCard(game, customBadge = '') {
         ${thumb}
         ${badgeText ? `<div class="game-badge">${escapeHtml(badgeText)}</div>` : ''}
         <div class="game-card-play" aria-hidden="true">
-          <span class="play-pill">PLAY NOW ▶</span>
+          <span class="play-pill">Play Now ▶</span>
         </div>
       </div>
       <div class="game-card-body">
@@ -378,7 +367,7 @@ function gameCard(game, customBadge = '') {
       </div>
       <div class="game-card-foot">
         <span>${game.inputs.map((inp) => inp === 'keyboard' ? 'Keyboard' : inp === 'touch' ? 'Touch' : 'Mouse').join(' · ')}</span>
-        <span class="game-card-cta">Instant Play →</span>
+        <span class="game-card-cta">Play →</span>
       </div>
     </a>
   `;
@@ -392,132 +381,106 @@ function renderHomePage() {
   const all = [...publishedGames()];
   const featured = featuredGames();
   const populatedGenres = genres.filter((g) => genreGameCount(g.slug) > 0);
-  const spotlightGame = all.find((g) => g.id === 'astro-drift') || all[0];
+  const spotlightGame = all.find((g) => g.id === 'tetris') || all[0];
 
-  const actionPicks = all.filter((g) => ['astro-drift', 'speed-dash', 'cyber-flap', 'neon-pong'].includes(g.id));
-  const arcadePicks = all.filter((g) => ['breakout', 'tower-stack', 'snake', 'reaction-test'].includes(g.id));
-  const puzzlePicks = all.filter((g) => ['2048', 'memory-match'].includes(g.id));
+  const reflexPicks = all.filter((g) => ['sky-jump', 'snake', 'breakout', 'cyber-flap'].includes(g.id));
+  const puzzlePicks = all.filter((g) => ['tetris', '2048', 'memory-match', 'tower-stack'].includes(g.id));
 
   return `
     <main class="page-shell home-page">
-      <!-- High-End Marquee Hero Showcase -->
-      <section class="hero-showcase">
-        <div class="spotlight-banner">
-          <div class="spotlight-poster">
-            <img src="${spotlightGame.thumbnail}" alt="${escapeHtml(spotlightGame.title)}" id="spotlight-bg-img" />
-            <div class="spotlight-overlay"></div>
-          </div>
+      <!-- Clean Spotlight Hero Banner -->
+      <section class="hero-spotlight">
+        <div class="spotlight-card">
           <div class="spotlight-content">
-            <div class="spotlight-tag">
-              <span class="status-indicator"></span>
-              <span id="spotlight-badge">FEATURED RELEASE · 60 FPS ENGINE</span>
+            <div class="spotlight-badge-row">
+              <span class="spotlight-tag">FEATURED GAME</span>
+              <span class="spotlight-genre">${spotlightGame.genres.map((g) => genre(g)?.label).filter(Boolean).join(' · ')}</span>
             </div>
             <h1 id="spotlight-title">${escapeHtml(spotlightGame.title)}</h1>
-            <p id="spotlight-desc" class="spotlight-summary">${escapeHtml(spotlightGame.description)}</p>
+            <p id="spotlight-desc" class="spotlight-desc">${escapeHtml(spotlightGame.description)}</p>
             <div class="spotlight-actions">
-              <a href="${spotlightGame.route}" data-nav class="btn btn-primary" id="spotlight-play-btn">Launch Game ▶</a>
-              <a href="/explore" data-nav class="btn btn-ghost">Browse Catalogue</a>
-              <button type="button" class="btn btn-ghost" id="hero-random-btn">${diceSvg()} Random Match</button>
+              <a href="${spotlightGame.route}" data-nav class="btn btn-primary" id="spotlight-play-btn">Play Now ▶</a>
+              <a href="/explore" data-nav class="btn btn-secondary">Explore All Games</a>
+              <button type="button" class="btn btn-secondary" id="hero-random-btn">${diceSvg()} Surprise Me</button>
             </div>
+          </div>
+          <div class="spotlight-media">
+            <img src="${spotlightGame.thumbnail}" alt="${escapeHtml(spotlightGame.title)}" id="spotlight-img" />
           </div>
         </div>
 
-        <!-- Spotlight Quick Selector Carousel Strip -->
-        <div class="spotlight-selector" id="spotlight-selector">
-          ${featured.slice(0, 5).map((g, idx) => `
-            <button type="button" class="spotlight-tab ${g.id === spotlightGame.id ? 'active' : ''}"
+        <!-- Featured Selector Tabs -->
+        <div class="featured-tabs" id="featured-tabs">
+          ${featured.slice(0, 5).map((g) => `
+            <button type="button" class="ft-tab ${g.id === spotlightGame.id ? 'active' : ''}"
               data-id="${g.id}"
               data-title="${escapeHtml(g.title)}"
               data-desc="${escapeHtml(g.description)}"
               data-route="${g.route}"
               data-thumb="${g.thumbnail}"
-              data-badge="${GAME_BADGES[g.id] || 'FEATURED'}">
-              <span class="tab-index">0${idx + 1}</span>
-              <span class="tab-title">${escapeHtml(g.title)}</span>
+              data-genre="${g.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ')}">
+              ${escapeHtml(g.title)}
             </button>
           `).join('')}
         </div>
-
-        <!-- Metric Specs Strip -->
-        <div class="specs-bar">
-          <div class="spec-unit">
-            <span class="spec-value">${all.length}</span>
-            <span class="spec-label">Native Games</span>
-          </div>
-          <div class="spec-divider"></div>
-          <div class="spec-unit">
-            <span class="spec-value">60 FPS</span>
-            <span class="spec-label">Hardware Render</span>
-          </div>
-          <div class="spec-divider"></div>
-          <div class="spec-unit">
-            <span class="spec-value">0 KB</span>
-            <span class="spec-label">Install Footprint</span>
-          </div>
-          <div class="spec-divider"></div>
-          <div class="spec-unit">
-            <span class="spec-value">100%</span>
-            <span class="spec-label">Local Client Privacy</span>
-          </div>
-        </div>
       </section>
 
-      <!-- Category Dock -->
+      <!-- Category Navigation Dock -->
       <section class="section" style="margin-top: 2rem;">
         <div class="category-dock">
-          <a href="/explore" data-nav class="cat-pill active">All Categories (${all.length})</a>
+          <a href="/explore" data-nav class="cat-pill active">All Games (${all.length})</a>
           ${populatedGenres.map((g) => `
             <a href="/genre/${g.slug}" data-nav class="cat-pill">${escapeHtml(g.label)} (${genreGameCount(g.slug)})</a>
           `).join('')}
         </div>
       </section>
 
-      <!-- Curated Shelf 1: Action & Speed -->
+      <!-- Shelf 1: Top Rated / Popular Hits -->
       <section class="section">
         <div class="section-header">
           <div class="copy">
-            <div class="eyebrow">High Velocity</div>
-            <h2>Action & Speed Arcades</h2>
-            <p>Rapid navigation, particle thrusters, laser barriers, and responsive momentum.</p>
+            <div class="eyebrow">POPULAR HITS</div>
+            <h2>Featured Games</h2>
+            <p>Our most played instant browser games with responsive controls and highscore tracking.</p>
           </div>
-          <a href="/explore" data-nav class="btn btn-ghost btn-sm">Explore All →</a>
+          <a href="/explore" data-nav class="btn btn-secondary btn-sm">View All →</a>
         </div>
-        <div class="featured-grid">${actionPicks.map((g) => gameCard(g)).join('')}</div>
+        <div class="featured-grid">${featured.map((g) => gameCard(g)).join('')}</div>
       </section>
 
-      <!-- Curated Shelf 2: Skill & Timing -->
+      <!-- Shelf 2: Fast Reflex & Arcade -->
       <section class="section">
         <div class="section-header">
           <div class="copy">
-            <div class="eyebrow">Precision Timing</div>
-            <h2>Skill, Reflection & Accuracy</h2>
-            <p>Brick fortresses, slab stacking, agile snake arenas, and neurological radar testing.</p>
+            <div class="eyebrow">FAST ACTION</div>
+            <h2>Reflex & Arcade Games</h2>
+            <p>Jump, dodge, bounce, and react with precision timing.</p>
           </div>
         </div>
-        <div class="game-grid">${arcadePicks.map((g) => gameCard(g)).join('')}</div>
+        <div class="game-grid">${reflexPicks.map((g) => gameCard(g)).join('')}</div>
       </section>
 
-      <!-- Curated Shelf 3: Logic & Strategy -->
+      <!-- Shelf 3: Puzzles & Brain Teasers -->
       <section class="section">
         <div class="section-header">
           <div class="copy">
-            <div class="eyebrow">Cognitive Focus</div>
-            <h2>Logic & Memory Puzzles</h2>
-            <p>Spatial calculation, tile merging, and paired glyph sequences.</p>
+            <div class="eyebrow">BRAIN TEASERS</div>
+            <h2>Puzzles & Casual Games</h2>
+            <p>Match tiles, arrange blocks, and exercise your memory.</p>
           </div>
         </div>
         <div class="game-grid">${puzzlePicks.map((g) => gameCard(g)).join('')}</div>
       </section>
 
-      <!-- Complete Collection Shelf -->
+      <!-- Shelf 4: Complete Catalogue -->
       <section class="section">
         <div class="section-header">
           <div class="copy">
-            <div class="eyebrow">Complete Catalogue</div>
-            <h2>All Verified Games</h2>
-            <p>Every title built for zero downloads, offline memory saves, and maximum frame rates.</p>
+            <div class="eyebrow">FULL CATALOGUE</div>
+            <h2>All 10 Games</h2>
+            <p>Every game is 100% free, runs instantly in your browser, and requires no downloads.</p>
           </div>
-          <button type="button" class="btn btn-primary btn-sm" id="section-random-btn">${diceSvg()} Random Match</button>
+          <button type="button" class="btn btn-primary btn-sm" id="section-random-btn">${diceSvg()} Random Game</button>
         </div>
         <div class="game-grid">${all.map((g) => gameCard(g)).join('')}</div>
       </section>
@@ -526,12 +489,11 @@ function renderHomePage() {
 }
 
 function setupHeroShowcase() {
-  const tabs = document.querySelectorAll('#spotlight-selector .spotlight-tab');
-  const bgImg = document.getElementById('spotlight-bg-img');
+  const tabs = document.querySelectorAll('#featured-tabs .ft-tab');
+  const imgEl = document.getElementById('spotlight-img');
   const titleEl = document.getElementById('spotlight-title');
   const descEl = document.getElementById('spotlight-desc');
   const playBtn = document.getElementById('spotlight-play-btn');
-  const badgeEl = document.getElementById('spotlight-badge');
   const randomHeroBtn = document.getElementById('hero-random-btn');
   const randomSecBtn = document.getElementById('section-random-btn');
 
@@ -554,13 +516,11 @@ function setupHeroShowcase() {
       const desc = tab.dataset.desc;
       const route = tab.dataset.route;
       const thumb = tab.dataset.thumb;
-      const badge = tab.dataset.badge;
 
       if (titleEl) titleEl.textContent = title;
       if (descEl) descEl.textContent = desc;
       if (playBtn) playBtn.href = route;
-      if (bgImg && thumb) bgImg.src = thumb;
-      if (badgeEl) badgeEl.textContent = `${badge} · 60 FPS ENGINE`;
+      if (imgEl && thumb) imgEl.src = thumb;
     });
   });
 }
@@ -573,20 +533,20 @@ function renderExplorePage() {
     <main class="page-shell explore-page">
       <div class="section-header">
         <div class="copy">
-          <div class="eyebrow">DevKitra Games Library</div>
-          <h1>All Browser Games</h1>
-          <p>Instant search by title, category, tags, or control mechanics. Filter with real-time responsive speed.</p>
+          <div class="eyebrow">LIBRARY</div>
+          <h1>All Games (${all.length})</h1>
+          <p>Instant search by title, category, or tags. Filter by genre in real time.</p>
         </div>
         <button type="button" class="btn btn-primary btn-sm" id="explore-random-btn">${diceSvg()} Random Pick</button>
       </div>
       <div class="search-sort">
         <div class="search-shell explore-search">
-          <input id="explore-search" type="search" placeholder="Search by game title, genre, or tag (e.g. space, racing, arcade, puzzle)…" aria-label="Search games" />
+          <input id="explore-search" type="search" placeholder="Search by game title, category, or tag…" aria-label="Search games" />
           ${searchSvg()}
         </div>
         <div class="select-shell">
           <select id="explore-sort" aria-label="Sort games">
-            <option value="added">Newest First</option>
+            <option value="added">Newest Added</option>
             <option value="title">Alphabetical (A–Z)</option>
           </select>
         </div>
@@ -599,7 +559,7 @@ function renderExplorePage() {
       <div id="explore-results" class="game-grid">${all.map((g) => gameCard(g)).join('')}</div>
       <div id="explore-empty" class="empty-state hidden">
         <h2>No games found.</h2>
-        <p>Try searching for "space", "racing", "arcade", or "pong".</p>
+        <p>Try searching for "tetris", "snake", "jump", or "puzzle".</p>
       </div>
     </main>
   `;
@@ -675,23 +635,23 @@ function renderGenrePage(slug) {
     <main class="page-shell genre-page">
       <div class="section-header">
         <div class="copy">
-          <div class="eyebrow">${escapeHtml(g.label)}</div>
+          <div class="eyebrow">CATEGORY</div>
           <h1>${escapeHtml(g.label)} Games</h1>
           <p>${escapeHtml(g.description)}</p>
         </div>
-        <a href="/explore" data-nav class="btn btn-ghost btn-sm">All Genres →</a>
+        <a href="/explore" data-nav class="btn btn-secondary btn-sm">All Categories →</a>
       </div>
       <p class="directory-count">${list.length} game${list.length === 1 ? '' : 's'} in this category</p>
       ${list.length
         ? `<div class="game-grid">${list.map((game) => gameCard(game)).join('')}</div>`
-        : `<div class="empty-state"><h2>No ${escapeHtml(g.label)} games yet.</h2><p>Check back soon — new games added regularly.</p></div>`
+        : `<div class="empty-state"><h2>No ${escapeHtml(g.label)} games yet.</h2><p>Check back soon.</p></div>`
       }
     </main>
   `;
 }
 
 /* ------------------------------------------------------------------ */
-/* Game Screen Console / Theater Architecture                        */
+/* Game Screen                                                        */
 /* ------------------------------------------------------------------ */
 
 function renderGamePage(slug) {
@@ -703,80 +663,71 @@ function renderGamePage(slug) {
     .slice(0, 4);
 
   const pauseMarkup = game.pause
-    ? `<button type="button" class="console-btn" data-action="pause" aria-pressed="false" title="Pause / Resume [P]"><span class="btn-icon">⏸</span> Pause</button>`
+    ? `<button type="button" class="game-tool-btn" data-action="pause" aria-pressed="false" title="Pause / Resume [P]">⏸ Pause</button>`
     : '';
 
   const genreLabels = game.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ');
 
   return `
-    <main class="page-shell game-page" id="game-page-root">
-      <!-- Game Info Header -->
-      <div class="game-meta-header">
-        <div class="meta-left">
-          <a href="/explore" data-nav class="back-link">← Games Library</a>
-          <span class="meta-genre">${genreLabels}</span>
-          <h1 class="game-main-title">${escapeHtml(game.title)}</h1>
-          <p class="game-main-lede">${escapeHtml(game.description)}</p>
-        </div>
-        <div class="meta-right">
-          <button type="button" class="btn btn-ghost btn-sm" id="game-next-btn">${diceSvg()} Next Game</button>
+    <main class="page-shell game-page">
+      <!-- Breadcrumb navigation -->
+      <div class="game-top-bar">
+        <a href="/explore" data-nav class="back-link">← Back to All Games</a>
+        <div class="game-top-actions">
+          <button type="button" class="btn btn-secondary btn-sm" id="game-random-btn">${diceSvg()} Next Game</button>
         </div>
       </div>
 
-      <!-- Gaming Console Theater Stage -->
-      <div class="console-stage" id="console-stage">
-        <!-- Floating HUD Control Ribbon -->
-        <div class="console-ribbon">
-          <div class="ribbon-left">
-            <span class="status-chip running" id="console-status"><span class="chip-dot"></span> LIVE RUNTIME</span>
-            <span class="fps-badge">60 FPS</span>
+      <!-- Main Game Canvas Container -->
+      <div class="game-player-card" id="game-player-card">
+        <div class="player-toolbar">
+          <div class="toolbar-title-wrap">
+            <span class="game-badge-chip">${escapeHtml(genreLabels)}</span>
+            <span class="toolbar-game-title">${escapeHtml(game.title)}</span>
           </div>
-          <div class="ribbon-actions">
+          <div class="toolbar-tools">
             ${pauseMarkup}
-            <button type="button" class="console-btn" data-action="restart" title="Restart Match [R]"><span class="btn-icon">↺</span> Restart</button>
-            <button type="button" class="console-btn" data-action="theater" id="theater-toggle" title="Toggle Cinema Theater Mode [T]"><span class="btn-icon">⛶</span> Theater Mode</button>
-            <button type="button" class="console-btn" data-action="fullscreen" id="fs-toggle" title="Full Screen [F]"><span class="btn-icon">⛶</span> Fullscreen</button>
-            <button type="button" class="console-btn ${soundEnabled ? 'active' : ''}" id="game-sound-btn" title="Toggle Game Audio">${soundIcon(soundEnabled)}</button>
+            <button type="button" class="game-tool-btn" data-action="restart" title="Restart [R]">↺ Restart</button>
+            <button type="button" class="game-tool-btn" data-action="fullscreen" id="fs-toggle" title="Fullscreen [F]">⛶ Fullscreen</button>
           </div>
         </div>
 
-        <!-- Frame Viewport -->
-        <div class="game-viewport-wrap" id="game-viewport" role="region" aria-label="${escapeHtml(game.title)} gameplay canvas">
+        <div class="game-viewport-wrap" id="game-viewport">
           <iframe class="game-viewport-frame" id="active-game-frame" src="${game.standalone}${game.pause ? '?embed=1' : ''}" title="${escapeHtml(game.title)}" allowfullscreen></iframe>
         </div>
       </div>
 
-      <!-- Controls & Details Section -->
-      <div class="game-details-layout">
-        <section class="details-card">
-          <h2>Controls & Instructions</h2>
-          <div class="controls-list">
+      <!-- Instructions & Details -->
+      <div class="game-info-grid">
+        <div class="info-card">
+          <h2>How to Play & Controls</h2>
+          <p class="game-desc-p">${escapeHtml(game.description)}</p>
+          <div class="controls-keys-row">
             ${game.inputs.map((input) => `<span class="kbd">${escapeHtml(input)}</span>`).join('')}
           </div>
-          <p class="controls-hint">${escapeHtml(game.controls)}</p>
-          ${game.save ? '<p class="controls-hint" style="color:var(--dk-success);font-weight:700;margin-top:0.75rem;">● Highscores and session progress are stored locally on your device.</p>' : ''}
-          <div class="hotkeys-guide">
+          <p class="controls-detail">${escapeHtml(game.controls)}</p>
+          ${game.save ? '<p class="save-status">✓ Highscores & progress save automatically in your browser.</p>' : ''}
+          <div class="hotkey-helpers">
             <span class="hotkey-pill"><kbd>R</kbd> Restart</span>
             ${game.pause ? '<span class="hotkey-pill"><kbd>P</kbd> Pause</span>' : ''}
-            <span class="hotkey-pill"><kbd>T</kbd> Theater Mode</span>
             <span class="hotkey-pill"><kbd>F</kbd> Fullscreen</span>
           </div>
-        </section>
+        </div>
 
-        <!-- Recommended Games Shelf -->
-        <section class="details-card">
-          <h2>More Titles In Rotation</h2>
-          <div class="related-stack">${related.map((r) => `
-            <a href="${r.route}" data-nav class="related-tile">
-              ${r.thumbnail ? `<img class="related-tile-thumb" src="${r.thumbnail}" alt="" loading="lazy" />` : ''}
-              <div class="related-tile-info">
-                <span class="related-tile-title">${escapeHtml(r.title)}</span>
-                <span class="related-tile-genre">${r.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ') || 'Game'}</span>
+        <!-- Related Games -->
+        <div class="info-card">
+          <h2>More Games You'll Enjoy</h2>
+          <div class="related-list">${related.map((r) => `
+            <a href="${r.route}" data-nav class="related-item">
+              ${r.thumbnail ? `<img class="related-thumb" src="${r.thumbnail}" alt="" loading="lazy" />` : ''}
+              <div class="related-text">
+                <span class="related-title">${escapeHtml(r.title)}</span>
+                <span class="related-genre">${r.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ')}</span>
               </div>
-              <span class="related-tile-badge">${GAME_BADGES[r.id] || 'PLAY'}</span>
+              <span class="related-play">Play →</span>
             </a>
           `).join('')}</div>
-        </section>
+        </div>
       </div>
     </main>
   `;
@@ -786,20 +737,16 @@ function setupGamePage(slug) {
   const game = gameByRoute(`/game/${slug}`);
   if (!game) return;
 
-  const stage = document.getElementById('console-stage');
   const viewport = document.getElementById('game-viewport');
   const frame = document.getElementById('active-game-frame');
   const restart = document.querySelector('[data-action="restart"]');
   const pauseBtn = document.querySelector('[data-action="pause"]');
   const fsBtn = document.getElementById('fs-toggle');
-  const theaterBtn = document.getElementById('theater-toggle');
-  const nextBtn = document.getElementById('game-next-btn');
-  const soundBtn = document.getElementById('game-sound-btn');
-  const statusChip = document.getElementById('console-status');
+  const randomBtn = document.getElementById('game-random-btn');
   const origin = window.location.origin;
 
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => launchRandomGame(game.id));
+  if (randomBtn) {
+    randomBtn.addEventListener('click', () => launchRandomGame(game.id));
   }
 
   function postToGame(payload) {
@@ -815,12 +762,8 @@ function setupGamePage(slug) {
       playUiSound('click');
       paused = false;
       if (pauseBtn) {
-        pauseBtn.innerHTML = '<span class="btn-icon">⏸</span> Pause';
+        pauseBtn.textContent = '⏸ Pause';
         pauseBtn.setAttribute('aria-pressed', 'false');
-      }
-      if (statusChip) {
-        statusChip.className = 'status-chip running';
-        statusChip.innerHTML = '<span class="chip-dot"></span> LIVE RUNTIME';
       }
       postToGame({ type: 'dk:restart' });
       frame.focus();
@@ -831,32 +774,13 @@ function setupGamePage(slug) {
     pauseBtn.addEventListener('click', () => {
       playUiSound('click');
       paused = !paused;
-      pauseBtn.innerHTML = paused ? '<span class="btn-icon">▶</span> Resume' : '<span class="btn-icon">⏸</span> Pause';
+      pauseBtn.textContent = paused ? '▶ Resume' : '⏸ Pause';
       pauseBtn.setAttribute('aria-pressed', String(paused));
-      if (statusChip) {
-        statusChip.className = paused ? 'status-chip paused' : 'status-chip running';
-        statusChip.innerHTML = paused ? '<span class="chip-dot"></span> PAUSED' : '<span class="chip-dot"></span> LIVE RUNTIME';
-      }
       postToGame(paused ? { type: 'dk:pause' } : { type: 'dk:resume' });
       frame.focus();
     });
   }
 
-  // Theater Mode Toggle
-  if (theaterBtn && stage) {
-    theaterBtn.addEventListener('click', () => {
-      playUiSound('click');
-      const isTheater = stage.classList.toggle('theater-mode');
-      theaterBtn.classList.toggle('active', isTheater);
-      theaterBtn.innerHTML = isTheater ? '<span class="btn-icon">🗗</span> Standard View' : '<span class="btn-icon">⛶</span> Theater Mode';
-      if (isTheater) {
-        stage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      frame.focus();
-    });
-  }
-
-  // Fullscreen Mode
   if (fsBtn && viewport) {
     fsBtn.addEventListener('click', () => {
       playUiSound('click');
@@ -867,16 +791,6 @@ function setupGamePage(slug) {
         if (document.exitFullscreen) document.exitFullscreen();
       }
       frame.focus();
-    });
-  }
-
-  // Audio Toggle on Game Bar
-  if (soundBtn) {
-    soundBtn.addEventListener('click', () => {
-      const enabled = toggleSound();
-      soundBtn.innerHTML = soundIcon(enabled);
-      soundBtn.classList.toggle('active', enabled);
-      showToast(enabled ? 'Sound FX Enabled' : 'Sound FX Muted');
     });
   }
 
@@ -893,8 +807,6 @@ function setupGamePage(slug) {
       pauseBtn?.click();
     } else if (event.key === 'f' || event.key === 'F') {
       fsBtn?.click();
-    } else if (event.key === 't' || event.key === 'T') {
-      theaterBtn?.click();
     }
   };
 
@@ -907,7 +819,7 @@ window.addEventListener('message', (event) => {
   if (event.origin !== origin) return;
   const { type, score } = event.data || {};
   if (type === 'dk:gameover' && score !== undefined && document.querySelector('.game-viewport-frame')) {
-    showToast(`Game Over · Final Score: ${score}`, 'error');
+    showToast(`Game Over · Score: ${score}`, 'info');
   }
 });
 
@@ -915,15 +827,15 @@ function renderAboutPage() {
   return `
     <main class="page-shell static-page">
       <div class="static-card">
-        <div class="eyebrow">Engine Architecture</div>
-        <h1>Instant Games, Client-Side Runtime</h1>
-        <p>DevKitra Gaming is engineered for instantaneous playability. No 50 GB downloads, no loading screens, and zero registration walls. Every title is executed locally within isolated browser canvas memory with GPU acceleration.</p>
-        <p>Games operate as isolated sandbox modules, communicating with the platform frame via standardized postMessage protocols for state synchronization and event dispatching.</p>
-        <h2>Data & Privacy Standards</h2>
+        <div class="eyebrow">ABOUT DEVKITRA</div>
+        <h1>Free Instant Browser Gaming</h1>
+        <p>DevKitra Gaming is built for players who want instant, lightweight, and responsive casual games without heavy downloads, invasive ads, or registration walls.</p>
+        <p>Every game is compiled as a self-contained module running locally on your device with hardware acceleration.</p>
+        <h2>Our Principles</h2>
         <ul>
-          <li>All gameplay loops, high scores, and preferences reside solely in your device's window.localStorage.</li>
-          <li>Zero tracking scripts, zero third-party advertising cookies, and zero user account requirements.</li>
-          <li>Compatible with modern desktop browsers, mobile touch devices, Chromebooks, and tablets.</li>
+          <li><strong>Instant Access:</strong> Click any game and start playing in under a second.</li>
+          <li><strong>Zero Tracking:</strong> High scores and preferences are saved locally on your device using localStorage. We do not track or profile you.</li>
+          <li><strong>Cross-Platform:</strong> Works smoothly across desktop computers, laptops, Chromebooks, iPads, and mobile phones.</li>
         </ul>
       </div>
     </main>
@@ -934,13 +846,13 @@ function renderPrivacyPage() {
   return `
     <main class="page-shell static-page">
       <div class="static-card">
-        <div class="eyebrow">Data & Security</div>
+        <div class="eyebrow">PRIVACY</div>
         <h1>Privacy Guarantee</h1>
         <ul>
-          <li><strong>Local Execution:</strong> 100% of game physics and logic execute on your client device.</li>
-          <li><strong>No Login Wall:</strong> No email, credentials, or personal profiles are collected.</li>
-          <li><strong>Local Storage Scoped:</strong> Best scores are stored in your device's window.localStorage.</li>
-          <li><strong>Zero Remote Paywalls:</strong> Completely open and playable without fees or subscriptions.</li>
+          <li><strong>100% Client-Side:</strong> Games execute locally in your browser memory.</li>
+          <li><strong>No User Accounts:</strong> No email addresses, phone numbers, or passwords collected.</li>
+          <li><strong>Local Progress:</strong> Scores and settings reside exclusively on your computer/phone.</li>
+          <li><strong>No Paywalls:</strong> Completely free to play for everyone.</li>
         </ul>
       </div>
     </main>
@@ -951,11 +863,11 @@ function renderContactPage() {
   return `
     <main class="page-shell static-page">
       <div class="static-card">
-        <div class="eyebrow">Connect</div>
+        <div class="eyebrow">CONTACT</div>
         <h1>Contact & Game Submissions</h1>
-        <p>Have an original browser game suggestion, performance feedback, or technical inquiry? Reach out directly:</p>
-        <a href="mailto:tejaskrishna.as@gmail.com" style="display:inline-block;margin-top:0.75rem;font-size:1.1rem;color:var(--dk-primary);font-weight:700;">tejaskrishna.as@gmail.com</a>
-        <p style="font-size:0.85rem;color:var(--dk-quiet);margin-top:0.75rem;">Please include browser specifications and reproduction steps for bug reports.</p>
+        <p>Have a game suggestion, performance feedback, or bug report? Reach out directly:</p>
+        <a href="mailto:tejaskrishna.as@gmail.com" class="contact-email">tejaskrishna.as@gmail.com</a>
+        <p style="font-size:0.85rem;color:var(--dk-quiet);margin-top:0.75rem;">Please include your browser version and device type for bug reports.</p>
       </div>
     </main>
   `;
@@ -965,10 +877,10 @@ function renderNotFoundPage() {
   return `
     <main class="page-shell">
       <section class="not-found">
-        <div class="eyebrow">404 ERROR</div>
-        <h1>Page Not Found</h1>
-        <p>The requested destination does not exist in the DevKitra rotation.</p>
-        <a href="/explore" data-nav class="btn btn-primary">Return to Games Library ▶</a>
+        <div class="eyebrow">404</div>
+        <h1>Game Not Found</h1>
+        <p>The page or game you requested does not exist.</p>
+        <a href="/explore" data-nav class="btn btn-primary">Browse All Games ▶</a>
       </section>
     </main>
   `;
@@ -1008,7 +920,7 @@ function setupGlobalSearch() {
           <span class="search-item-title">${escapeHtml(g.title)}</span>
           <span class="search-item-genre">${g.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ') || 'Game'}</span>
         </div>
-        <span class="search-item-badge">${GAME_BADGES[g.id] || 'PLAY'}</span>
+        <span class="search-item-badge">${GAME_TAGS[g.id] || 'PLAY'}</span>
       </button>`
     ).join('');
     list.querySelectorAll('[data-search-link]').forEach((button) => {
@@ -1148,7 +1060,7 @@ function setupSoundToggle() {
     const enabled = toggleSound();
     toggle.innerHTML = soundIcon(enabled);
     toggle.classList.toggle('active', enabled);
-    showToast(enabled ? 'Sound FX Enabled' : 'Sound FX Muted');
+    showToast(enabled ? 'Sound FX Enabled' : 'Sound FX Muted', 'info');
   });
 }
 
@@ -1171,7 +1083,7 @@ function setupSurpriseButton() {
 }
 
 function setupCardHoverSounds() {
-  document.querySelectorAll('.game-card, .btn, .cat-pill, .btn-surprise, .spotlight-tab').forEach((el) => {
+  document.querySelectorAll('.game-card, .btn, .cat-pill, .btn-random, .ft-tab').forEach((el) => {
     el.addEventListener('mouseenter', () => playUiSound('hover'), { passive: true });
   });
 }

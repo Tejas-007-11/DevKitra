@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Sky Jump — Devkitra Gaming</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #game-wrap {
+      position: relative;
+      width: 380px;
+      height: 580px;
+      max-width: 100%;
+      max-height: 100%;
+      background: linear-gradient(180deg, #38bdf8 0%, #bae6fd 60%, #e0f2fe 100%);
+      border: 3px solid #1e293b;
+      border-radius: 16px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    #top-score {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      font-size: 20px;
+      font-weight: 900;
+      color: #0369a1;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      z-index: 5;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      text-align: center;
+      padding: 24px;
+    }
+    .overlay.hidden { display: none; }
+    .overlay h2 {
+      font-size: 28px;
+      font-weight: 900;
+      color: #38bdf8;
+      margin-bottom: 8px;
+    }
+    .overlay p {
+      color: #cbd5e1;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 22px;
+      max-width: 280px;
+    }
+    .btn {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+      transition: all 0.15s ease;
+    }
+    .btn:hover {
+      background: #0369a1;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-wrap">
+    <div id="top-score">0 m</div>
+    <canvas id="jumpCanvas" width="380" height="580"></canvas>
+
+    <div id="overlay" class="overlay">
+      <h2 id="overlay-heading">SKY JUMP</h2>
+      <p id="overlay-desc">Tilt with Left/Right Arrows, A/D, or move mouse/touch. Bounce on platforms to climb high!</p>
+      <button id="start-btn" class="btn">START JUMPING</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Audio synth
+      var audioCtx = null;
+      function initAudio() {
+        if (!audioCtx) {
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch(e) {}
+        }
+      }
+      function playTone(freq, type, dur, gainVal) {
+        if (!audioCtx) return;
+        try {
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+          osc.type = type || 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(gainVal || 0.08, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + dur);
+        } catch(e) {}
+      }
+
+      function sfxBounce() { playTone(440, 'sine', 0.08, 0.07); }
+      function sfxSpring() {
+        playTone(520, 'sine', 0.1, 0.1);
+        setTimeout(function() { playTone(880, 'sine', 0.2, 0.12); }, 70);
+      }
+      function sfxFall() {
+        playTone(320, 'triangle', 0.15, 0.1);
+        setTimeout(function() { playTone(180, 'triangle', 0.3, 0.1); }, 100);
+      }
+
+      var canvas = document.getElementById('jumpCanvas');
+      var ctx = canvas.getContext('2d');
+      var topScoreEl = document.getElementById('top-score');
+      var overlay = document.getElementById('overlay');
+      var overlayHeading = document.getElementById('overlay-heading');
+      var overlayDesc = document.getElementById('overlay-desc');
+      var startBtn = document.getElementById('start-btn');
+
+      var W = 380;
+      var H = 580;
+
+      var isRunning = false;
+      var isPaused = false;
+      var score = 0;
+      var bestScore = 0;
+      try { bestScore = parseInt(localStorage.getItem('dk:jump-best') || '0', 10); } catch(e) {}
+
+      var player = {
+        x: W / 2 - 16,
+        y: H - 140,
+        w: 32,
+        h: 32,
+        vx: 0,
+        vy: -9,
+        facing: 'right'
+      };
+
+      var gravity = 0.32;
+      var bounceVelocity = -10.5;
+      var platforms = [];
+      var springs = [];
+      var clouds = [];
+
+      // Generate background clouds
+      for (var c = 0; c < 6; c++) {
+        clouds.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          w: Math.random() * 80 + 60,
+          speed: Math.random() * 0.3 + 0.1
+        });
+      }
+
+      function initPlatforms() {
+        platforms = [];
+        springs = [];
+        // Base platform under player
+        platforms.push({ x: W / 2 - 40, y: H - 80, w: 80, h: 14, type: 'standard' });
+
+        var curY = H - 150;
+        while (curY > -100) {
+          spawnPlatformAt(curY);
+          curY -= Math.floor(Math.random() * 45 + 50);
+        }
+      }
+
+      function spawnPlatformAt(y) {
+        var pw = 72;
+        var px = Math.random() * (W - pw);
+        var rand = Math.random();
+        var type = 'standard';
+        var vx = 0;
+
+        if (rand > 0.8) {
+          type = 'moving';
+          vx = (Math.random() > 0.5 ? 1 : -1) * 1.5;
+        } else if (rand > 0.68) {
+          type = 'fragile';
+        }
+
+        var plat = { x: px, y: y, w: pw, h: 14, type: type, vx: vx, broken: false };
+        platforms.push(plat);
+
+        // Chance for golden spring
+        if (type === 'standard' && Math.random() > 0.78) {
+          springs.push({
+            plat: plat,
+            x: px + pw / 2 - 8,
+            y: y - 10,
+            w: 16,
+            h: 10
+          });
+        }
+      }
+
+      // Input controls
+      var keys = {};
+      window.addEventListener('keydown', function(e) {
+        if (['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].includes(e.code)) {
+          e.preventDefault();
+        }
+        keys[e.code] = true;
+      });
+      window.addEventListener('keyup', function(e) {
+        keys[e.code] = false;
+      });
+
+      canvas.addEventListener('mousemove', function(e) {
+        if (!isRunning || isPaused) return;
+        var rect = canvas.getBoundingClientRect();
+        var mx = (e.clientX - rect.left) * (W / rect.width);
+        player.x = mx - player.w / 2;
+      });
+
+      canvas.addEventListener('touchmove', function(e) {
+        if (!isRunning || isPaused || !e.touches[0]) return;
+        var rect = canvas.getBoundingClientRect();
+        var tx = (e.touches[0].clientX - rect.left) * (W / rect.width);
+        player.x = tx - player.w / 2;
+      }, { passive: false });
+
+      function update() {
+        if (!isRunning || isPaused) return;
+
+        // Steering
+        if (keys['ArrowLeft'] || keys['KeyA']) {
+          player.vx = -5;
+          player.facing = 'left';
+        } else if (keys['ArrowRight'] || keys['KeyD']) {
+          player.vx = 5;
+          player.facing = 'right';
+        } else {
+          player.vx *= 0.82;
+        }
+
+        player.x += player.vx;
+
+        // Wrap around screen sides
+        if (player.x < -player.w) player.x = W;
+        if (player.x > W) player.x = -player.w;
+
+        // Apply gravity
+        player.vy += gravity;
+        player.y += player.vy;
+
+        // Platform collisions (only when falling downward)
+        if (player.vy > 0) {
+          var pFoot = player.y + player.h;
+
+          for (var i = 0; i < platforms.length; i++) {
+            var plat = platforms[i];
+            if (
+              !plat.broken &&
+              player.x + player.w > plat.x + 4 &&
+              player.x < plat.x + plat.w - 4 &&
+              pFoot >= plat.y &&
+              pFoot <= plat.y + 16 &&
+              player.vy > 0
+            ) {
+              if (plat.type === 'fragile') {
+                plat.broken = true;
+                playTone(180, 'triangle', 0.08, 0.06);
+              } else {
+                player.vy = bounceVelocity;
+                sfxBounce();
+              }
+              break;
+            }
+          }
+
+          // Spring collisions
+          for (var s = 0; s < springs.length; s++) {
+            var spr = springs[s];
+            if (
+              player.x + player.w > spr.x &&
+              player.x < spr.x + spr.w &&
+              pFoot >= spr.y &&
+              pFoot <= spr.y + 16
+            ) {
+              player.vy = bounceVelocity * 1.55; // Super spring bounce!
+              sfxSpring();
+              break;
+            }
+          }
+        }
+
+        // Camera scroll up
+        if (player.y < H * 0.42) {
+          var diff = H * 0.42 - player.y;
+          player.y = H * 0.42;
+          score += Math.round(diff);
+          topScoreEl.textContent = score + ' m';
+
+          // Move platforms downward
+          for (var i = 0; i < platforms.length; i++) {
+            platforms[i].y += diff;
+          }
+        }
+
+        // Update moving platforms
+        for (var i = 0; i < platforms.length; i++) {
+          var p = platforms[i];
+          if (p.type === 'moving') {
+            p.x += p.vx;
+            if (p.x < 0 || p.x + p.w > W) p.vx *= -1;
+          }
+        }
+
+        // Clean off-screen platforms and spawn new ones above
+        for (var i = platforms.length - 1; i >= 0; i--) {
+          if (platforms[i].y > H + 20) {
+            platforms.splice(i, 1);
+          }
+        }
+
+        var highestY = platforms.reduce(function(min, p) { return Math.min(min, p.y); }, H);
+        while (highestY > -50) {
+          highestY -= Math.floor(Math.random() * 45 + 50);
+          spawnPlatformAt(highestY);
+        }
+
+        // Game over check
+        if (player.y > H + 40) {
+          gameOver();
+        }
+
+        // Move background clouds
+        for (var c = 0; c < clouds.length; c++) {
+          var cl = clouds[c];
+          cl.x += cl.speed;
+          if (cl.x > W + 40) cl.x = -cl.w;
+        }
+      }
+
+      function gameOver() {
+        isRunning = false;
+        sfxFall();
+        if (score > bestScore) {
+          bestScore = score;
+          try { localStorage.setItem('dk:jump-best', String(bestScore)); } catch(e) {}
+        }
+        overlay.classList.remove('hidden');
+        overlayHeading.textContent = "GAME OVER";
+        overlayDesc.textContent = "Altitude Reached: " + score + " meters!\nBest Height: " + bestScore + " m";
+        startBtn.textContent = "PLAY AGAIN";
+
+        window.parent.postMessage({ type: 'dk:gameover', score: score }, '*');
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, W, H);
+
+        // Clouds
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        for (var c = 0; c < clouds.length; c++) {
+          var cl = clouds[c];
+          ctx.beginPath();
+          ctx.arc(cl.x, cl.y, 18, 0, Math.PI * 2);
+          ctx.arc(cl.x + 22, cl.y - 6, 22, 0, Math.PI * 2);
+          ctx.arc(cl.x + 44, cl.y, 16, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Platforms
+        for (var i = 0; i < platforms.length; i++) {
+          var plat = platforms[i];
+          if (plat.broken) continue;
+
+          if (plat.type === 'standard') {
+            ctx.fillStyle = '#22c55e';
+            ctx.strokeStyle = '#15803d';
+          } else if (plat.type === 'moving') {
+            ctx.fillStyle = '#38bdf8';
+            ctx.strokeStyle = '#0284c7';
+          } else if (plat.type === 'fragile') {
+            ctx.fillStyle = '#b45309';
+            ctx.strokeStyle = '#78350f';
+          }
+
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect ? ctx.roundRect(plat.x, plat.y, plat.w, plat.h, 6) : ctx.rect(plat.x, plat.y, plat.w, plat.h);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        // Springs
+        for (var s = 0; s < springs.length; s++) {
+          var spr = springs[s];
+          if (spr.plat && !spr.plat.broken) {
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(spr.plat.x + spr.plat.w / 2 - 8, spr.plat.y - 8, 16, 8);
+          }
+        }
+
+        // Player (Cute jumper doodle with eye)
+        ctx.save();
+        ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
+        if (player.facing === 'left') ctx.scale(-1, 1);
+
+        // Body
+        ctx.fillStyle = '#facc15';
+        ctx.strokeStyle = '#ca8a04';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Eye
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(5, -4, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Snout
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.ellipse(12, 1, 7, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+
+        update();
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+
+      function startGame() {
+        initAudio();
+        score = 0;
+        topScoreEl.textContent = '0 m';
+        player.x = W / 2 - 16;
+        player.y = H - 140;
+        player.vx = 0;
+        player.vy = bounceVelocity;
+        initPlatforms();
+        overlay.classList.add('hidden');
+        isRunning = true;
+        isPaused = false;
+      }
+
+      startBtn.addEventListener('click', startGame);
+
+      window.addEventListener('message', function(e) {
+        if (!e.data) return;
+        if (e.data.type === 'dk:restart') startGame();
+        else if (e.data.type === 'dk:pause') isPaused = true;
+        else if (e.data.type === 'dk:resume') isPaused = false;
+      });
+
+      window.parent.postMessage({ type: 'dk:ready' }, '*');
+    })();
+  </script>
+</body>
+</html>
