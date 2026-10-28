@@ -387,9 +387,9 @@ function renderHomePage() {
   const all = [...publishedGames()];
   const featured = featuredGames();
   const populatedGenres = genres.filter((g) => genreGameCount(g.slug) > 0);
-  const spotlightGame = all.find((g) => g.id === 'tetris') || all[0];
+  const spotlightGame = all.find((g) => g.id === 'velocity-3d') || all[0];
 
-  const reflexPicks = all.filter((g) => ['sky-jump', 'snake', 'breakout', 'cyber-flap'].includes(g.id));
+  const reflexPicks = all.filter((g) => ['velocity-3d', 'road-hopper', 'sky-jump', 'snake', 'breakout'].includes(g.id));
   const puzzlePicks = all.filter((g) => ['tetris', '2048', 'memory-match', 'tower-stack'].includes(g.id));
 
   return `

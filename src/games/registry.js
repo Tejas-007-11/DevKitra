@@ -25,6 +25,23 @@ export function genre(slug) {
 
 export const games = [
   {
+    id: 'velocity-3d',
+    title: 'Velocity 3D (Slope Runner)',
+    description: 'High-speed 3D downhill roller. Steer through rolling slopes, dodge red hazard blocks, hit jump ramps, and collect emerald gems.',
+    genres: ['arcade', 'reflex', 'physics-skill'],
+    thumbnail: '/games/velocity-3d/thumbnail.svg',
+    standalone: '/games/velocity-3d/index.html',
+    route: '/game/velocity-3d',
+    status: 'published',
+    featured: true,
+    tags: ['slope', '3d', 'velocity', 'ball', 'runner'],
+    inputs: ['keyboard', 'mouse', 'touch'],
+    save: true,
+    pause: true,
+    added: '2026-10-28',
+    controls: 'Left/Right Arrow keys or A/D to steer. Click & drag mouse or swipe on touch screen.',
+  },
+  {
     id: 'road-hopper',
     title: 'Road Hopper',
     description: 'Hop across busy highways, floating river logs, and high-speed train tracks while collecting gold coins.',
