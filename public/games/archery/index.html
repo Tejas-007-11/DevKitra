@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Archery Master — Devkitra Gaming</title>
   <style>
     * {
@@ -15,26 +15,19 @@
     html, body {
       width: 100%;
       height: 100%;
-      background: #0f172a;
+      background: #090d16;
       color: #f8fafc;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
     }
     #game-wrap {
       position: relative;
-      width: 680px;
-      height: 440px;
-      max-width: 100%;
-      max-height: 100%;
-      background: linear-gradient(180deg, #bae6fd 0%, #e0f2fe 50%, #86efac 50%, #4ade80 100%);
-      border: 3px solid #1e293b;
-      border-radius: 16px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      background: #090d16;
     }
     canvas {
       display: block;
@@ -45,71 +38,156 @@
     }
     .hud-bar {
       position: absolute;
-      top: 10px;
-      left: 14px;
-      right: 14px;
+      top: 14px;
+      left: 16px;
+      right: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       pointer-events: none;
       z-index: 10;
     }
-    .hud-badge {
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 5px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 800;
-      color: #f8fafc;
+    .hud-group {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 10px;
     }
-    .hud-badge b { color: #38bdf8; font-family: ui-monospace, monospace; }
-    .hud-badge.wind { color: #f59e0b; }
+    .hud-chip {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #f8fafc;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .hud-chip b {
+      color: #38bdf8;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 16px;
+    }
+    .hud-chip.wind b {
+      color: #f59e0b;
+    }
+    .arrows-rack {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .arrow-icon {
+      font-size: 16px;
+      opacity: 0.9;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .arrow-icon.spent {
+      opacity: 0.2;
+      filter: grayscale(1);
+    }
     .overlay {
       position: absolute;
       inset: 0;
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(4px);
+      background: rgba(9, 13, 22, 0.88);
+      backdrop-filter: blur(8px);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 20;
+      z-index: 30;
       text-align: center;
       padding: 24px;
     }
     .overlay.hidden { display: none; }
-    .overlay h2 {
+    .card-modal {
+      background: #151b28;
+      border: 1px solid #2d374d;
+      border-radius: 20px;
+      padding: 32px 28px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .modal-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 4px 12px rgba(245, 158, 11, 0.4));
+    }
+    .card-modal h2 {
       font-size: 26px;
       font-weight: 900;
-      color: #f59e0b;
-      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      margin-bottom: 8px;
     }
-    .overlay p {
-      color: #cbd5e1;
-      font-size: 13px;
-      line-height: 1.5;
-      margin-bottom: 20px;
-      max-width: 340px;
+    .card-modal p {
+      color: #94a3b8;
+      font-size: 14px;
+      line-height: 1.55;
+      margin-bottom: 24px;
+    }
+    .stats-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+    .stat-box {
+      background: #0f1420;
+      border: 1px solid #252e42;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+    .stat-val {
+      font-size: 18px;
+      font-weight: 900;
+      color: #f59e0b;
+      font-family: ui-monospace, monospace;
     }
     .btn {
       background: #f59e0b;
       color: #0f172a;
       border: none;
-      padding: 10px 28px;
+      padding: 14px 36px;
       border-radius: 999px;
-      font-size: 14px;
-      font-weight: 900;
+      font-size: 15px;
+      font-weight: 800;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
       transition: all 0.15s ease;
+      width: 100%;
     }
     .btn:hover {
-      background: #fbbf24;
+      background: #d97706;
       transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+    }
+    .aim-hint {
+      position: absolute;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.6);
+      pointer-events: none;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.8);
     }
   </style>
 </head>
@@ -117,22 +195,36 @@
 
   <div id="game-wrap">
     <div class="hud-bar">
-      <div style="display:flex; gap:8px;">
-        <div class="hud-badge">Stage: <b id="stage-disp">1/4</b></div>
-        <div class="hud-badge">Arrows: <b id="arrows-disp">5</b></div>
+      <div class="hud-group">
+        <div class="hud-chip">Stage: <b id="stage-display">1 / 4</b></div>
+        <div class="hud-chip">Score: <b id="score-display">0</b></div>
       </div>
-      <div style="display:flex; gap:8px;">
-        <div class="hud-badge wind" id="wind-disp">Wind: 0 m/s</div>
-        <div class="hud-badge">Score: <b id="score-disp">0</b></div>
+      <div class="hud-group">
+        <div class="hud-chip wind" id="wind-chip">Wind: <b id="wind-display">0.0 m/s</b></div>
+        <div class="hud-chip arrows-rack" id="arrows-rack"></div>
       </div>
     </div>
 
-    <canvas id="archCanvas" width="680" height="440"></canvas>
+    <canvas id="archeryCanvas"></canvas>
+    <div class="aim-hint">🎯 Click/Touch and drag back from the bow to aim. Release to shoot!</div>
 
     <div id="overlay" class="overlay">
-      <h2 id="overlay-heading">ARCHERY MASTER</h2>
-      <p id="overlay-desc">Click/Touch and drag back to aim the bow. Account for gravity and wind, then release to shoot the targets!</p>
-      <button id="start-btn" class="btn">DRAW BOW</button>
+      <div class="card-modal">
+        <div class="modal-icon" id="modal-icon">🏹</div>
+        <h2 id="overlay-heading">ARCHERY MASTER</h2>
+        <p id="overlay-desc">Pull back the bow string, compensate for gravity and crosswind, and hit bullseyes across 4 challenging tournament stages!</p>
+        <div class="stats-summary" id="stats-summary" style="display:none;">
+          <div class="stat-box">
+            <div class="stat-label">Final Score</div>
+            <div class="stat-val" id="final-score">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Best Record</div>
+            <div class="stat-val" id="final-best">0</div>
+          </div>
+        </div>
+        <button id="start-btn" class="btn">START SHOOTING</button>
+      </div>
     </div>
   </div>
 
@@ -140,536 +232,872 @@
     (function() {
       // Audio synth
       var audioCtx = null;
-      function initAudio() {
+      function getAudio() {
         if (!audioCtx) {
           try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           } catch(e) {}
         }
+        return audioCtx;
       }
-      function playTone(freq, type, dur, gainVal) {
-        if (!audioCtx) return;
+
+      function playTone(freq, type, dur, gainVal, endFreq) {
+        var actx = getAudio();
+        if (!actx) return;
         try {
-          var osc = audioCtx.createOscillator();
-          var gain = audioCtx.createGain();
+          var osc = actx.createOscillator();
+          var gain = actx.createGain();
           osc.type = type || 'sine';
-          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-          gain.gain.setValueAtTime(gainVal || 0.08, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+          osc.frequency.setValueAtTime(freq, actx.currentTime);
+          if (endFreq) {
+            osc.frequency.exponentialRampToValueAtTime(endFreq, actx.currentTime + dur);
+          }
+          gain.gain.setValueAtTime(gainVal || 0.08, actx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
           osc.connect(gain);
-          gain.connect(audioCtx.destination);
+          gain.connect(actx.destination);
           osc.start();
-          osc.stop(audioCtx.currentTime + dur);
+          osc.stop(actx.currentTime + dur);
         } catch(e) {}
       }
 
-      function sfxDraw() { playTone(220, 'triangle', 0.05, 0.04); }
-      function sfxShoot() { playTone(480, 'sine', 0.08, 0.08); }
-      function sfxHit() { playTone(160, 'sawtooth', 0.12, 0.1); }
-      function sfxBullseye() {
-        playTone(523.25, 'sine', 0.1, 0.1);
-        setTimeout(function() { playTone(659.25, 'sine', 0.1, 0.1); }, 70);
-        setTimeout(function() { playTone(1046.5, 'sine', 0.25, 0.14); }, 140);
+      function sfxDraw() {
+        playTone(160, 'sine', 0.12, 0.04, 220);
       }
-      function sfxPop() { playTone(720, 'sine', 0.06, 0.09); }
+      function sfxShoot() {
+        playTone(340, 'triangle', 0.1, 0.12, 110);
+      }
+      function sfxTargetHit(isBullseye) {
+        if (isBullseye) {
+          playTone(520, 'triangle', 0.15, 0.14, 260);
+          setTimeout(function() {
+            playTone(880, 'sine', 0.25, 0.12);
+            playTone(1100, 'sine', 0.35, 0.08);
+          }, 80);
+        } else {
+          playTone(220, 'triangle', 0.12, 0.1, 140);
+        }
+      }
+      function sfxBalloonPop() {
+        playTone(480, 'sine', 0.06, 0.1, 180);
+      }
 
-      var canvas = document.getElementById('archCanvas');
+      var canvas = document.getElementById('archeryCanvas');
       var ctx = canvas.getContext('2d');
-      var stageDisp = document.getElementById('stage-disp');
-      var arrowsDisp = document.getElementById('arrows-disp');
-      var windDisp = document.getElementById('wind-disp');
-      var scoreDisp = document.getElementById('score-disp');
+      var stageDisplay = document.getElementById('stage-display');
+      var scoreDisplay = document.getElementById('score-display');
+      var windDisplay = document.getElementById('wind-display');
+      var windChip = document.getElementById('wind-chip');
+      var arrowsRack = document.getElementById('arrows-rack');
       var overlay = document.getElementById('overlay');
+      var modalIcon = document.getElementById('modal-icon');
       var overlayHeading = document.getElementById('overlay-heading');
       var overlayDesc = document.getElementById('overlay-desc');
+      var statsSummary = document.getElementById('stats-summary');
+      var finalScore = document.getElementById('final-score');
+      var finalBest = document.getElementById('final-best');
       var startBtn = document.getElementById('start-btn');
 
-      var W = 680;
-      var H = 440;
+      var W = 900;
+      var H = 550;
+      var dpr = 1;
+
+      function resize() {
+        var wrap = document.getElementById('game-wrap');
+        W = wrap.clientWidth || window.innerWidth;
+        H = wrap.clientHeight || window.innerHeight;
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(W * dpr);
+        canvas.height = Math.floor(H * dpr);
+        ctx.resetTransform?.();
+        ctx.scale(dpr, dpr);
+      }
+      window.addEventListener('resize', resize);
+      resize();
 
       var isRunning = false;
       var isPaused = false;
-      var stage = 1;
-      var maxStages = 4;
+      var currentStage = 1;
+      var totalStages = 4;
       var score = 0;
-      var arrows = 5;
-      var wind = 0; // Wind acceleration
+      var arrowsLeft = 5;
+      var maxArrows = 5;
+      var bestScore = 0;
+      try { bestScore = parseInt(localStorage.getItem('dk:archery-best') || '0', 10); } catch(e) {}
+
+      // Stage configurations
+      var STAGES = [
+        { name: 'Practice Range', distance: 0.8, moving: false, balloons: false, wind: 0 },
+        { name: 'Moving Target', distance: 0.85, moving: true, speed: 2, balloons: false, wind: 1.5 },
+        { name: 'Balloon Festival', distance: 0.8, moving: false, balloons: true, wind: 2.5 },
+        { name: 'Olympic Windstorm', distance: 0.9, moving: true, speed: 3.2, balloons: false, wind: 4.8 }
+      ];
+
+      var wind = 0;
+      var bowX = 140;
+      var bowY = 0;
       var isAiming = false;
-      var aimStart = { x: 0, y: 0 };
-      var aimCurrent = { x: 0, y: 0 };
+      var aimStartX = 0;
+      var aimStartY = 0;
+      var pullX = 0;
+      var pullY = 0;
+      var maxPull = 90;
 
-      var bowX = 90;
-      var bowY = 220;
-
-      var currentArrow = null; // flying arrow
+      var arrowsInFlight = [];
       var stuckArrows = [];
-      var targets = [];
       var balloons = [];
       var particles = [];
-      var floatingTexts = [];
+      var callouts = [];
+      var targetY = 0;
+      var targetDir = 1;
+      var targetW = 32;
+      var targetH = 150;
+      var globalTime = 0;
 
-      function setupStage(s) {
-        stage = s;
-        arrows = 5;
-        currentArrow = null;
+      function initStage(sNum) {
+        currentStage = sNum;
+        var sCfg = STAGES[currentStage - 1];
+        arrowsLeft = maxArrows;
+        arrowsInFlight = [];
         stuckArrows = [];
-        targets = [];
         balloons = [];
+        particles = [];
+        callouts = [];
 
-        // Wind setup
-        wind = (Math.random() - 0.45) * (s * 0.15);
-        updateHUD();
+        bowY = H * 0.62;
+        targetY = H * 0.55;
 
-        if (s === 1) {
-          // Stationary targets at various heights
-          targets.push({ x: 540, y: 180, r: 42, vy: 0 });
-        } else if (s === 2) {
-          // Moving target sliding vertically
-          targets.push({ x: 550, y: 150, r: 38, vy: 1.8, minY: 90, maxY: 310 });
-        } else if (s === 3) {
-          // Balloons drifting up
+        // Set wind
+        wind = (Math.random() * sCfg.wind * 2 - sCfg.wind);
+        updateWindUI();
+
+        if (sCfg.balloons) {
           for (var b = 0; b < 6; b++) {
             balloons.push({
-              x: 360 + b * 45,
-              y: H + Math.random() * 200,
-              r: 18,
-              vy: -(Math.random() * 1.2 + 1),
-              color: ['#f43f5e', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'][b % 5]
-            });
-          }
-        } else if (s === 4) {
-          // Trickshot target + balloons
-          targets.push({ x: 580, y: 180, r: 32, vy: 2.2, minY: 80, maxY: 330 });
-          for (var b = 0; b < 4; b++) {
-            balloons.push({
-              x: 380 + b * 50,
-              y: H + Math.random() * 150,
-              r: 16,
-              vy: -(Math.random() * 1 + 1.2),
-              color: '#f43f5e'
+              x: W * 0.55 + (b * 45),
+              y: H * 0.75 + (Math.random() * 80),
+              vy: -(Math.random() * 1.2 + 0.8),
+              radius: Math.random() * 6 + 18,
+              color: ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6'][b % 6],
+              alive: true
             });
           }
         }
+
+        stageDisplay.textContent = currentStage + ' / ' + totalStages;
+        scoreDisplay.textContent = score;
+        updateArrowsUI();
       }
 
-      function updateHUD() {
-        stageDisp.textContent = stage + '/' + maxStages;
-        arrowsDisp.textContent = arrows;
-        scoreDisp.textContent = score;
-
-        var windM = Math.round(wind * 50);
-        if (windM === 0) windDisp.textContent = 'Wind: Calm';
-        else if (windM > 0) windDisp.textContent = 'Wind: → ' + Math.abs(windM) + ' m/s';
-        else windDisp.textContent = 'Wind: ← ' + Math.abs(windM) + ' m/s';
+      function updateWindUI() {
+        var dirStr = wind > 0.2 ? '▶ ' : wind < -0.2 ? '◀ ' : '';
+        windDisplay.textContent = dirStr + Math.abs(wind).toFixed(1) + ' m/s';
+        windChip.style.borderColor = Math.abs(wind) > 2 ? 'rgba(245, 158, 11, 0.6)' : 'rgba(255, 255, 255, 0.15)';
       }
 
-      // Pointer event listeners for aiming
-      function startAim(x, y) {
-        if (!isRunning || isPaused || currentArrow || arrows <= 0) return;
-        isAiming = true;
-        aimStart.x = x;
-        aimStart.y = y;
-        aimCurrent.x = x;
-        aimCurrent.y = y;
-        sfxDraw();
+      function updateArrowsUI() {
+        arrowsRack.innerHTML = '';
+        for (var a = 0; a < maxArrows; a++) {
+          var span = document.createElement('span');
+          span.className = 'arrow-icon' + (a < arrowsLeft ? '' : ' spent');
+          span.textContent = '🏹';
+          arrowsRack.appendChild(span);
+        }
       }
 
-      function updateAim(x, y) {
+      function spawnCallout(text, x, y, color) {
+        callouts.push({
+          text: text,
+          x: x,
+          y: y,
+          color: color || '#facc15',
+          life: 1
+        });
+      }
+
+      // Aiming logic
+      function onPointerDown(clientX, clientY) {
+        if (!isRunning || isPaused || arrowsLeft <= 0 || arrowsInFlight.length > 0) return;
+        getAudio();
+
+        var rect = canvas.getBoundingClientRect();
+        var clickX = (clientX - rect.left);
+        var clickY = (clientY - rect.top);
+
+        // Check if near the bow or general left half
+        if (clickX < W * 0.45) {
+          isAiming = true;
+          aimStartX = clickX;
+          aimStartY = clickY;
+          pullX = 0;
+          pullY = 0;
+          sfxDraw();
+        }
+      }
+
+      function onPointerMove(clientX, clientY) {
         if (!isAiming) return;
-        aimCurrent.x = x;
-        aimCurrent.y = y;
+        var rect = canvas.getBoundingClientRect();
+        var curX = (clientX - rect.left);
+        var curY = (clientY - rect.top);
+
+        var dx = aimStartX - curX;
+        var dy = aimStartY - curY;
+
+        var dist = Math.hypot(dx, dy);
+        if (dist > maxPull) {
+          dx = (dx / dist) * maxPull;
+          dy = (dy / dist) * maxPull;
+        }
+
+        pullX = dx;
+        pullY = dy;
       }
 
-      function shootArrow() {
+      function onPointerUp() {
         if (!isAiming) return;
         isAiming = false;
 
-        var dx = aimStart.x - aimCurrent.x;
-        var dy = aimStart.y - aimCurrent.y;
-        var power = Math.min(Math.hypot(dx, dy) * 0.18, 19);
-
-        if (power < 3) return; // Too weak
-
-        var angle = Math.atan2(dy, dx);
-        arrows--;
-        updateHUD();
-        sfxShoot();
-
-        currentArrow = {
-          x: bowX,
-          y: bowY,
-          vx: Math.cos(angle) * power,
-          vy: Math.sin(angle) * power,
-          length: 36
-        };
+        var pullDist = Math.hypot(pullX, pullY);
+        if (pullDist > 16) {
+          // Shoot Arrow
+          shootArrow(pullX, pullY);
+        }
+        pullX = 0;
+        pullY = 0;
       }
 
-      canvas.addEventListener('mousedown', function(e) {
-        var rect = canvas.getBoundingClientRect();
-        startAim((e.clientX - rect.left) * (W / rect.width), (e.clientY - rect.top) * (H / rect.height));
-      });
-      window.addEventListener('mousemove', function(e) {
-        var rect = canvas.getBoundingClientRect();
-        updateAim((e.clientX - rect.left) * (W / rect.width), (e.clientY - rect.top) * (H / rect.height));
-      });
-      window.addEventListener('mouseup', shootArrow);
+      canvas.addEventListener('mousedown', function(e) { onPointerDown(e.clientX, e.clientY); });
+      window.addEventListener('mousemove', function(e) { onPointerMove(e.clientX, e.clientY); });
+      window.addEventListener('mouseup', onPointerUp);
 
       canvas.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        var rect = canvas.getBoundingClientRect();
-        var t = e.touches[0];
-        startAim((t.clientX - rect.left) * (W / rect.width), (t.clientY - rect.top) * (H / rect.height));
-      }, { passive: false });
+        if (e.touches.length) onPointerDown(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
       window.addEventListener('touchmove', function(e) {
-        if (!e.touches[0]) return;
-        var rect = canvas.getBoundingClientRect();
-        var t = e.touches[0];
-        updateAim((t.clientX - rect.left) * (W / rect.width), (t.clientY - rect.top) * (H / rect.height));
-      });
-      window.addEventListener('touchend', shootArrow);
+        if (e.touches.length) onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      window.addEventListener('touchend', onPointerUp);
 
-      function update() {
-        if (!isRunning || isPaused) return;
+      function shootArrow(px, py) {
+        arrowsLeft--;
+        updateArrowsUI();
+        sfxShoot();
 
-        // Update moving targets
-        for (var t = 0; t < targets.length; t++) {
-          var tgt = targets[t];
-          if (tgt.vy) {
-            tgt.y += tgt.vy;
-            if (tgt.y < tgt.minY || tgt.y > tgt.maxY) tgt.vy *= -1;
+        var speedMult = 0.32;
+        var vx = (px + 20) * speedMult;
+        var vy = (py) * speedMult;
+
+        arrowsInFlight.push({
+          x: bowX,
+          y: bowY,
+          vx: Math.max(vx, 8),
+          vy: vy,
+          angle: Math.atan2(vy, vx),
+          trail: []
+        });
+      }
+
+      function checkNextStageOrEnd() {
+        setTimeout(function() {
+          if (arrowsLeft === 0 && arrowsInFlight.length === 0) {
+            if (currentStage < totalStages) {
+              spawnCallout('STAGE ' + currentStage + ' COMPLETE!', W * 0.5, H * 0.4, '#38bdf8');
+              setTimeout(function() {
+                initStage(currentStage + 1);
+              }, 1200);
+            } else {
+              // Tourney completed
+              gameOver(true);
+            }
           }
+        }, 500);
+      }
+
+      function gameOver(victory) {
+        isRunning = false;
+        try {
+          if (score > bestScore) {
+            bestScore = score;
+            localStorage.setItem('dk:archery-best', String(bestScore));
+          }
+        } catch(e) {}
+
+        try {
+          window.parent.postMessage({ type: 'dk:gameover', score: score }, '*');
+        } catch(e) {}
+
+        modalIcon.textContent = victory ? '🏆' : '🎯';
+        overlayHeading.textContent = victory ? 'TOURNAMENT CHAMPION!' : 'STAGE COMPLETE';
+        overlayDesc.textContent = victory
+          ? 'Magnificent marksmanship! You conquered all 4 archery tournament stages.'
+          : 'Great practice session! Try again to beat your tournament record.';
+        finalScore.textContent = score;
+        finalBest.textContent = bestScore;
+        statsSummary.style.display = 'grid';
+        startBtn.textContent = 'PLAY AGAIN';
+        overlay.classList.remove('hidden');
+      }
+
+      function startGame() {
+        getAudio();
+        overlay.classList.add('hidden');
+        score = 0;
+        initStage(1);
+        isRunning = true;
+      }
+      startBtn.addEventListener('click', startGame);
+
+      // Devkitra events
+      window.addEventListener('message', function(e) {
+        var data = e.data || {};
+        if (data.type === 'dk:restart') {
+          startGame();
+        } else if (data.type === 'dk:pause') {
+          isPaused = true;
+        } else if (data.type === 'dk:resume') {
+          isPaused = false;
+        } else if (data.type === 'dk:resize') {
+          resize();
         }
+      });
 
-        // Update balloons
-        for (var b = 0; b < balloons.length; b++) {
-          var bl = balloons[b];
-          bl.y += bl.vy;
-          bl.x += wind * 2;
-          if (bl.y < -30) bl.y = H + 40; // loop
-        }
+      // Update
+      function update() {
+        globalTime += 0.02;
 
-        // Update flying arrow
-        if (currentArrow) {
-          currentArrow.vx += wind * 0.05;
-          currentArrow.vy += 0.35; // gravity
-          currentArrow.x += currentArrow.vx;
-          currentArrow.y += currentArrow.vy;
+        if (isRunning && !isPaused) {
+          var sCfg = STAGES[currentStage - 1];
 
-          var arrowTipX = currentArrow.x;
-          var arrowTipY = currentArrow.y;
+          // Moving target oscillation
+          if (sCfg.moving) {
+            targetY += targetDir * sCfg.speed;
+            var minY = H * 0.25;
+            var maxY = H * 0.72;
+            if (targetY > maxY) { targetY = maxY; targetDir = -1; }
+            else if (targetY < minY) { targetY = minY; targetDir = 1; }
+          }
 
-          // Check hit against targets
-          for (var t = 0; t < targets.length; t++) {
-            var tgt = targets[t];
-            var dist = Math.hypot(arrowTipX - tgt.x, arrowTipY - tgt.y);
-
-            if (dist < tgt.r) {
-              // Target hit!
-              var pts = 20;
-              var label = "HIT! +20";
-              if (dist < tgt.r * 0.3) {
-                pts = 100;
-                label = "★ BULLSEYE! +100";
-                sfxBullseye();
-              } else if (dist < tgt.r * 0.65) {
-                pts = 50;
-                label = "GREAT! +50";
-                sfxHit();
-              } else {
-                sfxHit();
+          // Balloons
+          if (sCfg.balloons) {
+            for (var b = 0; b < balloons.length; b++) {
+              var bal = balloons[b];
+              if (!bal.alive) continue;
+              bal.y += bal.vy;
+              bal.x += wind * 0.15;
+              if (bal.y < -30) {
+                bal.y = H * 0.85;
+                bal.x = W * 0.5 + Math.random() * (W * 0.35);
               }
-
-              score += pts;
-              floatingTexts.push({ x: tgt.x, y: tgt.y - 20, text: label, alpha: 1 });
-
-              stuckArrows.push({
-                x: arrowTipX,
-                y: arrowTipY,
-                angle: Math.atan2(currentArrow.vy, currentArrow.vx)
-              });
-              currentArrow = null;
-              checkNextShotOrStage();
-              break;
             }
           }
 
-          // Check hit against balloons
-          if (currentArrow) {
-            for (var bl = balloons.length - 1; bl >= 0; bl--) {
-              var b = balloons[bl];
-              if (Math.hypot(arrowTipX - b.x, arrowTipY - b.y) < b.r + 4) {
-                sfxPop();
-                score += 40;
-                floatingTexts.push({ x: b.x, y: b.y, text: "+40 POP!", alpha: 1 });
-                // Pop particles
-                for (var p = 0; p < 8; p++) {
+          // Arrows in flight
+          var targetX = W * sCfg.distance;
+          for (var i = arrowsInFlight.length - 1; i >= 0; i--) {
+            var arr = arrowsInFlight[i];
+
+            // Record trail
+            arr.trail.push({ x: arr.x, y: arr.y });
+            if (arr.trail.length > 8) arr.trail.shift();
+
+            // Physics
+            arr.vy += 0.24; // gravity
+            arr.vx += wind * 0.015; // wind resistance
+            arr.x += arr.vx;
+            arr.y += arr.vy;
+            arr.angle = Math.atan2(arr.vy, arr.vx);
+
+            // Balloon Hit Check
+            if (sCfg.balloons) {
+              for (var j = 0; j < balloons.length; j++) {
+                var bl = balloons[j];
+                if (bl.alive && Math.hypot(arr.x - bl.x, arr.y - bl.y) < bl.radius) {
+                  bl.alive = false;
+                  sfxBalloonPop();
+                  score += 50;
+                  scoreDisplay.textContent = score;
+                  spawnCallout('★ POP! +50 ★', bl.x, bl.y - 10, bl.color);
+
+                  // Confetti
+                  for (var c = 0; c < 14; c++) {
+                    var ang = Math.random() * Math.PI * 2;
+                    particles.push({
+                      x: bl.x,
+                      y: bl.y,
+                      vx: Math.cos(ang) * (Math.random() * 4 + 2),
+                      vy: Math.sin(ang) * (Math.random() * 4 + 2),
+                      size: Math.random() * 4 + 2,
+                      color: bl.color,
+                      life: 1
+                    });
+                  }
+                }
+              }
+            }
+
+            // Target Hit Check
+            if (arr.x >= targetX - 10 && arr.x <= targetX + targetW + 10) {
+              var hitY = arr.y;
+              var targetCenterY = targetY;
+              var diff = Math.abs(hitY - targetCenterY);
+
+              if (diff <= targetH / 2) {
+                // Hit the board!
+                var ringPoints = 0;
+                var calloutMsg = '';
+                var isBullseye = false;
+
+                if (diff <= 12) {
+                  ringPoints = 100;
+                  calloutMsg = '★ BULLSEYE! 100 ★';
+                  isBullseye = true;
+                } else if (diff <= 30) {
+                  ringPoints = 80;
+                  calloutMsg = 'EXCELLENT! 80';
+                } else if (diff <= 50) {
+                  ringPoints = 60;
+                  calloutMsg = 'GOOD! 60';
+                } else {
+                  ringPoints = 30;
+                  calloutMsg = 'OUTER RING! 30';
+                }
+
+                sfxTargetHit(isBullseye);
+                score += ringPoints;
+                scoreDisplay.textContent = score;
+                spawnCallout(calloutMsg, targetX - 40, hitY, isBullseye ? '#facc15' : '#38bdf8');
+
+                // Wood splinters
+                for (var p = 0; p < (isBullseye ? 16 : 8); p++) {
                   particles.push({
-                    x: b.x, y: b.y,
-                    vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5,
-                    color: b.color, alpha: 1
+                    x: targetX,
+                    y: hitY,
+                    vx: -(Math.random() * 3 + 1),
+                    vy: (Math.random() - 0.5) * 4,
+                    size: Math.random() * 3 + 2,
+                    color: isBullseye ? '#facc15' : '#d97706',
+                    life: 1
                   });
                 }
-                balloons.splice(bl, 1);
+
+                // Stuck arrow
+                stuckArrows.push({
+                  x: targetX + (Math.random() * 6 - 3),
+                  relY: hitY - targetY,
+                  angle: arr.angle
+                });
+
+                arrowsInFlight.splice(i, 1);
+                checkNextStageOrEnd();
+                continue;
               }
             }
-          }
 
-          // Ground or off-screen hit
-          if (currentArrow) {
-            if (currentArrow.y >= H - 40 || currentArrow.x > W + 40 || currentArrow.x < -40) {
-              sfxHit();
-              currentArrow = null;
-              checkNextShotOrStage();
+            // Ground or Out of Bounds
+            if (arr.y >= H * 0.88 || arr.x > W + 50) {
+              spawnCallout('MISS!', Math.min(arr.x, W - 60), H * 0.84, '#ef4444');
+              arrowsInFlight.splice(i, 1);
+              checkNextStageOrEnd();
             }
           }
         }
 
-        // Update particles
-        for (var p = particles.length - 1; p >= 0; p--) {
-          var pt = particles[p];
-          pt.x += pt.vx;
-          pt.y += pt.vy;
-          pt.alpha -= 0.05;
-          if (pt.alpha <= 0) particles.splice(p, 1);
+        // Particles
+        for (var pt = particles.length - 1; pt >= 0; pt--) {
+          var p = particles[pt];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 0.035;
+          if (p.life <= 0) particles.splice(pt, 1);
         }
 
-        // Update floating texts
-        for (var ft = floatingTexts.length - 1; ft >= 0; ft--) {
-          var f = floatingTexts[ft];
-          f.y -= 1;
-          f.alpha -= 0.025;
-          if (f.alpha <= 0) floatingTexts.splice(ft, 1);
-        }
-      }
-
-      function checkNextShotOrStage() {
-        updateHUD();
-        if (arrows <= 0) {
-          setTimeout(function() {
-            if (stage < maxStages) {
-              setupStage(stage + 1);
-            } else {
-              endGame();
-            }
-          }, 800);
+        // Callouts
+        for (var cl = callouts.length - 1; cl >= 0; cl--) {
+          var c = callouts[cl];
+          c.y -= 0.7;
+          c.life -= 0.02;
+          if (c.life <= 0) callouts.splice(cl, 1);
         }
       }
 
-      function endGame() {
-        isRunning = false;
-        overlay.classList.remove('hidden');
-        overlayHeading.textContent = "TOUR COMPLETE!";
-        overlayDesc.textContent = "All 4 Archery Stages finished!\nFinal Score: " + score + " points.";
-        startBtn.textContent = "PLAY AGAIN";
-
-        window.parent.postMessage({ type: 'dk:gameover', score: score }, '*');
-      }
-
-      function render() {
+      // Render
+      function draw() {
+        ctx.save();
         ctx.clearRect(0, 0, W, H);
 
-        // Ground grass
-        ctx.fillStyle = '#22c55e';
-        ctx.fillRect(0, H - 40, W, 40);
-        ctx.fillStyle = '#15803d';
-        ctx.fillRect(0, H - 40, W, 4);
+        var sCfg = STAGES[currentStage - 1] || STAGES[0];
+        var targetX = W * sCfg.distance;
 
-        // Distant Trees
-        for (var tr = 0; tr < 6; tr++) {
-          ctx.fillStyle = '#16a34a';
-          ctx.beginPath();
-          ctx.arc(120 + tr * 90, H - 40, 28, 0, Math.PI, true);
-          ctx.fill();
-        }
+        // Scenic Background: Sky Gradient
+        var skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.85);
+        skyGrad.addColorStop(0, '#38bdf8');
+        skyGrad.addColorStop(0.5, '#bae6fd');
+        skyGrad.addColorStop(1, '#e0f2fe');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, W, H * 0.85);
+
+        // Distant Mountains
+        ctx.fillStyle = '#93c5fd';
+        ctx.beginPath();
+        ctx.moveTo(0, H * 0.7);
+        ctx.lineTo(W * 0.25, H * 0.52);
+        ctx.lineTo(W * 0.55, H * 0.68);
+        ctx.lineTo(W * 0.85, H * 0.48);
+        ctx.lineTo(W, H * 0.65);
+        ctx.lineTo(W, H * 0.85);
+        ctx.lineTo(0, H * 0.85);
+        ctx.closePath();
+        ctx.fill();
+
+        // Lush Green Grass Field
+        var grassGrad = ctx.createLinearGradient(0, H * 0.75, 0, H);
+        grassGrad.addColorStop(0, '#22c55e');
+        grassGrad.addColorStop(0.3, '#16a34a');
+        grassGrad.addColorStop(1, '#15803d');
+        ctx.fillStyle = grassGrad;
+        ctx.fillRect(0, H * 0.75, W, H * 0.25);
+
+        // Shooting line boundary & distance markers
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath();
+        ctx.moveTo(bowX + 30, H * 0.75);
+        ctx.lineTo(bowX + 30, H);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Windsock Flag
+        drawWindsock(W * 0.45, H * 0.73, wind);
 
         // Draw Balloons
-        for (var b = 0; b < balloons.length; b++) {
-          var bl = balloons[b];
-          ctx.fillStyle = bl.color;
-          ctx.beginPath();
-          ctx.arc(bl.x, bl.y, bl.r, 0, Math.PI * 2);
-          ctx.fill();
-          // String
-          ctx.strokeStyle = '#64748b';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(bl.x, bl.y + bl.r);
-          ctx.lineTo(bl.x + 2, bl.y + bl.r + 14);
-          ctx.stroke();
-        }
-
-        // Draw Targets
-        for (var t = 0; t < targets.length; t++) {
-          var tgt = targets[t];
-          // Wooden Stand
-          ctx.fillStyle = '#78350f';
-          ctx.fillRect(tgt.x - 4, tgt.y, 8, H - 40 - tgt.y);
-
-          // Rings
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(tgt.x, tgt.y, tgt.r, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = '#3b82f6';
-          ctx.beginPath();
-          ctx.arc(tgt.x, tgt.y, tgt.r * 0.68, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = '#ef4444';
-          ctx.beginPath();
-          ctx.arc(tgt.x, tgt.y, tgt.r * 0.35, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = '#facc15';
-          ctx.beginPath();
-          ctx.arc(tgt.x, tgt.y, tgt.r * 0.12, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Draw Stuck Arrows
-        for (var a = 0; a < stuckArrows.length; a++) {
-          var sa = stuckArrows[a];
-          ctx.save();
-          ctx.translate(sa.x, sa.y);
-          ctx.rotate(sa.angle);
-          ctx.strokeStyle = '#ca8a04';
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.moveTo(-28, 0); ctx.lineTo(0, 0);
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        // Aiming trajectory guide
-        if (isAiming) {
-          var dx = aimStart.x - aimCurrent.x;
-          var dy = aimStart.y - aimCurrent.y;
-          var power = Math.min(Math.hypot(dx, dy) * 0.18, 19);
-          var ang = Math.atan2(dy, dx);
-          var simVx = Math.cos(ang) * power;
-          var simVy = Math.sin(ang) * power;
-          var simX = bowX;
-          var simY = bowY;
-
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-          for (var dot = 0; dot < 14; dot++) {
-            simVx += wind * 0.05;
-            simVy += 0.35;
-            simX += simVx * 1.4;
-            simY += simVy * 1.4;
-            ctx.beginPath();
-            ctx.arc(simX, simY, 2.5, 0, Math.PI * 2);
-            ctx.fill();
+        if (sCfg.balloons) {
+          for (var b = 0; b < balloons.length; b++) {
+            var bal = balloons[b];
+            if (bal.alive) drawBalloon(bal.x, bal.y, bal.radius, bal.color);
           }
         }
 
-        // Flying Arrow
-        if (currentArrow) {
-          ctx.save();
-          var ang = Math.atan2(currentArrow.vy, currentArrow.vx);
-          ctx.translate(currentArrow.x, currentArrow.y);
-          ctx.rotate(ang);
+        // Draw Target Stand & Target
+        drawTargetStand(targetX, targetY);
 
-          // Shaft
-          ctx.strokeStyle = '#ca8a04';
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.moveTo(-currentArrow.length, 0);
-          ctx.lineTo(0, 0);
-          ctx.stroke();
+        // Draw Stuck Arrows on Target
+        for (var s = 0; s < stuckArrows.length; s++) {
+          var sa = stuckArrows[s];
+          drawStuckArrow(sa.x, targetY + sa.relY, sa.angle);
+        }
 
-          // Arrowhead
-          ctx.fillStyle = '#475569';
+        // Draw Bow & Archer
+        drawBowAndArrow(bowX, bowY, pullX, pullY, isAiming);
+
+        // Draw Arrows in Flight
+        for (var a = 0; a < arrowsInFlight.length; a++) {
+          var arr = arrowsInFlight[a];
+          drawFlyingArrow(arr);
+        }
+
+        // Draw Trajectory Guide when Aiming
+        if (isAiming) {
+          drawAimGuide(bowX, bowY, pullX, pullY);
+        }
+
+        // Draw Particles
+        for (var pt = 0; pt < particles.length; pt++) {
+          var p = particles[pt];
+          ctx.fillStyle = p.color;
           ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(-6, -4);
-          ctx.lineTo(-6, 4);
-          ctx.closePath();
+          ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
           ctx.fill();
+        }
 
-          // Feathers
-          ctx.fillStyle = '#ef4444';
-          ctx.fillRect(-currentArrow.length, -3, 8, 6);
-
+        // Draw Callouts
+        for (var cl = 0; cl < callouts.length; cl++) {
+          var c = callouts[cl];
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, c.life);
+          ctx.font = '900 20px -apple-system, sans-serif';
+          ctx.fillStyle = c.color;
+          ctx.textAlign = 'center';
+          ctx.shadowColor = 'rgba(0,0,0,0.8)';
+          ctx.shadowBlur = 8;
+          ctx.fillText(c.text, c.x, c.y);
           ctx.restore();
         }
 
-        // Archer Character & Bow
+        ctx.restore();
+      }
+
+      function drawWindsock(x, y, wSpeed) {
         ctx.save();
-        ctx.translate(bowX, bowY);
+        ctx.translate(x, y);
 
-        // Body
-        ctx.fillStyle = '#0284c7';
-        ctx.fillRect(-18, -10, 16, 28);
-        // Head
-        ctx.fillStyle = '#fed7aa';
+        // Pole
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(-2, -60, 4, 60);
+
+        // Windsock body
+        var blowAngle = (wSpeed * 0.18);
+        ctx.rotate(blowAngle);
+
+        ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        ctx.arc(-10, -20, 10, 0, Math.PI * 2);
-        ctx.fill();
-        // Green Cap
-        ctx.fillStyle = '#16a34a';
-        ctx.beginPath();
-        ctx.arc(-10, -25, 9, Math.PI, 0);
+        ctx.moveTo(0, -60);
+        ctx.lineTo(36, -55);
+        ctx.lineTo(32, -45);
+        ctx.lineTo(0, -50);
+        ctx.closePath();
         ctx.fill();
 
-        // Wooden Bow Arc
-        ctx.strokeStyle = '#92400e';
-        ctx.lineWidth = 3.5;
+        ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(4, 0, 22, -Math.PI / 2, Math.PI / 2);
+        ctx.moveTo(12, -58);
+        ctx.lineTo(24, -56);
+        ctx.lineTo(22, -47);
+        ctx.lineTo(10, -49);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function drawTargetStand(tx, ty) {
+        ctx.save();
+
+        // Wooden Tripod Stand
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(tx + 6, ty - 60);
+        ctx.lineTo(tx - 24, H * 0.78);
+        ctx.moveTo(tx + 6, ty - 60);
+        ctx.lineTo(tx + 36, H * 0.78);
         ctx.stroke();
 
-        // Bow String
-        ctx.strokeStyle = '#ffffff';
+        // Straw Hay Bale Backing
+        ctx.fillStyle = '#d97706';
+        ctx.beginPath();
+        ctx.roundRect(tx - 6, ty - (targetH / 2) - 8, targetW + 12, targetH + 16, 12);
+        ctx.fill();
+
+        // Multi-Ring Olympic Target Face
+        var rings = [
+          { r: 70, color: '#f8fafc' }, // White (1-2)
+          { r: 52, color: '#0f172a' }, // Black (3-4)
+          { r: 36, color: '#0284c7' }, // Blue (5-6)
+          { r: 22, color: '#ef4444' }, // Red (7-8)
+          { r: 10, color: '#facc15' }  // Gold Bullseye (9-10)
+        ];
+
+        for (var i = 0; i < rings.length; i++) {
+          ctx.fillStyle = rings[i].color;
+          ctx.beginPath();
+          ctx.ellipse(tx + (targetW / 2), ty, targetW / 2 - (i * 2.5), rings[i].r, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Inner X
+        ctx.strokeStyle = '#78350f';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        if (isAiming) {
-          ctx.moveTo(4, -22);
-          ctx.lineTo(-12, 0);
-          ctx.lineTo(4, 22);
-        } else {
-          ctx.moveTo(4, -22);
-          ctx.lineTo(4, 22);
-        }
+        ctx.moveTo(tx + (targetW / 2) - 3, ty - 3);
+        ctx.lineTo(tx + (targetW / 2) + 3, ty + 3);
+        ctx.moveTo(tx + (targetW / 2) + 3, ty - 3);
+        ctx.lineTo(tx + (targetW / 2) - 3, ty + 3);
         ctx.stroke();
 
         ctx.restore();
+      }
 
-        // Floating Scores
-        for (var ft = 0; ft < floatingTexts.length; ft++) {
-          var f = floatingTexts[ft];
-          ctx.font = 'bold 16px -apple-system, sans-serif';
-          ctx.fillStyle = 'rgba(15, 23, 42, ' + f.alpha + ')';
-          ctx.fillText(f.text, f.x + 1, f.y + 1);
-          ctx.fillStyle = 'rgba(250, 204, 21, ' + f.alpha + ')';
-          ctx.fillText(f.text, f.x, f.y);
+      function drawBalloon(x, y, r, color) {
+        ctx.save();
+        ctx.translate(x, y);
+
+        // String
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, r);
+        ctx.lineTo(Math.sin(globalTime * 3) * 4, r + 24);
+        ctx.stroke();
+
+        // Balloon Body
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * 0.85, r, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glossy Specular Highlight
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(-r * 0.3, -r * 0.35, r * 0.25, r * 0.4, -0.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function drawBowAndArrow(bx, by, px, py, aiming) {
+        ctx.save();
+        ctx.translate(bx, by);
+
+        var aimAngle = Math.atan2(py, px + 20);
+        ctx.rotate(aimAngle);
+
+        var pullDist = Math.hypot(px, py);
+
+        // Wooden Recurve Bow Body
+        ctx.strokeStyle = '#92400e';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(0, 0, 48, -Math.PI * 0.45, Math.PI * 0.45, false);
+        ctx.stroke();
+
+        // Bow Tips
+        ctx.fillStyle = '#f1f5f9';
+        ctx.beginPath();
+        ctx.arc(36, -34, 4, 0, Math.PI * 2);
+        ctx.arc(36, 34, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bowstring
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(36, -34);
+        ctx.lineTo(-pullDist * 0.6, 0); // drawn string notch
+        ctx.lineTo(36, 34);
+        ctx.stroke();
+
+        // Arrow on Bow
+        if (arrowsLeft > 0) {
+          ctx.save();
+          ctx.translate(-pullDist * 0.6, 0);
+
+          // Wooden Shaft
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(65, 0);
+          ctx.stroke();
+
+          // Steel Tip
+          ctx.fillStyle = '#e2e8f0';
+          ctx.beginPath();
+          ctx.moveTo(65, -4);
+          ctx.lineTo(75, 0);
+          ctx.lineTo(65, 4);
+          ctx.closePath();
+          ctx.fill();
+
+          // Red Fletching Feathers
+          ctx.fillStyle = '#ef4444';
+          ctx.fillRect(4, -4, 12, 2);
+          ctx.fillRect(4, 2, 12, 2);
+
+          ctx.restore();
         }
 
+        ctx.restore();
+      }
+
+      function drawAimGuide(bx, by, px, py) {
+        ctx.save();
+        var speedMult = 0.32;
+        var vx = (px + 20) * speedMult;
+        var vy = (py) * speedMult;
+
+        var simX = bx;
+        var simY = by;
+        var simVx = Math.max(vx, 8);
+        var simVy = vy;
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        for (var step = 0; step < 18; step++) {
+          simVy += 0.24;
+          simVx += wind * 0.015;
+          simX += simVx;
+          simY += simVy;
+
+          if (step % 2 === 0) {
+            ctx.beginPath();
+            ctx.arc(simX, simY, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+
+      function drawFlyingArrow(arr) {
+        ctx.save();
+        ctx.translate(arr.x, arr.y);
+        ctx.rotate(arr.angle);
+
+        // Arrow Shaft
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-25, 0);
+        ctx.lineTo(25, 0);
+        ctx.stroke();
+
+        // Steel Tip
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.moveTo(25, -4);
+        ctx.lineTo(34, 0);
+        ctx.lineTo(25, 4);
+        ctx.closePath();
+        ctx.fill();
+
+        // Red Feathers
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-22, -4, 10, 2);
+        ctx.fillRect(-22, 2, 10, 2);
+
+        ctx.restore();
+
+        // Smoke vapor trail
+        if (arr.trail.length > 1) {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(arr.trail[0].x, arr.trail[0].y);
+          for (var t = 1; t < arr.trail.length; t++) {
+            ctx.lineTo(arr.trail[t].x, arr.trail[t].y);
+          }
+          ctx.stroke();
+        }
+      }
+
+      function drawStuckArrow(x, y, angle) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-28, 0);
+        ctx.lineTo(0, 0);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-26, -4, 10, 2);
+        ctx.fillRect(-26, 2, 10, 2);
+
+        ctx.restore();
+      }
+
+      function loop() {
         update();
-        requestAnimationFrame(render);
+        draw();
+        requestAnimationFrame(loop);
       }
-      requestAnimationFrame(render);
+      requestAnimationFrame(loop);
 
-      function startGame() {
-        initAudio();
-        score = 0;
-        setupStage(1);
-        overlay.classList.add('hidden');
-        isRunning = true;
-        isPaused = false;
-      }
-
-      startBtn.addEventListener('click', startGame);
-
-      window.addEventListener('message', function(e) {
-        if (!e.data) return;
-        if (e.data.type === 'dk:restart') startGame();
-        else if (e.data.type === 'dk:pause') isPaused = true;
-        else if (e.data.type === 'dk:resume') isPaused = false;
-      });
-
-      window.parent.postMessage({ type: 'dk:ready' }, '*');
     })();
   </script>
 </body>

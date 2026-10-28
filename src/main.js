@@ -123,7 +123,13 @@ function matchRoute(path) {
   const genreMatch = path.match(/^\/genre\/([^/]+)$/);
   if (genreMatch) return { page: 'genre', slug: genreMatch[1] };
   const gameMatch = path.match(/^\/game\/([^/]+)$/);
-  if (gameMatch) return { page: 'game', slug: gameMatch[1] };
+  if (gameMatch) {
+    const slug = gameMatch[1];
+    if (slug === 'speed-dash') return { page: 'redirect', target: '/game/road-hopper' };
+    if (slug === 'graviton') return { page: 'redirect', target: '/game/sky-jump' };
+    if (slug === 'void-strike') return { page: 'redirect', target: '/game/archery' };
+    return { page: 'game', slug: slug };
+  }
   return { page: 'not-found' };
 }
 
@@ -688,12 +694,13 @@ function renderGamePage(slug) {
           <div class="toolbar-tools">
             ${pauseMarkup}
             <button type="button" class="game-tool-btn" data-action="restart" title="Restart [R]">↺ Restart</button>
-            <button type="button" class="game-tool-btn" data-action="fullscreen" id="fs-toggle" title="Fullscreen [F]">⛶ Fullscreen</button>
+            <button type="button" class="game-tool-btn" data-action="theater" id="theater-toggle" title="Toggle Theater View (Expands to screen width)">🗖 Theater</button>
+            <button type="button" class="game-tool-btn game-tool-btn-primary" data-action="fullscreen" id="fs-toggle" title="Full Screen [F]">⛶ Fullscreen</button>
           </div>
         </div>
 
         <div class="game-viewport-wrap" id="game-viewport">
-          <iframe class="game-viewport-frame" id="active-game-frame" src="${game.standalone}${game.pause ? '?embed=1' : ''}" title="${escapeHtml(game.title)}" allowfullscreen></iframe>
+          <iframe class="game-viewport-frame" id="active-game-frame" src="${game.standalone}${game.pause ? '?embed=1' : ''}" title="${escapeHtml(game.title)}" allowfullscreen allow="autoplay"></iframe>
         </div>
       </div>
 
@@ -738,9 +745,11 @@ function setupGamePage(slug) {
   if (!game) return;
 
   const viewport = document.getElementById('game-viewport');
+  const playerCard = document.getElementById('game-player-card');
   const frame = document.getElementById('active-game-frame');
   const restart = document.querySelector('[data-action="restart"]');
   const pauseBtn = document.querySelector('[data-action="pause"]');
+  const theaterBtn = document.getElementById('theater-toggle');
   const fsBtn = document.getElementById('fs-toggle');
   const randomBtn = document.getElementById('game-random-btn');
   const origin = window.location.origin;
@@ -781,18 +790,50 @@ function setupGamePage(slug) {
     });
   }
 
+  /* Theater mode toggle */
+  if (theaterBtn && playerCard) {
+    theaterBtn.addEventListener('click', () => {
+      playUiSound('click');
+      const isTheater = playerCard.classList.toggle('theater-mode');
+      theaterBtn.textContent = isTheater ? '🗗 Standard' : '🗖 Theater';
+      theaterBtn.setAttribute('aria-pressed', String(isTheater));
+      if (isTheater) {
+        playerCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      postToGame({ type: 'dk:resize' });
+      frame.focus();
+    });
+  }
+
   if (fsBtn && viewport) {
     fsBtn.addEventListener('click', () => {
       playUiSound('click');
-      if (!document.fullscreenElement) {
-        if (viewport.requestFullscreen) viewport.requestFullscreen();
-        else if (viewport.webkitRequestFullscreen) viewport.webkitRequestFullscreen();
+      const target = playerCard || viewport;
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (target.requestFullscreen) target.requestFullscreen();
+        else if (target.webkitRequestFullscreen) target.webkitRequestFullscreen();
       } else {
         if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       }
       frame.focus();
     });
   }
+
+  const handleFsChange = () => {
+    const isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+    if (playerCard) playerCard.classList.toggle('is-fullscreen', isFs);
+    if (fsBtn) fsBtn.textContent = isFs ? '✕ Exit Fullscreen' : '⛶ Fullscreen';
+    postToGame({ type: 'dk:fullscreen', fullscreen: isFs });
+    postToGame({ type: 'dk:resize' });
+  };
+
+  document.addEventListener('fullscreenchange', handleFsChange);
+  document.addEventListener('webkitfullscreenchange', handleFsChange);
+  pageCleanups.push(() => {
+    document.removeEventListener('fullscreenchange', handleFsChange);
+    document.removeEventListener('webkitfullscreenchange', handleFsChange);
+  });
 
   /* Hotkeys helper */
   const onKeydown = (event) => {
@@ -1096,6 +1137,10 @@ function renderCurrentPage() {
   setTheme(getTheme());
 
   const route = matchRoute(path);
+  if (route.page === 'redirect') {
+    navigateTo(route.target);
+    return;
+  }
   updatePageMetadata({ page: route.page, path, slug: route.slug });
 
   const pageContent = (() => {
