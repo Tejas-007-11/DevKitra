@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="grass-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Green Grass Field Background -->
+  <rect width="600" height="400" fill="url(#grass-grad)"/>
+
+  <!-- Highway Lane -->
+  <rect x="0" y="80" width="600" height="90" fill="#334155"/>
+  <line x1="0" y1="125" x2="600" y2="125" stroke="#94a3b8" stroke-width="3" stroke-dasharray="24,24"/>
+
+  <!-- River Lane -->
+  <rect x="0" y="230" width="600" height="90" fill="#0284c7"/>
+  <rect x="0" y="230" width="600" height="4" fill="#38bdf8" opacity="0.6"/>
+
+  <!-- Floating Log -->
+  <rect x="180" y="250" width="160" height="50" rx="10" fill="#92400e" stroke="#78350f" stroke-width="4"/>
+
+  <!-- Sports Car on Highway -->
+  <g transform="translate(140, 95)">
+    <rect x="0" y="0" width="110" height="55" rx="10" fill="#ef4444" stroke="#991b1b" stroke-width="3"/>
+    <rect x="65" y="6" width="30" height="43" rx="4" fill="#cbd5e1"/>
+    <!-- Headlights -->
+    <rect x="100" y="8" width="8" height="12" rx="2" fill="#fef08a"/>
+    <rect x="100" y="35" width="8" height="12" rx="2" fill="#fef08a"/>
+  </g>
+
+  <!-- Gold Coins -->
+  <circle cx="480" cy="125" r="14" fill="#facc15" stroke="#ca8a04" stroke-width="3"/>
+  <text x="480" y="130" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="900" font-size="14" fill="#ca8a04">★</text>
+
+  <!-- Cute Hopper Character (Center Stage) -->
+  <g transform="translate(260, 260)">
+    <!-- Shadow -->
+    <ellipse cx="0" cy="18" rx="24" ry="8" fill="rgba(0, 0, 0, 0.25)"/>
+    <!-- White Chicken Body -->
+    <circle cx="0" cy="0" r="28" fill="#ffffff" stroke="#cbd5e1" stroke-width="4"/>
+    <!-- Red Crest -->
+    <circle cx="0" cy="-28" r="8" fill="#ef4444"/>
+    <!-- Yellow Beak -->
+    <polygon points="-8,-16 0,-32 8,-16" fill="#f97316"/>
+    <!-- Big cute eyes -->
+    <circle cx="-10" cy="-4" r="5" fill="#0f172a"/>
+    <circle cx="-8" cy="-6" r="2" fill="#ffffff"/>
+    <circle cx="10" cy="-4" r="5" fill="#0f172a"/>
+    <circle cx="12" cy="-6" r="2" fill="#ffffff"/>
+  </g>
+
+  <!-- Title Badge -->
+  <g transform="translate(300, 40)">
+    <rect x="-95" y="-18" width="190" height="36" rx="18" fill="rgba(15, 23, 42, 0.9)" stroke="#22c55e" stroke-width="2.5"/>
+    <text x="0" y="6" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="14" fill="#22c55e" letter-spacing="2">ROAD HOPPER</text>
+  </g>
+</svg>

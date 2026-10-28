@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Archery Master — Devkitra Gaming</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #game-wrap {
+      position: relative;
+      width: 680px;
+      height: 440px;
+      max-width: 100%;
+      max-height: 100%;
+      background: linear-gradient(180deg, #bae6fd 0%, #e0f2fe 50%, #86efac 50%, #4ade80 100%);
+      border: 3px solid #1e293b;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: crosshair;
+    }
+    .hud-bar {
+      position: absolute;
+      top: 10px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .hud-badge {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hud-badge b { color: #38bdf8; font-family: ui-monospace, monospace; }
+    .hud-badge.wind { color: #f59e0b; }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      text-align: center;
+      padding: 24px;
+    }
+    .overlay.hidden { display: none; }
+    .overlay h2 {
+      font-size: 26px;
+      font-weight: 900;
+      color: #f59e0b;
+      margin-bottom: 6px;
+    }
+    .overlay p {
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      max-width: 340px;
+    }
+    .btn {
+      background: #f59e0b;
+      color: #0f172a;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+      transition: all 0.15s ease;
+    }
+    .btn:hover {
+      background: #fbbf24;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-wrap">
+    <div class="hud-bar">
+      <div style="display:flex; gap:8px;">
+        <div class="hud-badge">Stage: <b id="stage-disp">1/4</b></div>
+        <div class="hud-badge">Arrows: <b id="arrows-disp">5</b></div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <div class="hud-badge wind" id="wind-disp">Wind: 0 m/s</div>
+        <div class="hud-badge">Score: <b id="score-disp">0</b></div>
+      </div>
+    </div>
+
+    <canvas id="archCanvas" width="680" height="440"></canvas>
+
+    <div id="overlay" class="overlay">
+      <h2 id="overlay-heading">ARCHERY MASTER</h2>
+      <p id="overlay-desc">Click/Touch and drag back to aim the bow. Account for gravity and wind, then release to shoot the targets!</p>
+      <button id="start-btn" class="btn">DRAW BOW</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Audio synth
+      var audioCtx = null;
+      function initAudio() {
+        if (!audioCtx) {
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch(e) {}
+        }
+      }
+      function playTone(freq, type, dur, gainVal) {
+        if (!audioCtx) return;
+        try {
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+          osc.type = type || 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(gainVal || 0.08, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + dur);
+        } catch(e) {}
+      }
+
+      function sfxDraw() { playTone(220, 'triangle', 0.05, 0.04); }
+      function sfxShoot() { playTone(480, 'sine', 0.08, 0.08); }
+      function sfxHit() { playTone(160, 'sawtooth', 0.12, 0.1); }
+      function sfxBullseye() {
+        playTone(523.25, 'sine', 0.1, 0.1);
+        setTimeout(function() { playTone(659.25, 'sine', 0.1, 0.1); }, 70);
+        setTimeout(function() { playTone(1046.5, 'sine', 0.25, 0.14); }, 140);
+      }
+      function sfxPop() { playTone(720, 'sine', 0.06, 0.09); }
+
+      var canvas = document.getElementById('archCanvas');
+      var ctx = canvas.getContext('2d');
+      var stageDisp = document.getElementById('stage-disp');
+      var arrowsDisp = document.getElementById('arrows-disp');
+      var windDisp = document.getElementById('wind-disp');
+      var scoreDisp = document.getElementById('score-disp');
+      var overlay = document.getElementById('overlay');
+      var overlayHeading = document.getElementById('overlay-heading');
+      var overlayDesc = document.getElementById('overlay-desc');
+      var startBtn = document.getElementById('start-btn');
+
+      var W = 680;
+      var H = 440;
+
+      var isRunning = false;
+      var isPaused = false;
+      var stage = 1;
+      var maxStages = 4;
+      var score = 0;
+      var arrows = 5;
+      var wind = 0; // Wind acceleration
+      var isAiming = false;
+      var aimStart = { x: 0, y: 0 };
+      var aimCurrent = { x: 0, y: 0 };
+
+      var bowX = 90;
+      var bowY = 220;
+
+      var currentArrow = null; // flying arrow
+      var stuckArrows = [];
+      var targets = [];
+      var balloons = [];
+      var particles = [];
+      var floatingTexts = [];
+
+      function setupStage(s) {
+        stage = s;
+        arrows = 5;
+        currentArrow = null;
+        stuckArrows = [];
+        targets = [];
+        balloons = [];
+
+        // Wind setup
+        wind = (Math.random() - 0.45) * (s * 0.15);
+        updateHUD();
+
+        if (s === 1) {
+          // Stationary targets at various heights
+          targets.push({ x: 540, y: 180, r: 42, vy: 0 });
+        } else if (s === 2) {
+          // Moving target sliding vertically
+          targets.push({ x: 550, y: 150, r: 38, vy: 1.8, minY: 90, maxY: 310 });
+        } else if (s === 3) {
+          // Balloons drifting up
+          for (var b = 0; b < 6; b++) {
+            balloons.push({
+              x: 360 + b * 45,
+              y: H + Math.random() * 200,
+              r: 18,
+              vy: -(Math.random() * 1.2 + 1),
+              color: ['#f43f5e', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'][b % 5]
+            });
+          }
+        } else if (s === 4) {
+          // Trickshot target + balloons
+          targets.push({ x: 580, y: 180, r: 32, vy: 2.2, minY: 80, maxY: 330 });
+          for (var b = 0; b < 4; b++) {
+            balloons.push({
+              x: 380 + b * 50,
+              y: H + Math.random() * 150,
+              r: 16,
+              vy: -(Math.random() * 1 + 1.2),
+              color: '#f43f5e'
+            });
+          }
+        }
+      }
+
+      function updateHUD() {
+        stageDisp.textContent = stage + '/' + maxStages;
+        arrowsDisp.textContent = arrows;
+        scoreDisp.textContent = score;
+
+        var windM = Math.round(wind * 50);
+        if (windM === 0) windDisp.textContent = 'Wind: Calm';
+        else if (windM > 0) windDisp.textContent = 'Wind: → ' + Math.abs(windM) + ' m/s';
+        else windDisp.textContent = 'Wind: ← ' + Math.abs(windM) + ' m/s';
+      }
+
+      // Pointer event listeners for aiming
+      function startAim(x, y) {
+        if (!isRunning || isPaused || currentArrow || arrows <= 0) return;
+        isAiming = true;
+        aimStart.x = x;
+        aimStart.y = y;
+        aimCurrent.x = x;
+        aimCurrent.y = y;
+        sfxDraw();
+      }
+
+      function updateAim(x, y) {
+        if (!isAiming) return;
+        aimCurrent.x = x;
+        aimCurrent.y = y;
+      }
+
+      function shootArrow() {
+        if (!isAiming) return;
+        isAiming = false;
+
+        var dx = aimStart.x - aimCurrent.x;
+        var dy = aimStart.y - aimCurrent.y;
+        var power = Math.min(Math.hypot(dx, dy) * 0.18, 19);
+
+        if (power < 3) return; // Too weak
+
+        var angle = Math.atan2(dy, dx);
+        arrows--;
+        updateHUD();
+        sfxShoot();
+
+        currentArrow = {
+          x: bowX,
+          y: bowY,
+          vx: Math.cos(angle) * power,
+          vy: Math.sin(angle) * power,
+          length: 36
+        };
+      }
+
+      canvas.addEventListener('mousedown', function(e) {
+        var rect = canvas.getBoundingClientRect();
+        startAim((e.clientX - rect.left) * (W / rect.width), (e.clientY - rect.top) * (H / rect.height));
+      });
+      window.addEventListener('mousemove', function(e) {
+        var rect = canvas.getBoundingClientRect();
+        updateAim((e.clientX - rect.left) * (W / rect.width), (e.clientY - rect.top) * (H / rect.height));
+      });
+      window.addEventListener('mouseup', shootArrow);
+
+      canvas.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        var rect = canvas.getBoundingClientRect();
+        var t = e.touches[0];
+        startAim((t.clientX - rect.left) * (W / rect.width), (t.clientY - rect.top) * (H / rect.height));
+      }, { passive: false });
+      window.addEventListener('touchmove', function(e) {
+        if (!e.touches[0]) return;
+        var rect = canvas.getBoundingClientRect();
+        var t = e.touches[0];
+        updateAim((t.clientX - rect.left) * (W / rect.width), (t.clientY - rect.top) * (H / rect.height));
+      });
+      window.addEventListener('touchend', shootArrow);
+
+      function update() {
+        if (!isRunning || isPaused) return;
+
+        // Update moving targets
+        for (var t = 0; t < targets.length; t++) {
+          var tgt = targets[t];
+          if (tgt.vy) {
+            tgt.y += tgt.vy;
+            if (tgt.y < tgt.minY || tgt.y > tgt.maxY) tgt.vy *= -1;
+          }
+        }
+
+        // Update balloons
+        for (var b = 0; b < balloons.length; b++) {
+          var bl = balloons[b];
+          bl.y += bl.vy;
+          bl.x += wind * 2;
+          if (bl.y < -30) bl.y = H + 40; // loop
+        }
+
+        // Update flying arrow
+        if (currentArrow) {
+          currentArrow.vx += wind * 0.05;
+          currentArrow.vy += 0.35; // gravity
+          currentArrow.x += currentArrow.vx;
+          currentArrow.y += currentArrow.vy;
+
+          var arrowTipX = currentArrow.x;
+          var arrowTipY = currentArrow.y;
+
+          // Check hit against targets
+          for (var t = 0; t < targets.length; t++) {
+            var tgt = targets[t];
+            var dist = Math.hypot(arrowTipX - tgt.x, arrowTipY - tgt.y);
+
+            if (dist < tgt.r) {
+              // Target hit!
+              var pts = 20;
+              var label = "HIT! +20";
+              if (dist < tgt.r * 0.3) {
+                pts = 100;
+                label = "★ BULLSEYE! +100";
+                sfxBullseye();
+              } else if (dist < tgt.r * 0.65) {
+                pts = 50;
+                label = "GREAT! +50";
+                sfxHit();
+              } else {
+                sfxHit();
+              }
+
+              score += pts;
+              floatingTexts.push({ x: tgt.x, y: tgt.y - 20, text: label, alpha: 1 });
+
+              stuckArrows.push({
+                x: arrowTipX,
+                y: arrowTipY,
+                angle: Math.atan2(currentArrow.vy, currentArrow.vx)
+              });
+              currentArrow = null;
+              checkNextShotOrStage();
+              break;
+            }
+          }
+
+          // Check hit against balloons
+          if (currentArrow) {
+            for (var bl = balloons.length - 1; bl >= 0; bl--) {
+              var b = balloons[bl];
+              if (Math.hypot(arrowTipX - b.x, arrowTipY - b.y) < b.r + 4) {
+                sfxPop();
+                score += 40;
+                floatingTexts.push({ x: b.x, y: b.y, text: "+40 POP!", alpha: 1 });
+                // Pop particles
+                for (var p = 0; p < 8; p++) {
+                  particles.push({
+                    x: b.x, y: b.y,
+                    vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5,
+                    color: b.color, alpha: 1
+                  });
+                }
+                balloons.splice(bl, 1);
+              }
+            }
+          }
+
+          // Ground or off-screen hit
+          if (currentArrow) {
+            if (currentArrow.y >= H - 40 || currentArrow.x > W + 40 || currentArrow.x < -40) {
+              sfxHit();
+              currentArrow = null;
+              checkNextShotOrStage();
+            }
+          }
+        }
+
+        // Update particles
+        for (var p = particles.length - 1; p >= 0; p--) {
+          var pt = particles[p];
+          pt.x += pt.vx;
+          pt.y += pt.vy;
+          pt.alpha -= 0.05;
+          if (pt.alpha <= 0) particles.splice(p, 1);
+        }
+
+        // Update floating texts
+        for (var ft = floatingTexts.length - 1; ft >= 0; ft--) {
+          var f = floatingTexts[ft];
+          f.y -= 1;
+          f.alpha -= 0.025;
+          if (f.alpha <= 0) floatingTexts.splice(ft, 1);
+        }
+      }
+
+      function checkNextShotOrStage() {
+        updateHUD();
+        if (arrows <= 0) {
+          setTimeout(function() {
+            if (stage < maxStages) {
+              setupStage(stage + 1);
+            } else {
+              endGame();
+            }
+          }, 800);
+        }
+      }
+
+      function endGame() {
+        isRunning = false;
+        overlay.classList.remove('hidden');
+        overlayHeading.textContent = "TOUR COMPLETE!";
+        overlayDesc.textContent = "All 4 Archery Stages finished!\nFinal Score: " + score + " points.";
+        startBtn.textContent = "PLAY AGAIN";
+
+        window.parent.postMessage({ type: 'dk:gameover', score: score }, '*');
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, W, H);
+
+        // Ground grass
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(0, H - 40, W, 40);
+        ctx.fillStyle = '#15803d';
+        ctx.fillRect(0, H - 40, W, 4);
+
+        // Distant Trees
+        for (var tr = 0; tr < 6; tr++) {
+          ctx.fillStyle = '#16a34a';
+          ctx.beginPath();
+          ctx.arc(120 + tr * 90, H - 40, 28, 0, Math.PI, true);
+          ctx.fill();
+        }
+
+        // Draw Balloons
+        for (var b = 0; b < balloons.length; b++) {
+          var bl = balloons[b];
+          ctx.fillStyle = bl.color;
+          ctx.beginPath();
+          ctx.arc(bl.x, bl.y, bl.r, 0, Math.PI * 2);
+          ctx.fill();
+          // String
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(bl.x, bl.y + bl.r);
+          ctx.lineTo(bl.x + 2, bl.y + bl.r + 14);
+          ctx.stroke();
+        }
+
+        // Draw Targets
+        for (var t = 0; t < targets.length; t++) {
+          var tgt = targets[t];
+          // Wooden Stand
+          ctx.fillStyle = '#78350f';
+          ctx.fillRect(tgt.x - 4, tgt.y, 8, H - 40 - tgt.y);
+
+          // Rings
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(tgt.x, tgt.y, tgt.r, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#3b82f6';
+          ctx.beginPath();
+          ctx.arc(tgt.x, tgt.y, tgt.r * 0.68, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(tgt.x, tgt.y, tgt.r * 0.35, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          ctx.arc(tgt.x, tgt.y, tgt.r * 0.12, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Draw Stuck Arrows
+        for (var a = 0; a < stuckArrows.length; a++) {
+          var sa = stuckArrows[a];
+          ctx.save();
+          ctx.translate(sa.x, sa.y);
+          ctx.rotate(sa.angle);
+          ctx.strokeStyle = '#ca8a04';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(-28, 0); ctx.lineTo(0, 0);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Aiming trajectory guide
+        if (isAiming) {
+          var dx = aimStart.x - aimCurrent.x;
+          var dy = aimStart.y - aimCurrent.y;
+          var power = Math.min(Math.hypot(dx, dy) * 0.18, 19);
+          var ang = Math.atan2(dy, dx);
+          var simVx = Math.cos(ang) * power;
+          var simVy = Math.sin(ang) * power;
+          var simX = bowX;
+          var simY = bowY;
+
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+          for (var dot = 0; dot < 14; dot++) {
+            simVx += wind * 0.05;
+            simVy += 0.35;
+            simX += simVx * 1.4;
+            simY += simVy * 1.4;
+            ctx.beginPath();
+            ctx.arc(simX, simY, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Flying Arrow
+        if (currentArrow) {
+          ctx.save();
+          var ang = Math.atan2(currentArrow.vy, currentArrow.vx);
+          ctx.translate(currentArrow.x, currentArrow.y);
+          ctx.rotate(ang);
+
+          // Shaft
+          ctx.strokeStyle = '#ca8a04';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(-currentArrow.length, 0);
+          ctx.lineTo(0, 0);
+          ctx.stroke();
+
+          // Arrowhead
+          ctx.fillStyle = '#475569';
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-6, -4);
+          ctx.lineTo(-6, 4);
+          ctx.closePath();
+          ctx.fill();
+
+          // Feathers
+          ctx.fillStyle = '#ef4444';
+          ctx.fillRect(-currentArrow.length, -3, 8, 6);
+
+          ctx.restore();
+        }
+
+        // Archer Character & Bow
+        ctx.save();
+        ctx.translate(bowX, bowY);
+
+        // Body
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(-18, -10, 16, 28);
+        // Head
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(-10, -20, 10, 0, Math.PI * 2);
+        ctx.fill();
+        // Green Cap
+        ctx.fillStyle = '#16a34a';
+        ctx.beginPath();
+        ctx.arc(-10, -25, 9, Math.PI, 0);
+        ctx.fill();
+
+        // Wooden Bow Arc
+        ctx.strokeStyle = '#92400e';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(4, 0, 22, -Math.PI / 2, Math.PI / 2);
+        ctx.stroke();
+
+        // Bow String
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (isAiming) {
+          ctx.moveTo(4, -22);
+          ctx.lineTo(-12, 0);
+          ctx.lineTo(4, 22);
+        } else {
+          ctx.moveTo(4, -22);
+          ctx.lineTo(4, 22);
+        }
+        ctx.stroke();
+
+        ctx.restore();
+
+        // Floating Scores
+        for (var ft = 0; ft < floatingTexts.length; ft++) {
+          var f = floatingTexts[ft];
+          ctx.font = 'bold 16px -apple-system, sans-serif';
+          ctx.fillStyle = 'rgba(15, 23, 42, ' + f.alpha + ')';
+          ctx.fillText(f.text, f.x + 1, f.y + 1);
+          ctx.fillStyle = 'rgba(250, 204, 21, ' + f.alpha + ')';
+          ctx.fillText(f.text, f.x, f.y);
+        }
+
+        update();
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+
+      function startGame() {
+        initAudio();
+        score = 0;
+        setupStage(1);
+        overlay.classList.add('hidden');
+        isRunning = true;
+        isPaused = false;
+      }
+
+      startBtn.addEventListener('click', startGame);
+
+      window.addEventListener('message', function(e) {
+        if (!e.data) return;
+        if (e.data.type === 'dk:restart') startGame();
+        else if (e.data.type === 'dk:pause') isPaused = true;
+        else if (e.data.type === 'dk:resume') isPaused = false;
+      });
+
+      window.parent.postMessage({ type: 'dk:ready' }, '*');
+    })();
+  </script>
+</body>
+</html>

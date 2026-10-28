@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Road Hopper — Devkitra Gaming</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #111827;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #game-wrap {
+      position: relative;
+      width: 400px;
+      height: 600px;
+      max-width: 100%;
+      max-height: 100%;
+      background: #1e293b;
+      border: 3px solid #334155;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    .hud-bar {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .score-badge {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 16px;
+      font-weight: 900;
+      color: #38bdf8;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .coins-badge {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(250, 204, 21, 0.3);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #facc15;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      text-align: center;
+      padding: 24px;
+    }
+    .overlay.hidden { display: none; }
+    .overlay h2 {
+      font-size: 28px;
+      font-weight: 900;
+      color: #38bdf8;
+      margin-bottom: 6px;
+    }
+    .overlay p {
+      color: #cbd5e1;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 22px;
+      max-width: 280px;
+    }
+    .btn {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+      transition: all 0.15s ease;
+    }
+    .btn:hover {
+      background: #0369a1;
+      transform: translateY(-2px);
+    }
+    /* Mobile Controls */
+    .touch-pad {
+      display: none;
+      position: absolute;
+      bottom: 16px;
+      left: 0;
+      right: 0;
+      padding: 0 20px;
+      justify-content: center;
+      gap: 12px;
+      z-index: 15;
+    }
+    @media (pointer: coarse) {
+      .touch-pad { display: flex; }
+    }
+    .t-btn {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 900;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .t-btn:active { background: rgba(56, 189, 248, 0.3); }
+  </style>
+</head>
+<body>
+
+  <div id="game-wrap">
+    <div class="hud-bar">
+      <div class="score-badge" id="score-display">0 m</div>
+      <div class="coins-badge" id="coins-display">🪙 0</div>
+    </div>
+
+    <canvas id="hopperCanvas" width="400" height="600"></canvas>
+
+    <div class="touch-pad">
+      <button class="t-btn" id="btn-l">◀</button>
+      <button class="t-btn" id="btn-u" style="background:#0284c7;">▲</button>
+      <button class="t-btn" id="btn-d">▼</button>
+      <button class="t-btn" id="btn-r">▶</button>
+    </div>
+
+    <div id="overlay" class="overlay">
+      <h2 id="overlay-heading">ROAD HOPPER</h2>
+      <p id="overlay-desc">Use Arrow keys, WASD, or swipe to hop across highways, rivers, and train tracks. Dodge traffic and collect gold coins!</p>
+      <button id="start-btn" class="btn">START HOPPING</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Audio synth
+      var audioCtx = null;
+      function initAudio() {
+        if (!audioCtx) {
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch(e) {}
+        }
+      }
+      function playTone(freq, type, dur, gainVal) {
+        if (!audioCtx) return;
+        try {
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+          osc.type = type || 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(gainVal || 0.08, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + dur);
+        } catch(e) {}
+      }
+
+      function sfxHop() { playTone(380, 'sine', 0.06, 0.06); }
+      function sfxCoin() {
+        playTone(660, 'sine', 0.08, 0.08);
+        setTimeout(function() { playTone(990, 'sine', 0.14, 0.08); }, 50);
+      }
+      function sfxSplash() {
+        playTone(260, 'triangle', 0.15, 0.1);
+        setTimeout(function() { playTone(140, 'triangle', 0.25, 0.08); }, 80);
+      }
+      function sfxHonk() {
+        playTone(320, 'sawtooth', 0.12, 0.07);
+        setTimeout(function() { playTone(300, 'sawtooth', 0.2, 0.07); }, 80);
+      }
+
+      var canvas = document.getElementById('hopperCanvas');
+      var ctx = canvas.getContext('2d');
+      var scoreDisplay = document.getElementById('score-display');
+      var coinsDisplay = document.getElementById('coins-display');
+      var overlay = document.getElementById('overlay');
+      var overlayHeading = document.getElementById('overlay-heading');
+      var overlayDesc = document.getElementById('overlay-desc');
+      var startBtn = document.getElementById('start-btn');
+
+      var W = 400;
+      var H = 600;
+      var GRID_SIZE = 40;
+      var COLS = 10; // 400 / 40
+
+      var isRunning = false;
+      var isPaused = false;
+      var score = 0;
+      var maxDistance = 0;
+      var coins = 0;
+      var bestScore = 0;
+      try { bestScore = parseInt(localStorage.getItem('dk:hopper-best') || '0', 10); } catch(e) {}
+
+      var player = {
+        gridX: 4,
+        gridY: 0, // distance forward
+        targetX: 4 * GRID_SIZE,
+        targetY: H - 120,
+        x: 4 * GRID_SIZE,
+        y: H - 120,
+        animProgress: 1,
+        facing: 'up'
+      };
+
+      var cameraY = 0;
+      var lanes = [];
+      var particles = [];
+
+      var LANE_TYPES = ['grass', 'road', 'road', 'river', 'river', 'rail'];
+
+      function generateLane(yIndex) {
+        if (yIndex <= 2) {
+          return { yIndex: yIndex, type: 'grass', obstacles: [], coins: [] };
+        }
+
+        var type = LANE_TYPES[Math.floor(Math.random() * LANE_TYPES.length)];
+        var dir = Math.random() > 0.5 ? 1 : -1;
+        var speed = (Math.random() * 1.5 + 1.2) * dir;
+        var obstacles = [];
+        var laneCoins = [];
+
+        if (type === 'road') {
+          var numCars = Math.floor(Math.random() * 2 + 2);
+          var spacing = W / numCars;
+          for (var i = 0; i < numCars; i++) {
+            obstacles.push({
+              x: i * spacing + Math.random() * 20,
+              w: Math.random() > 0.5 ? 54 : 42,
+              h: 26,
+              color: ['#f43f5e', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'][Math.floor(Math.random() * 5)],
+              speed: speed
+            });
+          }
+        } else if (type === 'river') {
+          var numLogs = Math.floor(Math.random() * 2 + 2);
+          var logSpacing = W / numLogs;
+          for (var i = 0; i < numLogs; i++) {
+            obstacles.push({
+              x: i * logSpacing,
+              w: 75,
+              h: 26,
+              speed: speed * 0.8
+            });
+          }
+        } else if (type === 'rail') {
+          obstacles.push({
+            x: -200,
+            w: 160,
+            h: 26,
+            speed: 9 * dir,
+            active: false,
+            timer: Math.random() * 150 + 80
+          });
+        }
+
+        // Random coin
+        if (Math.random() > 0.65) {
+          laneCoins.push({
+            col: Math.floor(Math.random() * COLS),
+            collected: false
+          });
+        }
+
+        return {
+          yIndex: yIndex,
+          type: type,
+          obstacles: obstacles,
+          coins: laneCoins
+        };
+      }
+
+      function initLanes() {
+        lanes = [];
+        for (var i = 0; i < 20; i++) {
+          lanes.push(generateLane(i));
+        }
+      }
+
+      function movePlayer(dx, dy, dir) {
+        if (!isRunning || isPaused || player.animProgress < 0.7) return;
+
+        var nextCol = Math.max(0, Math.min(COLS - 1, player.gridX + dx));
+        var nextY = player.gridY + dy;
+
+        player.gridX = nextCol;
+        player.gridY = Math.max(0, nextY);
+        player.facing = dir;
+        player.animProgress = 0;
+        sfxHop();
+
+        if (player.gridY > maxDistance) {
+          maxDistance = player.gridY;
+          score = maxDistance;
+          scoreDisplay.textContent = score + ' m';
+        }
+
+        // Spawn new lanes ahead
+        var highestLane = lanes[lanes.length - 1].yIndex;
+        while (highestLane < player.gridY + 16) {
+          highestLane++;
+          lanes.push(generateLane(highestLane));
+        }
+      }
+
+      // Input listeners
+      window.addEventListener('keydown', function(e) {
+        if (['ArrowUp', 'KeyW'].includes(e.code)) { e.preventDefault(); movePlayer(0, 1, 'up'); }
+        else if (['ArrowDown', 'KeyS'].includes(e.code)) { e.preventDefault(); movePlayer(0, -1, 'down'); }
+        else if (['ArrowLeft', 'KeyA'].includes(e.code)) { e.preventDefault(); movePlayer(-1, 0, 'left'); }
+        else if (['ArrowRight', 'KeyD'].includes(e.code)) { e.preventDefault(); movePlayer(1, 0, 'right'); }
+      });
+
+      document.getElementById('btn-u').addEventListener('click', function() { movePlayer(0, 1, 'up'); });
+      document.getElementById('btn-d').addEventListener('click', function() { movePlayer(0, -1, 'down'); });
+      document.getElementById('btn-l').addEventListener('click', function() { movePlayer(-1, 0, 'left'); });
+      document.getElementById('btn-r').addEventListener('click', function() { movePlayer(1, 0, 'right'); });
+
+      function update() {
+        if (!isRunning || isPaused) return;
+
+        // Animate hop interpolation
+        if (player.animProgress < 1) {
+          player.animProgress = Math.min(1, player.animProgress + 0.15);
+        }
+
+        player.targetX = player.gridX * GRID_SIZE + (GRID_SIZE - 28) / 2;
+        player.x += (player.targetX - player.x) * 0.4;
+
+        // Smooth camera following player's forward progress
+        var targetCamY = player.gridY * GRID_SIZE;
+        cameraY += (targetCamY - cameraY) * 0.15;
+
+        var playerScreenY = H - 120 - (player.gridY * GRID_SIZE - cameraY);
+
+        // Find current lane
+        var curLane = lanes.find(function(l) { return l.yIndex === player.gridY; });
+        var onLog = false;
+
+        // Update obstacles across all active lanes
+        for (var l = 0; l < lanes.length; l++) {
+          var lane = lanes[l];
+          var laneScreenY = H - 120 - (lane.yIndex * GRID_SIZE - cameraY);
+
+          if (laneScreenY < -80 || laneScreenY > H + 80) continue;
+
+          for (var o = 0; o < lane.obstacles.length; o++) {
+            var obs = lane.obstacles[o];
+
+            if (lane.type === 'rail') {
+              obs.timer--;
+              if (obs.timer <= 0) {
+                obs.active = true;
+                obs.x += obs.speed;
+                if (obs.x < -400 || obs.x > W + 400) {
+                  obs.active = false;
+                  obs.timer = Math.random() * 180 + 100;
+                  obs.x = obs.speed > 0 ? -250 : W + 250;
+                }
+              }
+            } else {
+              obs.x += obs.speed;
+              if (obs.speed > 0 && obs.x > W + 60) obs.x = -obs.w - 20;
+              if (obs.speed < 0 && obs.x < -obs.w - 60) obs.x = W + 20;
+            }
+
+            // Check collision with player
+            if (lane.yIndex === player.gridY) {
+              var px = player.x;
+              var pw = 28;
+
+              if (lane.type === 'road' || (lane.type === 'rail' && obs.active)) {
+                if (px + pw > obs.x + 4 && px < obs.x + obs.w - 4) {
+                  sfxHonk();
+                  triggerGameOver("HIT BY TRAFFIC!");
+                  return;
+                }
+              } else if (lane.type === 'river') {
+                if (px + pw > obs.x + 4 && px < obs.x + obs.w - 4) {
+                  onLog = true;
+                  player.x += obs.speed;
+                  player.gridX = Math.round(player.x / GRID_SIZE);
+                  if (player.x < 0 || player.x > W - pw) {
+                    sfxSplash();
+                    triggerGameOver("DRIFTED OUT OF BOUNDS!");
+                    return;
+                  }
+                }
+              }
+            }
+          }
+
+          // Check coin collection
+          for (var c = 0; c < lane.coins.length; c++) {
+            var cn = lane.coins[c];
+            if (!cn.collected && lane.yIndex === player.gridY && player.gridX === cn.col) {
+              cn.collected = true;
+              coins++;
+              coinsDisplay.textContent = '🪙 ' + coins;
+              sfxCoin();
+              for (var p = 0; p < 8; p++) {
+                particles.push({
+                  x: player.x + 14,
+                  y: playerScreenY + 14,
+                  vx: (Math.random() - 0.5) * 4,
+                  vy: (Math.random() - 0.5) * 4,
+                  color: '#facc15',
+                  alpha: 1
+                });
+              }
+            }
+          }
+        }
+
+        // Check water drowning
+        if (curLane && curLane.type === 'river' && !onLog && player.animProgress >= 0.8) {
+          sfxSplash();
+          triggerGameOver("FELL IN THE RIVER!");
+          return;
+        }
+
+        // Particles
+        for (var pt = particles.length - 1; pt >= 0; pt--) {
+          var pr = particles[pt];
+          pr.x += pr.vx;
+          pr.y += pr.vy;
+          pr.alpha -= 0.05;
+          if (pr.alpha <= 0) particles.splice(pt, 1);
+        }
+      }
+
+      function triggerGameOver(reason) {
+        isRunning = false;
+        if (score > bestScore) {
+          bestScore = score;
+          try { localStorage.setItem('dk:hopper-best', String(bestScore)); } catch(e) {}
+        }
+        overlay.classList.remove('hidden');
+        overlayHeading.textContent = "GAME OVER";
+        overlayDesc.textContent = reason + "\nDistance Hopped: " + score + " m\nBest: " + bestScore + " m · Coins: " + coins;
+        startBtn.textContent = "PLAY AGAIN";
+
+        window.parent.postMessage({ type: 'dk:gameover', score: score }, '*');
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, W, H);
+
+        // Render visible lanes
+        for (var l = 0; l < lanes.length; l++) {
+          var lane = lanes[l];
+          var ly = H - 120 - (lane.yIndex * GRID_SIZE - cameraY);
+
+          if (ly < -GRID_SIZE || ly > H + GRID_SIZE) continue;
+
+          // Lane background
+          if (lane.type === 'grass') {
+            ctx.fillStyle = '#16a34a';
+            ctx.fillRect(0, ly, W, GRID_SIZE);
+            // Light grass dots
+            ctx.fillStyle = '#22c55e';
+            for (var g = 0; g < COLS; g++) {
+              if ((g + lane.yIndex) % 2 === 0) ctx.fillRect(g * GRID_SIZE + 8, ly + 8, 4, 4);
+            }
+          } else if (lane.type === 'road') {
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(0, ly, W, GRID_SIZE);
+            // Dashed center road markings
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([12, 12]);
+            ctx.beginPath();
+            ctx.moveTo(0, ly + GRID_SIZE / 2);
+            ctx.lineTo(W, ly + GRID_SIZE / 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          } else if (lane.type === 'river') {
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(0, ly, W, GRID_SIZE);
+            // Subtle wave ripple
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(20, ly + 10, 40, 2);
+            ctx.fillRect(180, ly + 25, 60, 2);
+            ctx.fillRect(320, ly + 8, 45, 2);
+          } else if (lane.type === 'rail') {
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(0, ly, W, GRID_SIZE);
+            // Iron rails
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, ly + 8); ctx.lineTo(W, ly + 8);
+            ctx.moveTo(0, ly + GRID_SIZE - 8); ctx.lineTo(W, ly + GRID_SIZE - 8);
+            ctx.stroke();
+          }
+
+          // Render Logs (river obstacles)
+          if (lane.type === 'river') {
+            ctx.fillStyle = '#92400e';
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 2;
+            for (var o = 0; o < lane.obstacles.length; o++) {
+              var log = lane.obstacles[o];
+              ctx.beginPath();
+              ctx.roundRect ? ctx.roundRect(log.x, ly + 6, log.w, log.h, 6) : ctx.rect(log.x, ly + 6, log.w, log.h);
+              ctx.fill();
+              ctx.stroke();
+            }
+          }
+
+          // Render Coins
+          for (var c = 0; c < lane.coins.length; c++) {
+            var cn = lane.coins[c];
+            if (!cn.collected) {
+              var cx = cn.col * GRID_SIZE + GRID_SIZE / 2;
+              ctx.fillStyle = '#facc15';
+              ctx.strokeStyle = '#ca8a04';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(cx, ly + GRID_SIZE / 2, 8, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+            }
+          }
+
+          // Render Cars / Trains
+          if (lane.type === 'road') {
+            for (var o = 0; o < lane.obstacles.length; o++) {
+              var car = lane.obstacles[o];
+              ctx.fillStyle = car.color;
+              ctx.strokeStyle = '#0f172a';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.roundRect ? ctx.roundRect(car.x, ly + 7, car.w, car.h, 5) : ctx.rect(car.x, ly + 7, car.w, car.h);
+              ctx.fill();
+              ctx.stroke();
+
+              // Windshield
+              ctx.fillStyle = '#cbd5e1';
+              var wx = car.speed > 0 ? car.x + car.w - 14 : car.x + 4;
+              ctx.fillRect(wx, ly + 10, 10, car.h - 6);
+            }
+          } else if (lane.type === 'rail') {
+            for (var o = 0; o < lane.obstacles.length; o++) {
+              var trn = lane.obstacles[o];
+              if (trn.active) {
+                ctx.fillStyle = '#ef4444';
+                ctx.strokeStyle = '#7f1d1d';
+                ctx.lineWidth = 2;
+                ctx.fillRect(trn.x, ly + 6, trn.w, trn.h);
+                ctx.fillStyle = '#fef08a';
+                var hx = trn.speed > 0 ? trn.x + trn.w - 10 : trn.x;
+                ctx.fillRect(hx, ly + 9, 10, 12);
+              }
+            }
+          }
+        }
+
+        // Render Particles
+        for (var p = 0; p < particles.length; p++) {
+          var pt = particles[p];
+          ctx.fillStyle = pt.color;
+          ctx.globalAlpha = Math.max(0, pt.alpha);
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // Render Player (Cute Hopper Chicken)
+        var py = H - 120 - (player.gridY * GRID_SIZE - cameraY);
+        // Squash-and-stretch hop arc
+        var hopOffset = Math.sin(player.animProgress * Math.PI) * 12;
+
+        ctx.save();
+        ctx.translate(player.x + 14, py + 14 - hopOffset);
+
+        // Body
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Comb / Crest
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(0, -12, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Beak
+        ctx.fillStyle = '#f97316';
+        if (player.facing === 'up') {
+          ctx.beginPath();
+          ctx.moveTo(-4, -8); ctx.lineTo(0, -15); ctx.lineTo(4, -8);
+          ctx.fill();
+        } else if (player.facing === 'down') {
+          ctx.beginPath();
+          ctx.moveTo(-4, 8); ctx.lineTo(0, 15); ctx.lineTo(4, 8);
+          ctx.fill();
+        } else if (player.facing === 'left') {
+          ctx.beginPath();
+          ctx.moveTo(-8, -4); ctx.lineTo(-15, 0); ctx.lineTo(-8, 4);
+          ctx.fill();
+        } else if (player.facing === 'right') {
+          ctx.beginPath();
+          ctx.moveTo(8, -4); ctx.lineTo(15, 0); ctx.lineTo(8, 4);
+          ctx.fill();
+        }
+
+        // Eyes
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(-4, -2, 2, 0, Math.PI * 2);
+        ctx.arc(4, -2, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        update();
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+
+      function startGame() {
+        initAudio();
+        score = 0;
+        maxDistance = 0;
+        coins = 0;
+        scoreDisplay.textContent = '0 m';
+        coinsDisplay.textContent = '🪙 0';
+        player.gridX = 4;
+        player.gridY = 0;
+        player.x = 4 * GRID_SIZE;
+        cameraY = 0;
+        player.animProgress = 1;
+        initLanes();
+        overlay.classList.add('hidden');
+        isRunning = true;
+        isPaused = false;
+      }
+
+      startBtn.addEventListener('click', startGame);
+
+      window.addEventListener('message', function(e) {
+        if (!e.data) return;
+        if (e.data.type === 'dk:restart') startGame();
+        else if (e.data.type === 'dk:pause') isPaused = true;
+        else if (e.data.type === 'dk:resume') isPaused = false;
+      });
+
+      window.parent.postMessage({ type: 'dk:ready' }, '*');
+    })();
+  </script>
+</body>
+</html>
