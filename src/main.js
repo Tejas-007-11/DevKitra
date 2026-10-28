@@ -835,12 +835,29 @@ function setupGamePage(slug) {
     document.removeEventListener('webkitfullscreenchange', handleFsChange);
   });
 
-  /* Hotkeys helper */
+  if (frame) {
+    frame.addEventListener('load', () => {
+      try { frame.focus(); } catch (_) {}
+    });
+  }
+
+  if (viewport) {
+    viewport.addEventListener('click', () => {
+      try { frame?.focus(); } catch (_) {}
+    });
+  }
+
+  /* Hotkeys helper & Gameplay Key Forwarder */
   const onKeydown = (event) => {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) {
-      if (document.querySelector('.game-page')) event.preventDefault();
-    }
     if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+    const gameKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyZ', 'KeyC', 'Space'];
+    if (gameKeys.includes(event.code)) {
+      if (document.querySelector('.game-page')) {
+        event.preventDefault();
+        postToGame({ type: 'dk:keydown', code: event.code, key: event.key });
+      }
+    }
 
     if (event.key === 'r' || event.key === 'R') {
       restart?.click();
@@ -851,8 +868,24 @@ function setupGamePage(slug) {
     }
   };
 
+  const onKeyup = (event) => {
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+    const gameKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyZ', 'KeyC', 'Space'];
+    if (gameKeys.includes(event.code)) {
+      if (document.querySelector('.game-page')) {
+        event.preventDefault();
+        postToGame({ type: 'dk:keyup', code: event.code, key: event.key });
+      }
+    }
+  };
+
   window.addEventListener('keydown', onKeydown);
-  pageCleanups.push(() => window.removeEventListener('keydown', onKeydown));
+  window.addEventListener('keyup', onKeyup);
+  pageCleanups.push(() => {
+    window.removeEventListener('keydown', onKeydown);
+    window.removeEventListener('keyup', onKeyup);
+  });
 }
 
 window.addEventListener('message', (event) => {
