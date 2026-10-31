@@ -1,0 +1,1742 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>NEON BASTION — 2D Arcade Survival Shooter — DevKitra</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    :root {
+      --bg: #070a13;
+      --surface: #0f172a;
+      --surface-glass: rgba(15, 23, 42, 0.88);
+      --border: rgba(255, 255, 255, 0.14);
+      --cyan: #06b6d4;
+      --cyan-glow: #38bdf8;
+      --magenta: #f43f5e;
+      --purple: #a855f7;
+      --amber: #f59e0b;
+      --emerald: #10b981;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #070a13;
+    }
+    canvas#gameCanvas {
+      display: block;
+      touch-action: none;
+      cursor: crosshair;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    }
+
+    /* ---------------- TOP HUD OVERLAY ---------------- */
+    .hud-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .hud-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+    .hud-chip {
+      background: var(--surface-glass);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+    }
+    .hud-chip .badge-val {
+      color: var(--cyan-glow);
+    }
+
+    /* Core Health Bar in HUD */
+    .core-hp-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 140px;
+    }
+    .hp-bar-outer {
+      flex: 1;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 9999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .hp-bar-inner {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      border-radius: 9999px;
+      transition: width 0.2s ease-out, background 0.3s;
+    }
+
+    .btn-hud {
+      background: var(--surface-glass);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, transform 0.1s, border-color 0.15s;
+    }
+    .btn-hud:hover {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+    .btn-hud:active {
+      transform: translateY(1px);
+    }
+
+    /* ---------------- MOBILE CONTROLS ---------------- */
+    .mobile-controls-dock {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: none;
+      z-index: 22;
+      pointer-events: auto;
+    }
+    .mobile-fire-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.9), rgba(14, 165, 233, 0.85));
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 30px rgba(6, 182, 212, 0.6);
+      cursor: pointer;
+      touch-action: none;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .mobile-fire-btn:active, .mobile-fire-btn.active {
+      transform: scale(0.92);
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.9);
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .mobile-controls-dock { display: block; }
+    }
+
+    /* ---------------- MODAL OVERLAYS ---------------- */
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(7, 10, 19, 0.84);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 16px;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.hidden {
+      display: none;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .modal-card {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 20px;
+      padding: 28px 32px;
+      max-width: 620px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 40px rgba(6, 182, 212, 0.18);
+      position: relative;
+      animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes modalPop {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .modal-card h1 {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #e0f2fe 0%, #38bdf8 50%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .modal-card h2 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .modal-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    /* Mode Grid in Main Menu */
+    .mode-select-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .mode-card {
+      background: #1e293b;
+      border: 2px solid transparent;
+      border-radius: 14px;
+      padding: 16px 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .mode-card:hover {
+      border-color: rgba(6, 182, 212, 0.4);
+      background: #253349;
+      transform: translateY(-2px);
+    }
+    .mode-card.selected {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.12);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+    }
+    .mode-icon {
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+    .mode-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .mode-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Upgrade Selection Grid */
+    .upgrade-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 18px 0 22px;
+    }
+    .upgrade-card {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 18px 14px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .upgrade-card:hover {
+      border-color: var(--cyan);
+      background: #253349;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(6, 182, 212, 0.3);
+    }
+    .upgrade-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+    .upgrade-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .upgrade-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .upgrade-level {
+      margin-top: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--amber);
+      background: rgba(245, 158, 11, 0.15);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    /* Action Buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan-glow), var(--cyan));
+      border: none;
+      color: #04101e;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 13px 32px;
+      border-radius: 9999px;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.5);
+      transition: all 0.18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(6, 182, 212, 0.7);
+    }
+    .btn-secondary {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 11px 22px;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-secondary:hover {
+      background: #334155;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    /* Stat Rows in Modals */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .stat-label {
+      color: var(--text-muted);
+    }
+    .stat-val {
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    /* Keybind Pill Helpers */
+    .kbd-tip {
+      display: inline-block;
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--cyan-glow);
+    }
+
+    @media (max-width: 640px) {
+      .mode-select-grid, .upgrade-cards-grid { grid-template-columns: 1fr; }
+      .hud-layer { padding: 8px 12px; }
+      .hud-chip { font-size: 11px; padding: 4px 8px; }
+      .modal-card { padding: 20px 16px; }
+      .btn-primary { padding: 11px 24px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+<div id="game-container">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- TOP HUD OVERLAY -->
+  <div class="hud-layer">
+    <div class="hud-group">
+      <div class="hud-chip">
+        <div class="core-hp-wrap">
+          <span style="font-size: 11px; color: var(--text-muted);">CORE</span>
+          <div class="hp-bar-outer">
+            <div class="hp-bar-inner" id="hud-core-hp-bar"></div>
+          </div>
+          <span class="badge-val" id="hud-core-hp-val">100%</span>
+        </div>
+      </div>
+      <div class="hud-chip">
+        <span id="hud-mode-label">SURVIVAL</span>
+        <span class="badge-val" id="hud-wave-val">WAVE 1</span>
+      </div>
+    </div>
+
+    <div class="hud-group">
+      <div class="hud-chip">
+        <span>SCORE</span>
+        <span class="badge-val" id="hud-score-val">0</span>
+      </div>
+      <div class="hud-chip">
+        <span>COMBO</span>
+        <span class="badge-val" id="hud-combo-val" style="color: var(--amber);">1.0x</span>
+      </div>
+      <button type="button" class="btn-hud" id="btn-hud-restart" title="Restart [R]">↺</button>
+      <button type="button" class="btn-hud" id="btn-hud-pause" title="Pause [P / ESC]">⏸</button>
+      <button type="button" class="btn-hud" id="btn-hud-sound" title="Toggle Sound">🔊</button>
+    </div>
+  </div>
+
+  <!-- MOBILE FIRE BUTTON DOCK -->
+  <div class="mobile-controls-dock">
+    <button type="button" class="mobile-fire-btn" id="btn-mobile-fire">FIRE</button>
+  </div>
+
+  <!-- MAIN MENU MODAL -->
+  <div class="modal-overlay" id="overlay-menu">
+    <div class="modal-card">
+      <h1>NEON BASTION</h1>
+      <p class="modal-subtitle">2D Arcade Survival Shooter • Defend your core against geometric swarms</p>
+
+      <div class="mode-select-grid">
+        <div class="mode-card selected" data-mode="survival">
+          <div class="mode-icon">🛡️</div>
+          <div class="mode-title">Survival</div>
+          <div class="mode-desc">Endless enemy waves, weapon upgrades & highscores</div>
+        </div>
+        <div class="mode-card" data-mode="challenge">
+          <div class="mode-icon">🎯</div>
+          <div class="mode-title">Challenges</div>
+          <div class="mode-desc">5 handcrafted trials with specific objectives</div>
+        </div>
+        <div class="mode-card" data-mode="bossrush">
+          <div class="mode-icon">👾</div>
+          <div class="mode-title">Boss Rush</div>
+          <div class="mode-desc">Consecutive geometric boss titan gauntlets</div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-primary" id="btn-menu-play">▶ Start Game</button>
+        <button type="button" class="btn-secondary" id="btn-menu-guide">❓ How to Play</button>
+      </div>
+
+      <div style="margin-top: 22px; font-size: 12px; color: var(--text-muted);">
+        Aim: <span class="kbd-tip">MOUSE</span> / <span class="kbd-tip">TOUCH</span> • Fire: <span class="kbd-tip">HOLD CLICK</span> / <span class="kbd-tip">SPACE</span> • Pause: <span class="kbd-tip">P</span> / <span class="kbd-tip">ESC</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPGRADE SELECTION MODAL -->
+  <div class="modal-overlay hidden" id="overlay-upgrade">
+    <div class="modal-card">
+      <h2 style="color: var(--cyan-glow);">Wave Cleared!</h2>
+      <p class="modal-subtitle">Choose a weapon upgrade to fortify your bastion</p>
+      <div class="upgrade-cards-grid" id="upgrade-cards-container"></div>
+    </div>
+  </div>
+
+  <!-- PAUSE MODAL -->
+  <div class="modal-overlay hidden" id="overlay-pause">
+    <div class="modal-card">
+      <h2>Game Paused</h2>
+      <p class="modal-subtitle">Bastion defense grid on standby</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-primary" id="btn-resume">▶ Resume</button>
+        <button type="button" class="btn-secondary" id="btn-pause-restart">↺ Restart</button>
+        <button type="button" class="btn-secondary" id="btn-pause-menu">☰ Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER MODAL -->
+  <div class="modal-overlay hidden" id="overlay-gameover">
+    <div class="modal-card">
+      <h2 style="color: var(--magenta);">Core Destroyed</h2>
+      <p class="modal-subtitle" id="gameover-reason">Bastion energy core breached</p>
+
+      <div class="stat-row">
+        <span class="stat-label">Final Score</span>
+        <span class="stat-val" id="go-score">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Best Score</span>
+        <span class="stat-val" id="go-best-score">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Waves Survived</span>
+        <span class="stat-val" id="go-wave">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Enemies Destroyed</span>
+        <span class="stat-val" id="go-kills">0</span>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-primary" id="btn-gameover-retry">↺ Try Again</button>
+        <button type="button" class="btn-secondary" id="btn-gameover-menu">☰ Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY / GUIDE MODAL -->
+  <div class="modal-overlay hidden" id="overlay-guide">
+    <div class="modal-card" style="text-align: left;">
+      <h2 style="text-align: center;">How to Play NEON BASTION</h2>
+      <div style="margin: 16px 0; font-size: 13px; line-height: 1.6; color: #cbd5e1;">
+        <p>🎯 <strong>Aim & Fire:</strong> Move your mouse or drag anywhere to aim. Hold left click or Spacebar to fire continuous energy projectiles.</p>
+        <p style="margin-top: 10px;">🛡️ <strong>Defend the Core:</strong> Geometric enemies spawn from the arena perimeter and charge your central bastion. Destroy them before they inflict damage.</p>
+        <p style="margin-top: 10px;">🔷 <strong>Enemy Types:</strong>
+          <br>• <strong>Drifter (Cyan):</strong> Direct steady approach.
+          <br>• <strong>Sprinter (Yellow):</strong> High-speed arrow, fragile.
+          <br>• <strong>Tank (Purple):</strong> Armored hexagon with high health.
+          <br>• <strong>Zigzag (Green):</strong> Sinusoidal evasive maneuvers.
+          <br>• <strong>Splitter (Orange):</strong> Bifurcates into smaller micro-shards on death.
+          <br>• <strong>Shielded (Blue):</strong> Frontal deflector shield.
+          <br>• <strong>Bomber (Crimson):</strong> Detonates in a lethal blast near the core.
+        </p>
+        <p style="margin-top: 10px;">⚡ <strong>Upgrades & Bosses:</strong> Clear waves to unlock 8 stackable upgrades (Rapid Fire, Multi Shot, Explosive, Orbital Shield, etc.) and conquer geometric bosses!</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-primary" id="btn-close-guide">Understood</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ---------------- CANVAS & VIRTUAL VIEWPORT ----------------
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const V_WIDTH = 960;
+  const V_HEIGHT = 600;
+  const CENTER_X = V_WIDTH * 0.5;
+  const CENTER_Y = V_HEIGHT * 0.5;
+  const ARENA_RADIUS = 280;
+
+  let scale = 1;
+  let canvasRect = canvas.getBoundingClientRect();
+
+  function resizeCanvas() {
+    const parentW = window.innerWidth;
+    const parentH = window.innerHeight;
+    const aspect = V_WIDTH / V_HEIGHT;
+
+    let targetW = parentW;
+    let targetH = parentW / aspect;
+
+    if (targetH > parentH) {
+      targetH = parentH;
+      targetW = parentH * aspect;
+    }
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = targetW * dpr;
+    canvas.height = targetH * dpr;
+    canvas.style.width = targetW + 'px';
+    canvas.style.height = targetH + 'px';
+
+    scale = (targetW * dpr) / V_WIDTH;
+    canvasRect = canvas.getBoundingClientRect();
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  // ---------------- WEB AUDIO API SYNTHESIZER ----------------
+  let audioCtx = null;
+  let soundEnabled = true;
+  try {
+    const saved = localStorage.getItem('dk:sound');
+    if (saved !== null) soundEnabled = saved === 'true';
+  } catch(e) {}
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        audioCtx = new AudioContext();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function playTone(freq, duration, type = 'sine', gainVal = 0.08, targetFreq = null) {
+    if (!soundEnabled || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      if (targetFreq !== null) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, targetFreq), now + duration);
+      }
+      gain.gain.setValueAtTime(gainVal, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+    } catch(e) {}
+  }
+
+  function playShootSound() {
+    playTone(580, 0.06, 'sawtooth', 0.04, 220);
+  }
+
+  function playHitSound() {
+    playTone(340, 0.04, 'triangle', 0.03, 140);
+  }
+
+  function playDestroySound(isHeavy = false) {
+    if (isHeavy) {
+      playTone(180, 0.22, 'square', 0.1, 40);
+    } else {
+      playTone(280, 0.12, 'triangle', 0.06, 60);
+    }
+  }
+
+  function playWaveSound() {
+    if (!soundEnabled || !audioCtx) return;
+    [440, 554, 659, 880].forEach((f, idx) => {
+      setTimeout(() => playTone(f, 0.2, 'sine', 0.07), idx * 80);
+    });
+  }
+
+  function playBossSound() {
+    if (!soundEnabled || !audioCtx) return;
+    playTone(110, 0.6, 'sawtooth', 0.14, 55);
+  }
+
+  function playUpgradeSound() {
+    if (!soundEnabled || !audioCtx) return;
+    [523, 659, 784, 1046].forEach((f, idx) => {
+      setTimeout(() => playTone(f, 0.18, 'sine', 0.08), idx * 60);
+    });
+  }
+
+  function playGameOverSound() {
+    playTone(180, 0.6, 'sawtooth', 0.18, 30);
+  }
+
+  // ---------------- GAME STATE & UPGRADES ----------------
+  let currentMode = 'survival'; // 'survival', 'challenge', 'bossrush'
+  let isPlaying = false;
+  let isPaused = false;
+  let wave = 1;
+  let score = 0;
+  let enemiesKilled = 0;
+  let combo = 1.0;
+  let comboTimer = 0;
+  let bestScore = 0;
+  try {
+    bestScore = parseInt(localStorage.getItem('dk:neon-bastion-best') || '0', 10);
+  } catch(e) {}
+
+  // Turret & Core Status
+  const core = {
+    x: CENTER_X,
+    y: CENTER_Y,
+    radius: 30,
+    maxHp: 100,
+    hp: 100,
+    angle: 0,
+    recoil: 0,
+    color: '#06b6d4'
+  };
+
+  // Upgrades Active
+  const upgrades = {
+    rapidFire: 0,     // Increases fire rate
+    powerShot: 0,     // Projectile damage
+    multiShot: 0,     // Spread projectiles
+    piercingShot: 0,  // Pierce count
+    explosiveShot: 0, // Blast on impact
+    orbitalShield: 0, // Defensive orbiting orb
+    slowField: 0,     // Slows approaching enemies
+    coreRepair: 0     // Restoration instances
+  };
+
+  const UPGRADE_DEFINITIONS = [
+    { key: 'rapidFire', name: 'Rapid Fire', icon: '⚡', desc: '+25% Firing Cadence' },
+    { key: 'powerShot', name: 'Power Shot', icon: '💥', desc: '+1 Projectile Damage' },
+    { key: 'multiShot', name: 'Multi Shot', icon: '🔱', desc: '+1 Spread Projectile' },
+    { key: 'piercingShot', name: 'Piercing Shot', icon: '🏹', desc: 'Projectiles Pierce +1 Enemy' },
+    { key: 'explosiveShot', name: 'Explosive Shot', icon: '💣', desc: 'Impact Blast Damages Nearby Foes' },
+    { key: 'orbitalShield', name: 'Orbital Shield', icon: '🛡️', desc: 'Orbiting Defense Barrier' },
+    { key: 'slowField', name: 'Slow Field', icon: '❄️', desc: 'Aura Slows Enemies near Core' },
+    { key: 'coreRepair', name: 'Core Repair', icon: '🔧', desc: 'Restores +35 Core Health' }
+  ];
+
+  // ---------------- OBJECT POOLS & ARRAYS ----------------
+  let projectiles = [];
+  let enemies = [];
+  let particles = [];
+  let floatingTexts = [];
+  let orbitalShields = [];
+  let screenShake = 0;
+
+  // Wave Spawner State
+  let waveActive = false;
+  let waveEnemiesRemaining = 0;
+  let waveSpawnQueue = [];
+  let spawnCooldown = 0;
+
+  // Controls State
+  let isFiring = false;
+  let fireCooldown = 0;
+  let aimTarget = { x: CENTER_X + 100, y: CENTER_Y };
+
+  // ---------------- ENEMY FACTORY ----------------
+  function createEnemy(type, x, y) {
+    const e = {
+      type: type,
+      x: x,
+      y: y,
+      vx: 0,
+      vy: 0,
+      radius: 14,
+      hp: 1,
+      maxHp: 1,
+      speed: 70,
+      scoreVal: 100,
+      color: '#06b6d4',
+      phase: Math.random() * Math.PI * 2,
+      shieldAngle: 0
+    };
+
+    switch(type) {
+      case 'drifter':
+        e.radius = 14; e.hp = 1; e.maxHp = 1; e.speed = 65;
+        e.color = '#06b6d4'; e.scoreVal = 100;
+        break;
+      case 'sprinter':
+        e.radius = 11; e.hp = 1; e.maxHp = 1; e.speed = 135;
+        e.color = '#f59e0b'; e.scoreVal = 150;
+        break;
+      case 'tank':
+        e.radius = 22; e.hp = 6; e.maxHp = 6; e.speed = 38;
+        e.color = '#a855f7'; e.scoreVal = 300;
+        break;
+      case 'zigzag':
+        e.radius = 13; e.hp = 2; e.maxHp = 2; e.speed = 85;
+        e.color = '#10b981'; e.scoreVal = 200;
+        break;
+      case 'splitter':
+        e.radius = 17; e.hp = 3; e.maxHp = 3; e.speed = 55;
+        e.color = '#f97316'; e.scoreVal = 250;
+        break;
+      case 'shielded':
+        e.radius = 15; e.hp = 3; e.maxHp = 3; e.speed = 50;
+        e.color = '#3b82f6'; e.scoreVal = 350;
+        break;
+      case 'bomber':
+        e.radius = 16; e.hp = 3; e.maxHp = 3; e.speed = 80;
+        e.color = '#ef4444'; e.scoreVal = 280;
+        break;
+      case 'boss_prism':
+        e.radius = 42; e.hp = 45; e.maxHp = 45; e.speed = 22;
+        e.color = '#ec4899'; e.scoreVal = 2500; e.isBoss = true;
+        break;
+      case 'boss_vortex':
+        e.radius = 50; e.hp = 80; e.maxHp = 80; e.speed = 18;
+        e.color = '#8b5cf6'; e.scoreVal = 5000; e.isBoss = true;
+        break;
+    }
+
+    // Health scaling with wave
+    if (wave > 3 && !e.isBoss) {
+      const scaleHp = 1 + Math.floor((wave - 1) * 0.25);
+      e.hp *= scaleHp;
+      e.maxHp = e.hp;
+    }
+
+    return e;
+  }
+
+  // ---------------- WAVE GENERATOR ----------------
+  function prepareWave(w) {
+    waveActive = true;
+    waveSpawnQueue = [];
+
+    // Boss Waves at 5 and 10
+    if (w === 5) {
+      waveSpawnQueue.push('boss_prism');
+      for (let i = 0; i < 8; i++) waveSpawnQueue.push('drifter');
+      for (let i = 0; i < 4; i++) waveSpawnQueue.push('sprinter');
+      playBossSound();
+    } else if (w === 10) {
+      waveSpawnQueue.push('boss_vortex');
+      for (let i = 0; i < 12; i++) waveSpawnQueue.push('tank');
+      for (let i = 0; i < 8; i++) waveSpawnQueue.push('bomber');
+      playBossSound();
+    } else {
+      // Standard progressive composition
+      const count = 10 + w * 4;
+      for (let i = 0; i < count; i++) {
+        const roll = Math.random();
+        if (roll < 0.35) waveSpawnQueue.push('drifter');
+        else if (roll < 0.55 && w >= 2) waveSpawnQueue.push('sprinter');
+        else if (roll < 0.70 && w >= 3) waveSpawnQueue.push('zigzag');
+        else if (roll < 0.82 && w >= 3) waveSpawnQueue.push('tank');
+        else if (roll < 0.90 && w >= 4) waveSpawnQueue.push('splitter');
+        else if (roll < 0.95 && w >= 4) waveSpawnQueue.push('shielded');
+        else waveSpawnQueue.push('bomber');
+      }
+      playWaveSound();
+    }
+
+    waveEnemiesRemaining = waveSpawnQueue.length;
+    document.getElementById('hud-wave-val').textContent = `WAVE ${w}`;
+  }
+
+  function spawnFromQueue() {
+    if (waveSpawnQueue.length === 0) return;
+    const type = waveSpawnQueue.shift();
+
+    // Spawn around outer circle perimeter
+    const angle = Math.random() * Math.PI * 2;
+    const spawnDist = ARENA_RADIUS + 30 + Math.random() * 40;
+    const x = CENTER_X + Math.cos(angle) * spawnDist;
+    const y = CENTER_Y + Math.sin(angle) * spawnDist;
+
+    enemies.push(createEnemy(type, x, y));
+  }
+
+  // ---------------- TURRET COMBAT & FIRING ----------------
+  function fireWeapons() {
+    const baseCooldown = 0.22;
+    const cd = baseCooldown / (1 + upgrades.rapidFire * 0.25);
+    if (fireCooldown > 0) return;
+
+    fireCooldown = cd;
+    core.recoil = 8;
+    playShootSound();
+
+    const aimAngle = Math.atan2(aimTarget.y - CENTER_Y, aimTarget.x - CENTER_X);
+    const speed = 640;
+    const dmg = 1 + upgrades.powerShot;
+    const pierce = upgrades.piercingShot;
+    const explosive = upgrades.explosiveShot > 0;
+
+    // Multi-shot spread angles
+    const count = 1 + upgrades.multiShot;
+    const spread = 0.16; // radians
+    const startAngle = aimAngle - ((count - 1) * spread * 0.5);
+
+    for (let i = 0; i < count; i++) {
+      const a = startAngle + i * spread;
+      projectiles.push({
+        x: CENTER_X + Math.cos(a) * (core.radius + 12),
+        y: CENTER_Y + Math.sin(a) * (core.radius + 12),
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed,
+        radius: 4.5 + upgrades.powerShot * 0.8,
+        damage: dmg,
+        pierceRemaining: pierce,
+        explosive: explosive,
+        hitList: new Set(),
+        life: 0.9
+      });
+    }
+
+    // Muzzle flash particle
+    particles.push({
+      x: CENTER_X + Math.cos(aimAngle) * (core.radius + 14),
+      y: CENTER_Y + Math.sin(aimAngle) * (core.radius + 14),
+      radius: 12,
+      maxRadius: 22,
+      color: '#38bdf8',
+      alpha: 0.85,
+      type: 'ring'
+    });
+  }
+
+  // ---------------- UPGRADE LIFECYCLE ----------------
+  function triggerUpgradeSelection() {
+    isPlaying = false;
+    playUpgradeSound();
+
+    // Pick 3 random distinct upgrades
+    const available = [...UPGRADE_DEFINITIONS].sort(() => Math.random() - 0.5).slice(0, 3);
+    const container = document.getElementById('upgrade-cards-container');
+    container.innerHTML = '';
+
+    available.forEach(up => {
+      const curLvl = upgrades[up.key] || 0;
+      const card = document.createElement('div');
+      card.className = 'upgrade-card';
+      card.innerHTML = `
+        <div class="upgrade-icon">${up.icon}</div>
+        <div class="upgrade-name">${up.name}</div>
+        <div class="upgrade-desc">${up.desc}</div>
+        <div class="upgrade-level">Rank ${curLvl + 1}</div>
+      `;
+      card.addEventListener('click', () => {
+        applyUpgrade(up.key);
+        document.getElementById('overlay-upgrade').classList.add('hidden');
+        isPlaying = true;
+        wave++;
+        prepareWave(wave);
+      });
+      container.appendChild(card);
+    });
+
+    document.getElementById('overlay-upgrade').classList.remove('hidden');
+  }
+
+  function applyUpgrade(key) {
+    upgrades[key] = (upgrades[key] || 0) + 1;
+    if (key === 'coreRepair') {
+      core.hp = Math.min(core.maxHp, core.hp + 35);
+      updateCoreHpUI();
+    }
+    if (key === 'orbitalShield') {
+      rebuildOrbitalShields();
+    }
+  }
+
+  function rebuildOrbitalShields() {
+    orbitalShields = [];
+    const count = upgrades.orbitalShield;
+    for (let i = 0; i < count; i++) {
+      orbitalShields.push({
+        angle: (i / count) * Math.PI * 2,
+        dist: core.radius + 32,
+        radius: 8,
+        speed: 2.2
+      });
+    }
+  }
+
+  // ---------------- GAME OVER & VICTORY LIFECYCLE ----------------
+  function triggerGameOver(reason) {
+    isPlaying = false;
+    playGameOverSound();
+    screenShake = 22;
+
+    if (score > bestScore) {
+      bestScore = score;
+      try { localStorage.setItem('dk:neon-bastion-best', String(bestScore)); } catch(e) {}
+    }
+
+    document.getElementById('gameover-reason').textContent = reason;
+    document.getElementById('go-score').textContent = score.toLocaleString();
+    document.getElementById('go-best-score').textContent = bestScore.toLocaleString();
+    document.getElementById('go-wave').textContent = `${wave}`;
+    document.getElementById('go-kills').textContent = `${enemiesKilled}`;
+
+    // Post score to DevKitra host
+    window.parent.postMessage({ type: 'dk:gameover', score: score }, '*');
+
+    setTimeout(() => {
+      document.getElementById('overlay-gameover').classList.remove('hidden');
+    }, 600);
+  }
+
+  function updateCoreHpUI() {
+    const pct = Math.max(0, Math.min(100, Math.round((core.hp / core.maxHp) * 100)));
+    const bar = document.getElementById('hud-core-hp-bar');
+    const val = document.getElementById('hud-core-hp-val');
+    bar.style.width = `${pct}%`;
+    val.textContent = `${pct}%`;
+
+    if (pct < 30) {
+      bar.style.background = 'linear-gradient(90deg, #ef4444, #f97316)';
+    } else {
+      bar.style.background = 'linear-gradient(90deg, #10b981, #06b6d4)';
+    }
+  }
+
+  // ---------------- INPUT EVENT LISTENERS ----------------
+  function updateAim(clientX, clientY) {
+    canvasRect = canvas.getBoundingClientRect();
+    aimTarget.x = (clientX - canvasRect.left) / (canvasRect.width / V_WIDTH);
+    aimTarget.y = (clientY - canvasRect.top) / (canvasRect.height / V_HEIGHT);
+    core.angle = Math.atan2(aimTarget.y - CENTER_Y, aimTarget.x - CENTER_X);
+  }
+
+  window.addEventListener('pointermove', (e) => {
+    updateAim(e.clientX, e.clientY);
+  });
+
+  canvas.addEventListener('pointerdown', (e) => {
+    initAudio();
+    updateAim(e.clientX, e.clientY);
+    isFiring = true;
+  });
+
+  window.addEventListener('pointerup', () => {
+    isFiring = false;
+  });
+
+  const mobileFireBtn = document.getElementById('btn-mobile-fire');
+  mobileFireBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    initAudio();
+    isFiring = true;
+    mobileFireBtn.classList.add('active');
+  });
+  mobileFireBtn.addEventListener('pointerup', (e) => {
+    e.preventDefault();
+    isFiring = false;
+    mobileFireBtn.classList.remove('active');
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      initAudio();
+      isFiring = true;
+    } else if (e.code === 'KeyP' || e.code === 'Escape') {
+      e.preventDefault();
+      togglePause();
+    } else if (e.code === 'KeyR') {
+      e.preventDefault();
+      restartGame();
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') {
+      isFiring = false;
+    }
+  });
+
+  // ---------------- GAME LOOP & UPDATE ----------------
+  function update(dt) {
+    if (!isPlaying || isPaused) return;
+
+    if (fireCooldown > 0) fireCooldown -= dt;
+    if (core.recoil > 0) core.recoil = Math.max(0, core.recoil - dt * 30);
+    if (screenShake > 0) screenShake = Math.max(0, screenShake - dt * 25);
+
+    // Continuous Firing
+    if (isFiring) {
+      fireWeapons();
+    }
+
+    // Combo Timer Decay
+    if (combo > 1.0) {
+      comboTimer -= dt;
+      if (comboTimer <= 0) {
+        combo = 1.0;
+        document.getElementById('hud-combo-val').textContent = '1.0x';
+      }
+    }
+
+    // 1. Orbital Shields Rotation & Defense
+    orbitalShields.forEach(orb => {
+      orb.angle += orb.speed * dt;
+      const ox = CENTER_X + Math.cos(orb.angle) * orb.dist;
+      const oy = CENTER_Y + Math.sin(orb.angle) * orb.dist;
+
+      // Collide with enemies
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const en = enemies[i];
+        const dist = Math.hypot(en.x - ox, en.y - oy);
+        if (dist < en.radius + orb.radius) {
+          en.hp -= 2;
+          playHitSound();
+          if (en.hp <= 0) {
+            destroyEnemy(en, i);
+          }
+        }
+      }
+    });
+
+    // 2. Wave Spawner
+    if (waveActive) {
+      spawnCooldown -= dt;
+      if (spawnCooldown <= 0 && waveSpawnQueue.length > 0) {
+        spawnFromQueue();
+        spawnCooldown = Math.max(0.35, 1.2 - wave * 0.08);
+      }
+      if (waveSpawnQueue.length === 0 && enemies.length === 0) {
+        waveActive = false;
+        triggerUpgradeSelection();
+      }
+    }
+
+    // 3. Projectiles Update
+    for (let pIdx = projectiles.length - 1; pIdx >= 0; pIdx--) {
+      const p = projectiles[pIdx];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+
+      if (p.life <= 0 || p.x < 0 || p.x > V_WIDTH || p.y < 0 || p.y > V_HEIGHT) {
+        projectiles.splice(pIdx, 1);
+        continue;
+      }
+
+      // Check collision against enemies
+      let projectileDead = false;
+      for (let eIdx = enemies.length - 1; eIdx >= 0; eIdx--) {
+        const en = enemies[eIdx];
+        if (p.hitList.has(en)) continue;
+
+        const dist = Math.hypot(p.x - en.x, p.y - en.y);
+        if (dist < p.radius + en.radius) {
+          p.hitList.add(en);
+          playHitSound();
+
+          // Check shielded frontal barrier
+          if (en.type === 'shielded') {
+            const angleToCore = Math.atan2(CENTER_Y - en.y, CENTER_X - en.x);
+            const bulletAngle = Math.atan2(p.vy, p.vx);
+            const diff = Math.abs(angleToCore - bulletAngle);
+            if (diff > 1.8 && !p.explosive) {
+              // Blocked by frontal shield
+              particles.push({
+                x: p.x, y: p.y, radius: 10, maxRadius: 18, color: '#3b82f6', alpha: 0.8, type: 'ring'
+              });
+              projectileDead = true;
+              break;
+            }
+          }
+
+          // Damage Enemy
+          en.hp -= p.damage;
+          spawnCombatText(p.x, p.y, `-${p.damage}`, '#ffffff');
+
+          // Explosive Shot AoE
+          if (p.explosive) {
+            triggerAoEExplosion(p.x, p.y, 65, p.damage);
+          }
+
+          // Hit spark particles
+          for (let sp = 0; sp < 4; sp++) {
+            const spAng = Math.random() * Math.PI * 2;
+            particles.push({
+              x: p.x, y: p.y,
+              vx: Math.cos(spAng) * (60 + Math.random() * 80),
+              vy: Math.sin(spAng) * (60 + Math.random() * 80),
+              life: 0.3, maxLife: 0.3, color: '#38bdf8', radius: 2.5
+            });
+          }
+
+          if (en.hp <= 0) {
+            destroyEnemy(en, eIdx);
+          }
+
+          if (p.pierceRemaining > 0) {
+            p.pierceRemaining--;
+          } else {
+            projectileDead = true;
+            break;
+          }
+        }
+      }
+
+      if (projectileDead) {
+        projectiles.splice(pIdx, 1);
+      }
+    }
+
+    // 4. Enemies Movement & Core Collision
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const en = enemies[i];
+
+      // Base Angle toward Core
+      const dx = CENTER_X - en.x;
+      const dy = CENTER_Y - en.y;
+      const distToCore = Math.hypot(dx, dy);
+      const baseAngle = Math.atan2(dy, dx);
+
+      // Slow Field Effect
+      let spd = en.speed;
+      if (upgrades.slowField > 0 && distToCore < 180) {
+        spd *= (1 - 0.22 * upgrades.slowField);
+      }
+
+      // Movement Behavior
+      if (en.type === 'zigzag') {
+        en.phase += dt * 6;
+        const perpAngle = baseAngle + Math.PI * 0.5;
+        const lateral = Math.sin(en.phase) * 60;
+        en.x += (Math.cos(baseAngle) * spd + Math.cos(perpAngle) * lateral) * dt;
+        en.y += (Math.sin(baseAngle) * spd + Math.sin(perpAngle) * lateral) * dt;
+      } else {
+        en.x += Math.cos(baseAngle) * spd * dt;
+        en.y += Math.sin(baseAngle) * spd * dt;
+      }
+
+      // Core Collision Detection
+      if (distToCore < core.radius + en.radius) {
+        const dmg = en.type === 'bomber' ? 25 : (en.isBoss ? 35 : 10);
+        core.hp -= dmg;
+        screenShake = 12;
+        playDestroySound(true);
+        updateCoreHpUI();
+
+        // Core damage spark burst
+        for (let p = 0; p < 18; p++) {
+          const a = Math.random() * Math.PI * 2;
+          particles.push({
+            x: en.x, y: en.y,
+            vx: Math.cos(a) * 120, vy: Math.sin(a) * 120,
+            life: 0.45, maxLife: 0.45, color: '#f43f5e', radius: 3.5
+          });
+        }
+
+        enemies.splice(i, 1);
+
+        if (core.hp <= 0) {
+          triggerGameOver("Core energy depleted by enemy swarm");
+          return;
+        }
+      }
+    }
+
+    // 5. Particles Update
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      if (p.type === 'ring') {
+        p.radius += dt * 90;
+        p.alpha -= dt * 2.2;
+        if (p.alpha <= 0) particles.splice(i, 1);
+      } else {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+    }
+
+    // 6. Floating Text Update
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+      const ft = floatingTexts[i];
+      ft.y -= dt * 28;
+      ft.life -= dt;
+      if (ft.life <= 0) floatingTexts.splice(i, 1);
+    }
+  }
+
+  function destroyEnemy(en, idx) {
+    enemies.splice(idx, 1);
+    enemiesKilled++;
+    playDestroySound(en.isBoss || en.type === 'tank');
+
+    // Combo & Score
+    combo = Math.min(5.0, combo + 0.1);
+    comboTimer = 2.8;
+    const gained = Math.round(en.scoreVal * combo);
+    score += gained;
+    document.getElementById('hud-score-val').textContent = score.toLocaleString();
+    document.getElementById('hud-combo-val').textContent = `${combo.toFixed(1)}x`;
+
+    spawnCombatText(en.x, en.y, `+${gained}`, '#38bdf8');
+
+    // Splitter spawns smaller micro-shards
+    if (en.type === 'splitter') {
+      for (let s = 0; s < 2; s++) {
+        const offsetAng = Math.random() * Math.PI * 2;
+        const sub = createEnemy('sprinter', en.x + Math.cos(offsetAng) * 15, en.y + Math.sin(offsetAng) * 15);
+        sub.scoreVal = 60;
+        enemies.push(sub);
+      }
+    }
+
+    // Destruction particle shards
+    const count = en.isBoss ? 40 : 16;
+    for (let p = 0; p < count; p++) {
+      const a = Math.random() * Math.PI * 2;
+      const spd = 60 + Math.random() * 160;
+      particles.push({
+        x: en.x, y: en.y,
+        vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+        life: 0.5, maxLife: 0.5,
+        color: en.color,
+        radius: 3 + Math.random() * 2
+      });
+    }
+  }
+
+  function triggerAoEExplosion(x, y, radius, damage) {
+    particles.push({
+      x: x, y: y, radius: 10, maxRadius: radius, color: '#f59e0b', alpha: 0.9, type: 'ring'
+    });
+    enemies.forEach(en => {
+      const d = Math.hypot(en.x - x, en.y - y);
+      if (d < radius + en.radius) {
+        en.hp -= damage;
+        spawnCombatText(en.x, en.y, `-${damage}`, '#f59e0b');
+      }
+    });
+  }
+
+  function spawnCombatText(x, y, text, color) {
+    floatingTexts.push({ x: x, y: y, text: text, color: color, life: 0.6, maxLife: 0.6 });
+  }
+
+  // ---------------- RENDERING ----------------
+  function draw(time) {
+    requestAnimationFrame(draw);
+
+    const now = performance.now();
+    const dt = Math.min(0.04, (now - (draw.lastTime || now)) / 1000);
+    draw.lastTime = now;
+
+    update(dt);
+
+    ctx.save();
+    ctx.scale(scale, scale);
+
+    // Screen Shake
+    if (screenShake > 0) {
+      const sx = (Math.random() - 0.5) * screenShake;
+      const sy = (Math.random() - 0.5) * screenShake;
+      ctx.translate(sx, sy);
+    }
+
+    // 1. Deep Space Arena Backdrop
+    ctx.fillStyle = '#070a13';
+    ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
+
+    // Radar Concentric Grid
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    [80, 150, 220, ARENA_RADIUS].forEach(r => {
+      ctx.arc(CENTER_X, CENTER_Y, r, 0, Math.PI * 2);
+    });
+    ctx.stroke();
+
+    // Crosshair Axis
+    ctx.beginPath();
+    ctx.moveTo(CENTER_X, CENTER_Y - ARENA_RADIUS);
+    ctx.lineTo(CENTER_X, CENTER_Y + ARENA_RADIUS);
+    ctx.moveTo(CENTER_X - ARENA_RADIUS, CENTER_Y);
+    ctx.lineTo(CENTER_X + ARENA_RADIUS, CENTER_Y);
+    ctx.stroke();
+
+    // Slow Field Energy Aura
+    if (upgrades.slowField > 0) {
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.18)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      ctx.arc(CENTER_X, CENTER_Y, 180, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // 2. Orbital Shields
+    orbitalShields.forEach(orb => {
+      const ox = CENTER_X + Math.cos(orb.angle) * orb.dist;
+      const oy = CENTER_Y + Math.sin(orb.angle) * orb.dist;
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(ox, oy, orb.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(ox, oy, orb.radius + 4, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+
+    // 3. Central Core & Turret Cannons
+    drawCore(time);
+
+    // 4. Projectiles
+    ctx.fillStyle = '#38bdf8';
+    projectiles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tail glow
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.lineWidth = p.radius * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - (p.vx * 0.025), p.y - (p.vy * 0.025));
+      ctx.stroke();
+    });
+
+    // 5. Enemies
+    enemies.forEach(en => {
+      drawEnemy(en, time);
+    });
+
+    // 6. Particles
+    particles.forEach(p => {
+      if (p.type === 'ring') {
+        ctx.strokeStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else {
+        const a = p.life / p.maxLife;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = a;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius * a, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    });
+
+    // 7. Floating Combat Text
+    floatingTexts.forEach(ft => {
+      const a = ft.life / ft.maxLife;
+      ctx.fillStyle = ft.color;
+      ctx.globalAlpha = a;
+      ctx.font = 'bold 13px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.globalAlpha = 1;
+    });
+
+    ctx.restore();
+  }
+
+  function drawCore(time) {
+    ctx.save();
+    ctx.translate(CENTER_X, CENTER_Y);
+
+    // Outer Energy Ring
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, core.radius + 6, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Core Sphere
+    const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, core.radius);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.4, '#38bdf8');
+    grad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, core.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rotating Turret Barrel
+    ctx.rotate(core.angle);
+    ctx.translate(-core.recoil, 0);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(core.radius - 2, -6, 26, 12);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(core.radius + 6, -3, 16, 6);
+
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(0, 0, 14, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#06b6d4';
+    ctx.beginPath();
+    ctx.arc(0, 0, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawEnemy(en, time) {
+    ctx.save();
+    ctx.translate(en.x, en.y);
+
+    const angleToCore = Math.atan2(CENTER_Y - en.y, CENTER_X - en.x);
+    ctx.rotate(angleToCore);
+
+    switch(en.type) {
+      case 'drifter':
+        ctx.fillStyle = en.color;
+        ctx.beginPath();
+        ctx.moveTo(en.radius, 0);
+        ctx.lineTo(0, en.radius * 0.7);
+        ctx.lineTo(-en.radius, 0);
+        ctx.lineTo(0, -en.radius * 0.7);
+        ctx.closePath();
+        ctx.fill();
+        break;
+
+      case 'sprinter':
+        ctx.fillStyle = en.color;
+        ctx.beginPath();
+        ctx.moveTo(en.radius * 1.3, 0);
+        ctx.lineTo(-en.radius, en.radius * 0.8);
+        ctx.lineTo(-en.radius * 0.4, 0);
+        ctx.lineTo(-en.radius, -en.radius * 0.8);
+        ctx.closePath();
+        ctx.fill();
+        break;
+
+      case 'tank':
+        ctx.fillStyle = en.color;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          const px = Math.cos(a) * en.radius;
+          const py = Math.sin(a) * en.radius;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+
+      case 'zigzag':
+        ctx.fillStyle = en.color;
+        ctx.beginPath();
+        ctx.moveTo(en.radius, 0);
+        ctx.lineTo(-en.radius * 0.8, en.radius);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(-en.radius * 0.8, -en.radius);
+        ctx.closePath();
+        ctx.fill();
+        break;
+
+      case 'splitter':
+        ctx.fillStyle = en.color;
+        ctx.beginPath();
+        ctx.moveTo(en.radius, 0);
+        ctx.lineTo(0, en.radius);
+        ctx.lineTo(-en.radius, 0);
+        ctx.lineTo(0, -en.radius);
+        ctx.closePath();
+        ctx.fill();
+        break;
+
+      case 'shielded':
+        ctx.fillStyle = en.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, en.radius, 0, Math.PI * 2);
+        ctx.fill();
+        // Frontal deflector shield arc
+        ctx.strokeStyle = '#60a5fa';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, en.radius + 6, -Math.PI * 0.4, Math.PI * 0.4);
+        ctx.stroke();
+        break;
+
+      case 'bomber':
+        const pulse = Math.sin(time * 0.02) * 2;
+        ctx.fillStyle = en.color;
+        ctx.beginPath();
+        ctx.moveTo(en.radius + pulse, 0);
+        ctx.lineTo(-en.radius, en.radius * 0.85);
+        ctx.lineTo(-en.radius, -en.radius * 0.85);
+        ctx.closePath();
+        ctx.fill();
+        break;
+
+      case 'boss_prism':
+      case 'boss_vortex':
+        ctx.fillStyle = en.color;
+        ctx.strokeStyle = '#fbcfe8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2 + (time * 0.001);
+          const px = Math.cos(a) * en.radius;
+          const py = Math.sin(a) * en.radius;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+    }
+
+    // Health Bar for multi-hp enemies
+    if (en.maxHp > 1) {
+      ctx.rotate(-angleToCore);
+      const barW = en.radius * 1.8;
+      const barH = 4;
+      const barY = -en.radius - 8;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(-barW * 0.5, barY, barW, barH);
+      ctx.fillStyle = en.isBoss ? '#ec4899' : '#10b981';
+      ctx.fillRect(-barW * 0.5, barY, barW * Math.max(0, en.hp / en.maxHp), barH);
+    }
+
+    ctx.restore();
+  }
+
+  // ---------------- UI & MODAL MANAGEMENT ----------------
+  function hideAllModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+  }
+
+  function startGame(mode = 'survival') {
+    initAudio();
+    hideAllModals();
+    currentMode = mode;
+    isPlaying = true;
+    isPaused = false;
+    wave = 1;
+    score = 0;
+    enemiesKilled = 0;
+    combo = 1.0;
+    core.hp = core.maxHp;
+    enemies = [];
+    projectiles = [];
+    particles = [];
+    floatingTexts = [];
+
+    // Reset upgrades
+    for (let k in upgrades) upgrades[k] = 0;
+    orbitalShields = [];
+
+    updateCoreHpUI();
+    document.getElementById('hud-score-val').textContent = '0';
+    document.getElementById('hud-combo-val').textContent = '1.0x';
+    document.getElementById('hud-mode-label').textContent = mode.toUpperCase();
+
+    prepareWave(wave);
+  }
+
+  function restartGame() {
+    startGame(currentMode);
+  }
+
+  function togglePause() {
+    if (!isPlaying) return;
+    isPaused = !isPaused;
+    if (isPaused) {
+      document.getElementById('overlay-pause').classList.remove('hidden');
+    } else {
+      document.getElementById('overlay-pause').classList.add('hidden');
+    }
+  }
+
+  // Main Menu Mode Selection
+  const modeCards = document.querySelectorAll('.mode-card');
+  modeCards.forEach(card => {
+    card.addEventListener('click', () => {
+      modeCards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      currentMode = card.dataset.mode;
+    });
+  });
+
+  document.getElementById('btn-menu-play').addEventListener('click', () => startGame(currentMode));
+  document.getElementById('btn-menu-guide').addEventListener('click', () => {
+    document.getElementById('overlay-guide').classList.remove('hidden');
+  });
+  document.getElementById('btn-close-guide').addEventListener('click', () => {
+    document.getElementById('overlay-guide').classList.add('hidden');
+  });
+
+  document.getElementById('btn-resume').addEventListener('click', togglePause);
+  document.getElementById('btn-pause-restart').addEventListener('click', restartGame);
+  document.getElementById('btn-pause-menu').addEventListener('click', () => {
+    hideAllModals();
+    isPlaying = false;
+    document.getElementById('overlay-menu').classList.remove('hidden');
+  });
+
+  document.getElementById('btn-gameover-retry').addEventListener('click', restartGame);
+  document.getElementById('btn-gameover-menu').addEventListener('click', () => {
+    hideAllModals();
+    isPlaying = false;
+    document.getElementById('overlay-menu').classList.remove('hidden');
+  });
+
+  document.getElementById('btn-hud-restart').addEventListener('click', restartGame);
+  document.getElementById('btn-hud-pause').addEventListener('click', togglePause);
+  document.getElementById('btn-hud-sound').addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    try { localStorage.setItem('dk:sound', String(soundEnabled)); } catch(e) {}
+    document.getElementById('btn-hud-sound').textContent = soundEnabled ? '🔊' : '🔇';
+  });
+  document.getElementById('btn-hud-sound').textContent = soundEnabled ? '🔊' : '🔇';
+
+  // ---------------- DEVKITRA POSTMESSAGE INTEROP ----------------
+  window.addEventListener('message', (e) => {
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === 'dk:pause') {
+      if (!isPaused && isPlaying) togglePause();
+    } else if (e.data.type === 'dk:resume') {
+      if (isPaused && isPlaying) togglePause();
+    } else if (e.data.type === 'dk:restart') {
+      restartGame();
+    }
+  });
+
+  // ---------------- INITIAL STARTUP ----------------
+  requestAnimationFrame(draw);
+
+})();
+</script>
+</body>
+</html>
+
