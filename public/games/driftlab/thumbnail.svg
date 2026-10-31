@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <defs>
+    <radialGradient id="dl-bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#141c2e"/>
+      <stop offset="60%" stop-color="#0a0f1d"/>
+      <stop offset="100%" stop-color="#05070d"/>
+    </radialGradient>
+    <linearGradient id="neon-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="neon-flame" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="50%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="car-body" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="40%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+    <filter id="glow-cyan" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="400" fill="url(#dl-bg)"/>
+
+  <!-- Subtle Speed Grid Lines -->
+  <g stroke="rgba(255, 255, 255, 0.04)" stroke-width="1.5">
+    <line x1="0" y1="80" x2="600" y2="80"/>
+    <line x1="0" y1="160" x2="600" y2="160"/>
+    <line x1="0" y1="240" x2="600" y2="240"/>
+    <line x1="0" y1="320" x2="600" y2="320"/>
+    <line x1="100" y1="0" x2="100" y2="400"/>
+    <line x1="200" y1="0" x2="200" y2="400"/>
+    <line x1="300" y1="0" x2="300" y2="400"/>
+    <line x1="400" y1="0" x2="400" y2="400"/>
+    <line x1="500" y1="0" x2="500" y2="400"/>
+  </g>
+
+  <!-- Curving Asphalt Race Track -->
+  <path d="M -20 320 C 180 320, 260 260, 340 180 C 420 100, 480 80, 620 80" 
+        fill="none" stroke="#1e293b" stroke-width="140" stroke-linecap="round"/>
+  
+  <!-- Outer Track Neon Edge -->
+  <path d="M -20 250 C 160 250, 240 190, 320 110 C 370 60, 440 20, 620 20" 
+        fill="none" stroke="#06b6d4" stroke-width="5" opacity="0.8" filter="url(#glow-cyan)"/>
+  
+  <!-- Inner Track Neon Edge -->
+  <path d="M -20 390 C 200 390, 280 330, 360 250 C 430 180, 500 140, 620 140" 
+        fill="none" stroke="#f43f5e" stroke-width="5" opacity="0.8"/>
+
+  <!-- Dashed Racing Apex Line -->
+  <path d="M -20 320 C 180 320, 260 260, 340 180 C 420 100, 480 80, 620 80" 
+        fill="none" stroke="rgba(255, 255, 255, 0.25)" stroke-width="3" stroke-dasharray="24 16"/>
+
+  <!-- Rubber Skid Marks From Drifting -->
+  <path d="M 170 335 C 230 330, 270 290, 310 230" fill="none" stroke="rgba(0, 0, 0, 0.6)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M 190 355 C 250 350, 290 310, 330 250" fill="none" stroke="rgba(0, 0, 0, 0.6)" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Blue Nitro Trail Flames -->
+  <path d="M 230 270 L 160 295 L 220 280 Z" fill="url(#neon-cyan)" filter="url(#glow-cyan)" opacity="0.85"/>
+  <path d="M 240 285 L 170 310 L 230 295 Z" fill="url(#neon-cyan)" filter="url(#glow-cyan)" opacity="0.85"/>
+
+  <!-- Drifting Sports Car (Angled into drift at ~ -35 degrees) -->
+  <g transform="translate(300, 220) rotate(-35)">
+    <!-- Car Cyan Underglow -->
+    <rect x="-35" y="-55" width="70" height="110" rx="20" fill="#06b6d4" opacity="0.4" filter="url(#glow-cyan)"/>
+    
+    <!-- Wheels -->
+    <rect x="-34" y="-45" width="10" height="22" rx="4" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+    <rect x="24" y="-45" width="10" height="22" rx="4" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+    <rect x="-34" y="25" width="10" height="22" rx="4" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+    <rect x="24" y="25" width="10" height="22" rx="4" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+
+    <!-- Main Chassis Body -->
+    <path d="M -24 -45 C -24 -55, 24 -55, 24 -45 L 26 35 C 26 48, -26 48, -26 35 Z" fill="url(#car-body)"/>
+    
+    <!-- Cockpit & Windshield -->
+    <path d="M -16 -20 L 16 -20 L 14 15 L -14 15 Z" fill="#0f172a"/>
+    <path d="M -15 -18 L 15 -18 L 13 -2 L -13 -2 Z" fill="#38bdf8" opacity="0.85"/>
+
+    <!-- Dual Racing Stripes -->
+    <rect x="-4" y="-48" width="3" height="88" fill="#06b6d4"/>
+    <rect x="1" y="-48" width="3" height="88" fill="#06b6d4"/>
+
+    <!-- Rear Carbon Wing Spoiler -->
+    <rect x="-28" y="40" width="56" height="8" rx="2" fill="#0284c7" filter="url(#glow-cyan)"/>
+
+    <!-- Headlight Beams -->
+    <polygon points="-18,-52 -50,-120 -10,-120" fill="rgba(255,255,255,0.25)"/>
+    <polygon points="18,-52 50,-120 10,-120" fill="rgba(255,255,255,0.25)"/>
+  </g>
+
+  <!-- Drift Smoke & Sparks -->
+  <circle cx="270" cy="270" r="14" fill="#38bdf8" opacity="0.3" filter="url(#glow-cyan)"/>
+  <circle cx="295" cy="290" r="18" fill="#ffffff" opacity="0.25"/>
+  <circle cx="250" cy="285" r="10" fill="#f59e0b" opacity="0.4"/>
+
+  <!-- Badge banner -->
+  <rect x="180" y="300" width="240" height="30" rx="15" fill="rgba(6, 182, 212, 0.15)" stroke="#06b6d4" stroke-width="1.5"/>
+  <text x="300" y="320" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="12" fill="#38bdf8" letter-spacing="3">ARCADE DRIFT &amp; TIME TRIAL</text>
+
+  <!-- Typography Title -->
+  <text x="300" y="365" text-anchor="middle" font-family="'Segoe UI', -apple-system, sans-serif" font-weight="900" font-size="34" fill="#ffffff" letter-spacing="6">
+    DRIFT<tspan fill="#06b6d4">LAB</tspan>
+  </text>
+</svg>
+

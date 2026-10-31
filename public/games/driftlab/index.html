@@ -1,0 +1,2282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>DRIFTLAB — Arcade Drift Racing — DevKitra</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    :root {
+      --bg: #070a13;
+      --surface: #0f172a;
+      --surface-light: #1e293b;
+      --border: rgba(255, 255, 255, 0.12);
+      --cyan: #06b6d4;
+      --cyan-glow: #38bdf8;
+      --magenta: #f43f5e;
+      --amber: #f59e0b;
+      --emerald: #10b981;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    canvas#raceCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+
+    /* ---------------- TOP HUD OVERLAY ---------------- */
+    .hud-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .hud-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .btn-hud {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.15s ease;
+      backdrop-filter: blur(8px);
+    }
+    .btn-hud:hover {
+      background: rgba(30, 41, 59, 0.95);
+      border-color: var(--cyan);
+      transform: translateY(-1px);
+    }
+    .btn-hud.active {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+    }
+    .hud-card {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      backdrop-filter: blur(8px);
+      min-width: 72px;
+    }
+    .hud-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .hud-val {
+      font-size: 18px;
+      font-weight: 900;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+
+    /* ---------------- BOTTOM GAUGE & DRIFT HUD ---------------- */
+    .bottom-hud {
+      position: absolute;
+      bottom: 12px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .speedo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .speedo-box {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 16px;
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .speedo-num {
+      font-size: 32px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      color: #ffffff;
+      line-height: 1;
+    }
+    .speedo-unit {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--cyan);
+      letter-spacing: 1px;
+    }
+    .nitro-gauge-wrap {
+      width: 140px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 5px 8px;
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .nitro-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--cyan);
+    }
+    .nitro-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .nitro-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #06b6d4, #38bdf8);
+      border-radius: 4px;
+      transition: width 0.08s linear;
+      box-shadow: 0 0 8px rgba(6, 182, 212, 0.8);
+    }
+    .nitro-bar-fill.boosting {
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
+    }
+
+    /* Drift Combo Floating Banner */
+    #drift-banner {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--cyan);
+      padding: 6px 18px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+      pointer-events: none;
+      z-index: 25;
+    }
+    #drift-banner.active {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+    .drift-pts {
+      font-size: 18px;
+      font-weight: 900;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+    }
+    .drift-mult {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--cyan);
+      background: rgba(6, 182, 212, 0.2);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    /* ---------------- MOBILE TOUCH CONTROLS ---------------- */
+    .touch-controls {
+      position: absolute;
+      inset: 0;
+      display: none;
+      pointer-events: none;
+      z-index: 30;
+    }
+    .touch-controls.visible {
+      display: block;
+    }
+    .touch-btn {
+      position: absolute;
+      pointer-events: auto;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 18px;
+      touch-action: none;
+      backdrop-filter: blur(4px);
+      transition: background 0.1s, transform 0.08s;
+    }
+    .touch-btn:active, .touch-btn.pressed {
+      background: rgba(6, 182, 212, 0.5);
+      border-color: var(--cyan);
+      transform: scale(0.94);
+    }
+    /* Left / Right Steering */
+    #touch-steer-left {
+      left: 18px;
+      bottom: 24px;
+      width: 68px;
+      height: 68px;
+    }
+    #touch-steer-right {
+      left: 96px;
+      bottom: 24px;
+      width: 68px;
+      height: 68px;
+    }
+    /* Gas / Brake / Drift / Nitro */
+    #touch-gas {
+      right: 20px;
+      bottom: 96px;
+      width: 72px;
+      height: 72px;
+      background: rgba(16, 185, 129, 0.35);
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+    #touch-gas:active, #touch-gas.pressed {
+      background: rgba(16, 185, 129, 0.65);
+    }
+    #touch-brake {
+      right: 24px;
+      bottom: 20px;
+      width: 62px;
+      height: 62px;
+      background: rgba(244, 63, 94, 0.35);
+      border-color: rgba(244, 63, 94, 0.5);
+    }
+    #touch-brake:active, #touch-brake.pressed {
+      background: rgba(244, 63, 94, 0.65);
+    }
+    #touch-drift {
+      right: 104px;
+      bottom: 20px;
+      width: 60px;
+      height: 60px;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      background: rgba(245, 158, 11, 0.35);
+      border-color: rgba(245, 158, 11, 0.5);
+    }
+    #touch-nitro {
+      right: 104px;
+      bottom: 92px;
+      width: 60px;
+      height: 60px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      background: rgba(6, 182, 212, 0.35);
+      border-color: rgba(6, 182, 212, 0.5);
+    }
+
+    /* ---------------- OVERLAY SCREENS ---------------- */
+    .screen-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(7, 10, 19, 0.94);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+      transition: opacity 0.22s ease, visibility 0.22s ease;
+      overflow-y: auto;
+    }
+    .screen-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .menu-card {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 26px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+    }
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .logo-title {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #ffffff;
+    }
+    .logo-title span {
+      color: var(--cyan);
+      text-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
+    }
+    .logo-sub {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    /* Track Selection Grid */
+    .track-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .track-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: left;
+    }
+    .track-card:hover, .track-card.selected {
+      background: rgba(30, 41, 59, 0.95);
+      border-color: var(--cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(6, 182, 212, 0.18);
+    }
+    .track-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .track-diff {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .diff-easy { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .diff-med { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .diff-hard { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
+    .track-stats {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .track-medal {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    /* Mode Selection Tabs */
+    .mode-tabs {
+      display: flex;
+      width: 100%;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 9px 4px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .mode-tab.active {
+      background: var(--cyan);
+      color: #ffffff;
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
+    }
+
+    /* Primary & Secondary Buttons */
+    .btn-action {
+      background: linear-gradient(135deg, #06b6d4, #0284c7);
+      border: none;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 1px;
+      padding: 13px 24px;
+      border-radius: 12px;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+      transition: all 0.15s ease;
+    }
+    .btn-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 13px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      margin-top: 10px;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Results stats grid */
+    .results-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .result-box {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .result-box.highlight {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.1);
+    }
+    .result-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .result-val {
+      font-size: 20px;
+      font-weight: 900;
+      color: #ffffff;
+      margin-top: 2px;
+    }
+    .result-box.highlight .result-val {
+      color: #38bdf8;
+    }
+
+    /* Toast */
+    #toast {
+      position: absolute;
+      top: 64px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #0284c7;
+      color: #ffffff;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 200;
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <!-- Toast message -->
+  <div id="toast">Result copied!</div>
+
+  <!-- Race Canvas -->
+  <canvas id="raceCanvas"></canvas>
+
+  <!-- HUD Layer -->
+  <div class="hud-layer">
+    <div class="hud-group">
+      <button id="btn-hud-menu" class="btn-hud" title="Main Menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </button>
+      <button id="btn-hud-sound" class="btn-hud" title="Sound Mute">
+        <svg id="icon-sound-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg id="icon-sound-off" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+      </button>
+      <button id="btn-hud-ghost" class="btn-hud active" title="Toggle Ghost Car [G]">
+        <span style="font-size: 11px; font-weight: 900;">👻</span>
+      </button>
+    </div>
+
+    <div class="hud-group">
+      <div class="hud-card">
+        <span class="hud-label">Lap</span>
+        <span class="hud-val" id="hud-lap">1/3</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label" id="hud-timer-label">Time</span>
+        <span class="hud-val" id="hud-timer">00:00.0</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">Best Lap</span>
+        <span class="hud-val" id="hud-best-lap">--:--.-</span>
+      </div>
+      <button id="btn-hud-pause" class="btn-hud" title="Pause [P / Esc]">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <rect x="6" y="4" width="4" height="16"></rect>
+          <rect x="14" y="4" width="4" height="16"></rect>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Drift Combo Floating Banner -->
+  <div id="drift-banner">
+    <span style="font-size: 13px; font-weight: 800; color: #38bdf8;">DRIFT</span>
+    <span class="drift-pts" id="drift-pts">+450</span>
+    <span class="drift-mult" id="drift-mult">2x</span>
+  </div>
+
+  <!-- Bottom Gauge & Nitro HUD -->
+  <div class="bottom-hud">
+    <div class="speedo-wrap">
+      <div class="speedo-box">
+        <span class="speedo-num" id="speedo-val">0</span>
+        <span class="speedo-unit">KM/H</span>
+      </div>
+      <div class="nitro-gauge-wrap">
+        <div class="nitro-header">
+          <span>NITRO</span>
+          <span id="nitro-pct">0%</span>
+        </div>
+        <div class="nitro-bar-bg">
+          <div class="nitro-bar-fill" id="nitro-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Touch Controls -->
+  <div class="touch-controls" id="touch-controls">
+    <div class="touch-btn" id="touch-steer-left">◀</div>
+    <div class="touch-btn" id="touch-steer-right">▶</div>
+    <div class="touch-btn" id="touch-gas">GAS</div>
+    <div class="touch-btn" id="touch-brake">BRK</div>
+    <div class="touch-btn" id="touch-drift">DRIFT</div>
+    <div class="touch-btn" id="touch-nitro">BOOST</div>
+  </div>
+
+  <!-- ---------------- OVERLAY: MAIN MENU ---------------- -->
+  <div id="overlay-menu" class="screen-overlay">
+    <div class="menu-card">
+      <div class="logo-badge">
+        <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="16" stroke="#06b6d4" stroke-width="4" stroke-dasharray="8 4"/>
+          <path d="M14 26 L26 14 M26 14 L20 14 M26 14 L26 20" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <h1 class="logo-title">DRIFT<span>LAB</span></h1>
+      </div>
+      <p class="logo-sub">Arcade Racing &amp; Precision Drift</p>
+
+      <!-- Mode Selector -->
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="timetrial">Time Trial</button>
+        <button class="mode-tab" data-mode="drift">Drift Attack</button>
+        <button class="mode-tab" data-mode="daily">Daily Track</button>
+      </div>
+
+      <!-- Track List Cards -->
+      <div class="track-list" id="track-list">
+        <!-- Track 1 -->
+        <div class="track-card selected" data-track="0">
+          <div>
+            <div class="track-name">
+              NEON CIRCUIT
+              <span class="track-diff diff-easy">Beginner</span>
+            </div>
+            <div class="track-stats">Wide flowing curves · Ideal for drift basics</div>
+          </div>
+          <div class="track-medal" id="medal-track-0">🥉</div>
+        </div>
+
+        <!-- Track 2 -->
+        <div class="track-card" data-track="1">
+          <div>
+            <div class="track-name">
+              HAZARD LOOP
+              <span class="track-diff diff-med">Intermediate</span>
+            </div>
+            <div class="track-stats">Chicanes &amp; apex barriers · Technical slide lines</div>
+          </div>
+          <div class="track-medal" id="medal-track-1">🥈</div>
+        </div>
+
+        <!-- Track 3 -->
+        <div class="track-card" data-track="2">
+          <div>
+            <div class="track-name">
+              VELOCITY RUN
+              <span class="track-diff diff-hard">Advanced</span>
+            </div>
+            <div class="track-stats">180° hairpin &amp; high-speed esses · Master line required</div>
+          </div>
+          <div class="track-medal" id="medal-track-2">🔒</div>
+        </div>
+      </div>
+
+      <button id="btn-start-race" class="btn-action">Start Race</button>
+
+      <button id="btn-show-help" class="btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        Controls &amp; Physics Guide
+      </button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: HOW TO PLAY ---------------- -->
+  <div id="overlay-help" class="screen-overlay hidden">
+    <div class="menu-card">
+      <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 14px;">Controls &amp; Drift Guide</h2>
+
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; font-size: 13px; line-height: 1.4; margin-bottom: 16px;">
+        <div style="background: rgba(30,41,59,0.5); padding: 10px; border-radius: 10px;">
+          <strong style="color: #38bdf8;">Desktop Keys:</strong><br/>
+          <kbd style="background:#0f172a; padding:2px 6px; border-radius:4px;">W / ↑</kbd> Gas &nbsp;|&nbsp;
+          <kbd style="background:#0f172a; padding:2px 6px; border-radius:4px;">S / ↓</kbd> Brake / Reverse<br/>
+          <kbd style="background:#0f172a; padding:2px 6px; border-radius:4px;">A / ←</kbd> Steer Left &nbsp;|&nbsp;
+          <kbd style="background:#0f172a; padding:2px 6px; border-radius:4px;">D / →</kbd> Steer Right<br/>
+          <kbd style="background:#0f172a; padding:2px 6px; border-radius:4px;">SPACE</kbd> Drift / Handbrake<br/>
+          <kbd style="background:#0f172a; padding:2px 6px; border-radius:4px;">SHIFT</kbd> Nitro Boost &nbsp;|&nbsp;
+          <kbd style="background:#0f172a; padding:2px 6px; border-radius:4px;">G</kbd> Ghost Toggle
+        </div>
+
+        <div style="background: rgba(30,41,59,0.5); padding: 10px; border-radius: 10px;">
+          <strong style="color: #f59e0b;">Drift Physics:</strong><br/>
+          Turn hard into corners while carrying speed or tap Space/Drift. Maintain counter-steer to sustain the drift angle. Drifting charges your <strong>Nitro Meter</strong>!
+        </div>
+
+        <div style="background: rgba(30,41,59,0.5); padding: 10px; border-radius: 10px;">
+          <strong style="color: #10b981;">Ghost Car Racing:</strong><br/>
+          Your personal best run is recorded locally. Race against your translucent ghost car in real-time to shave milliseconds off your lap time!
+        </div>
+      </div>
+
+      <button id="btn-close-help" class="btn-action">Ready to Race</button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: PAUSE ---------------- -->
+  <div id="overlay-pause" class="screen-overlay hidden">
+    <div class="menu-card">
+      <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 18px; letter-spacing: 2px;">RACE PAUSED</h2>
+      <button id="btn-resume-race" class="btn-action" style="margin-bottom: 10px;">Resume</button>
+      <button id="btn-restart-race" class="btn-secondary" style="margin-top:0; margin-bottom: 10px;">Restart [R]</button>
+      <button id="btn-quit-race" class="btn-secondary" style="margin-top:0; color:#fda4af; border-color: rgba(244, 63, 94, 0.4);">Quit to Menu</button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: RESULTS ---------------- -->
+  <div id="overlay-results" class="screen-overlay hidden">
+    <div class="menu-card">
+      <div id="res-medal-icon" style="font-size: 48px; margin-bottom: 6px;">🥇</div>
+      <h2 id="res-heading" style="font-size: 24px; font-weight: 900; margin-bottom: 2px;">RACE COMPLETED!</h2>
+      <p id="res-sub" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Gold medal performance.</p>
+
+      <div class="results-grid">
+        <div class="result-box highlight">
+          <div class="result-label">Total Time</div>
+          <div class="result-val" id="res-time">01:24.3</div>
+        </div>
+        <div class="result-box">
+          <div class="result-label">Best Lap</div>
+          <div class="result-val" id="res-best-lap">00:27.1</div>
+        </div>
+        <div class="result-box">
+          <div class="result-label">Drift Score</div>
+          <div class="result-val" id="res-drift">14,250</div>
+        </div>
+        <div class="result-box">
+          <div class="result-label">Ghost PB Delta</div>
+          <div class="result-val" id="res-delta">-0.42s</div>
+        </div>
+      </div>
+
+      <button id="btn-retry-race" class="btn-action" style="margin-bottom: 10px;">Race Again</button>
+      <button id="btn-share-daily" class="btn-secondary" style="display:none; margin-top:0; margin-bottom: 10px;">Share Daily Result</button>
+      <button id="btn-menu-res" class="btn-secondary" style="margin-top:0;">Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * DRIFTLAB — Arcade Drift Racing & Time Trial
+ * Self-contained Canvas 2D racing engine with rigid body arcade physics,
+ * real-time ghost car playback, and synthetic Web Audio sound effects.
+ */
+(function() {
+  'use strict';
+
+  // ---------------- SOUND SYSTEM (Web Audio API) ----------------
+  var audioCtx = null;
+  var soundMuted = false;
+  try {
+    soundMuted = localStorage.getItem('dk:driftlab-muted') === 'true';
+  } catch(e) {}
+
+  var engineOsc = null;
+  var engineGain = null;
+  var skidGain = null;
+  var skidNoise = null;
+  var nitroGain = null;
+  var nitroNoise = null;
+
+  function initAudio() {
+    if (!audioCtx) {
+      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        audioCtx = new AudioContextClass();
+        setupAudioNodes();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function setupAudioNodes() {
+    if (!audioCtx) return;
+    try {
+      // 1. Engine Oscillator (Triangle/Saw wave with smooth frequency shift)
+      engineOsc = audioCtx.createOscillator();
+      engineOsc.type = 'sawtooth';
+      engineOsc.frequency.setValueAtTime(65, audioCtx.currentTime);
+
+      var engineFilter = audioCtx.createBiquadFilter();
+      engineFilter.type = 'lowpass';
+      engineFilter.frequency.setValueAtTime(450, audioCtx.currentTime);
+
+      engineGain = audioCtx.createGain();
+      engineGain.gain.setValueAtTime(0, audioCtx.currentTime);
+
+      engineOsc.connect(engineFilter);
+      engineFilter.connect(engineGain);
+      engineGain.connect(audioCtx.destination);
+      engineOsc.start();
+
+      // 2. Tire Skid White Noise Node
+      var bufferSize = audioCtx.sampleRate * 2;
+      var noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      var output = noiseBuffer.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+
+      skidNoise = audioCtx.createBufferSource();
+      skidNoise.buffer = noiseBuffer;
+      skidNoise.loop = true;
+
+      var skidFilter = audioCtx.createBiquadFilter();
+      skidFilter.type = 'bandpass';
+      skidFilter.frequency.setValueAtTime(1100, audioCtx.currentTime);
+      skidFilter.Q.setValueAtTime(3.5, audioCtx.currentTime);
+
+      skidGain = audioCtx.createGain();
+      skidGain.gain.setValueAtTime(0, audioCtx.currentTime);
+
+      skidNoise.connect(skidFilter);
+      skidFilter.connect(skidGain);
+      skidGain.connect(audioCtx.destination);
+      skidNoise.start();
+
+      // 3. Nitro Boost Rush Noise
+      nitroNoise = audioCtx.createBufferSource();
+      nitroNoise.buffer = noiseBuffer;
+      nitroNoise.loop = true;
+
+      var nitroFilter = audioCtx.createBiquadFilter();
+      nitroFilter.type = 'highpass';
+      nitroFilter.frequency.setValueAtTime(800, audioCtx.currentTime);
+
+      nitroGain = audioCtx.createGain();
+      nitroGain.gain.setValueAtTime(0, audioCtx.currentTime);
+
+      nitroNoise.connect(nitroFilter);
+      nitroFilter.connect(nitroGain);
+      nitroGain.connect(audioCtx.destination);
+      nitroNoise.start();
+    } catch(e) {}
+  }
+
+  function updateAudio(speedKmh, isDrifting, isNitroActive) {
+    if (soundMuted || !audioCtx || !engineGain) return;
+    try {
+      var t = audioCtx.currentTime;
+      // Engine pitch curve
+      var baseFreq = 60 + (speedKmh / 220) * 160;
+      engineOsc.frequency.setTargetAtTime(baseFreq, t, 0.05);
+      engineGain.gain.setTargetAtTime(0.08, t, 0.05);
+
+      // Skid noise
+      var targetSkid = isDrifting ? Math.min(0.18, (speedKmh / 160) * 0.18) : 0;
+      skidGain.gain.setTargetAtTime(targetSkid, t, 0.06);
+
+      // Nitro rush
+      var targetNitro = isNitroActive ? 0.22 : 0;
+      nitroGain.gain.setTargetAtTime(targetNitro, t, 0.05);
+    } catch(e) {}
+  }
+
+  function stopAudio() {
+    if (!audioCtx || !engineGain) return;
+    try {
+      var t = audioCtx.currentTime;
+      engineGain.gain.setTargetAtTime(0, t, 0.05);
+      skidGain.gain.setTargetAtTime(0, t, 0.05);
+      nitroGain.gain.setTargetAtTime(0, t, 0.05);
+    } catch(e) {}
+  }
+
+  function playSoundTone(freq, type, duration, vol) {
+    if (soundMuted || !audioCtx) return;
+    try {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+
+  function playLapSound() {
+    [523.25, 659.25, 783.99, 1046.50].forEach(function(f, i) {
+      setTimeout(function() {
+        playSoundTone(f, 'sine', 0.35, 0.15);
+      }, i * 65);
+    });
+  }
+
+  function playCrashSound() {
+    playSoundTone(110, 'square', 0.25, 0.2);
+  }
+
+  // ---------------- TRACK SPECIFICATIONS ----------------
+  // Spline points define the center curve of each closed racing circuit.
+  var TRACKS = [
+    {
+      id: 'neon-circuit',
+      name: 'NEON CIRCUIT',
+      difficulty: 'Beginner',
+      width: 150,
+      totalLaps: 3,
+      medals: { gold: 68.0, silver: 78.0, bronze: 90.0 }, // Total seconds
+      driftTarget: 12000,
+      nodes: [
+        { x: 300, y: 800 },
+        { x: 800, y: 800 },
+        { x: 1300, y: 750 },
+        { x: 1650, y: 550 },
+        { x: 1750, y: 250 },
+        { x: 1550, y: -50 },
+        { x: 1150, y: -150 },
+        { x: 600, y: -150 },
+        { x: 150, y: 0 },
+        { x: 50, y: 350 },
+        { x: 120, y: 650 }
+      ],
+      hazards: []
+    },
+    {
+      id: 'hazard-loop',
+      name: 'HAZARD LOOP',
+      difficulty: 'Intermediate',
+      width: 125,
+      totalLaps: 3,
+      medals: { gold: 74.0, silver: 84.0, bronze: 98.0 },
+      driftTarget: 18000,
+      nodes: [
+        { x: 300, y: 800 },
+        { x: 750, y: 800 },
+        { x: 1100, y: 650 },
+        { x: 1200, y: 400 },
+        { x: 950, y: 250 },
+        { x: 700, y: 300 },
+        { x: 550, y: 150 },
+        { x: 650, y: -100 },
+        { x: 1100, y: -250 },
+        { x: 1550, y: -150 },
+        { x: 1750, y: 150 },
+        { x: 1650, y: 500 },
+        { x: 1350, y: 800 },
+        { x: 950, y: 950 },
+        { x: 350, y: 950 },
+        { x: 100, y: 750 }
+      ],
+      hazards: [
+        { x: 950, y: 300, r: 18 },
+        { x: 700, y: 240, r: 18 },
+        { x: 1150, y: 500, r: 18 }
+      ]
+    },
+    {
+      id: 'velocity-run',
+      name: 'VELOCITY RUN',
+      difficulty: 'Advanced',
+      width: 130,
+      totalLaps: 3,
+      medals: { gold: 82.0, silver: 94.0, bronze: 110.0 },
+      driftTarget: 24000,
+      nodes: [
+        { x: 300, y: 1000 },
+        { x: 900, y: 1000 },
+        { x: 1500, y: 1000 },
+        { x: 2000, y: 850 },
+        { x: 2200, y: 500 },
+        { x: 1950, y: 200 },
+        { x: 1550, y: 200 },
+        { x: 1300, y: 450 },
+        { x: 950, y: 450 },
+        { x: 750, y: 200 },
+        { x: 500, y: -50 },
+        { x: 150, y: 100 },
+        { x: 50, y: 500 },
+        { x: 100, y: 850 }
+      ],
+      hazards: [
+        { x: 1650, y: 230, r: 20 },
+        { x: 1150, y: 430, r: 20 },
+        { x: 650, y: 150, r: 20 }
+      ]
+    }
+  ];
+
+  // ---------------- GAME STATE ----------------
+  var currentTrackIdx = 0;
+  var currentMode = 'timetrial'; // 'timetrial', 'drift', 'daily'
+  var isRacing = false;
+  var isPaused = false;
+  var raceTime = 0;
+  var lapTime = 0;
+  var currentLap = 1;
+  var bestLapTime = Infinity;
+  var lapTimes = [];
+  var currentCheckpoint = 0;
+  var totalCheckpoints = 0;
+  var showGhost = true;
+
+  // Drift Scoring
+  var driftScore = 0;
+  var currentDriftPts = 0;
+  var driftMultiplier = 1;
+  var driftTimer = 0;
+
+  // Car Physics Object
+  var car = {
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    angle: 0, // radians
+    angularVelocity: 0,
+    steerInput: 0, // -1 (left) to 1 (right)
+    gasInput: 0,   // 0 to 1
+    brakeInput: 0, // 0 to 1
+    handbrake: false,
+    speed: 0,
+    slipAngle: 0,
+    isDrifting: false,
+    nitro: 0, // 0 to 100
+    isBoosting: false,
+    colliding: false
+  };
+
+  // Ghost Recording & Playback Data
+  var currentRunReplay = []; // [{ t, x, y, angle, drift, nitro }]
+  var ghostData = []; // loaded recorded run
+  var ghostIndex = 0;
+
+  // Input states
+  var keys = {};
+  var touchInputs = {
+    steerLeft: false,
+    steerRight: false,
+    gas: false,
+    brake: false,
+    drift: false,
+    nitro: false
+  };
+
+  // Visual Effects & Skid Marks
+  var skidMarks = []; // [{ x1, y1, x2, y2, alpha }]
+  var particles = []; // Tire smoke, spark bursts, nitro exhaust
+  var speedStreaks = [];
+  var camera = { x: 0, y: 0, zoom: 1 };
+  var screenShake = 0;
+
+  // DOM Elements
+  var canvas = document.getElementById('raceCanvas');
+  var ctx = canvas.getContext('2d');
+  var hudLap = document.getElementById('hud-lap');
+  var hudTimer = document.getElementById('hud-timer');
+  var hudBestLap = document.getElementById('hud-best-lap');
+  var speedoVal = document.getElementById('speedo-val');
+  var nitroPct = document.getElementById('nitro-pct');
+  var nitroBar = document.getElementById('nitro-bar');
+  var driftBanner = document.getElementById('drift-banner');
+  var driftPtsEl = document.getElementById('drift-pts');
+  var driftMultEl = document.getElementById('drift-mult');
+  var btnGhost = document.getElementById('btn-hud-ghost');
+  var toastEl = document.getElementById('toast');
+
+  // Overlays
+  var overlayMenu = document.getElementById('overlay-menu');
+  var overlayHelp = document.getElementById('overlay-help');
+  var overlayPause = document.getElementById('overlay-pause');
+  var overlayResults = document.getElementById('overlay-results');
+  var touchControls = document.getElementById('touch-controls');
+
+  // Detect Mobile Touch Device
+  function checkTouchDevice() {
+    return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  }
+  if (checkTouchDevice()) {
+    touchControls.classList.add('visible');
+  }
+
+  // ---------------- TRACK CATMULL-ROM SPLINE GENERATION ----------------
+  var trackPath = []; // dense sampled points along the track center
+  var checkpoints = []; // array of { x, y, nx, ny, index }
+
+  function buildTrackSpline(track) {
+    trackPath = [];
+    checkpoints = [];
+    var raw = track.nodes;
+    var len = raw.length;
+
+    function getPt(idx) {
+      return raw[(idx + len) % len];
+    }
+
+    // Catmull-Rom interpolation
+    for (var i = 0; i < len; i++) {
+      var p0 = getPt(i - 1);
+      var p1 = getPt(i);
+      var p2 = getPt(i + 1);
+      var p3 = getPt(i + 2);
+
+      var steps = 24;
+      for (var s = 0; s < steps; s++) {
+        var t = s / steps;
+        var t2 = t * t;
+        var t3 = t2 * t;
+
+        var x = 0.5 * ((2 * p1.x) +
+          (-p0.x + p2.x) * t +
+          (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+          (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+
+        var y = 0.5 * ((2 * p1.y) +
+          (-p0.y + p2.y) * t +
+          (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+          (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+
+        trackPath.push({ x: x, y: y });
+      }
+    }
+
+    // Generate Checkpoints around track (e.g. 8 checkpoint gates)
+    totalCheckpoints = 8;
+    var stepInterval = Math.floor(trackPath.length / totalCheckpoints);
+    for (var c = 0; c < totalCheckpoints; c++) {
+      var ptIndex = c * stepInterval;
+      var pt = trackPath[ptIndex];
+      var nextPt = trackPath[(ptIndex + 2) % trackPath.length];
+      var dx = nextPt.x - pt.x;
+      var dy = nextPt.y - pt.y;
+      var mag = Math.sqrt(dx * dx + dy * dy) || 1;
+      checkpoints.push({
+        x: pt.x,
+        y: pt.y,
+        nx: -dy / mag, // perpendicular normal
+        ny: dx / mag,
+        width: track.width,
+        index: c
+      });
+    }
+  }
+
+  // ---------------- RESET / START RACE ----------------
+  function initRace(trackIdx) {
+    currentTrackIdx = trackIdx;
+    var track = TRACKS[currentTrackIdx];
+    buildTrackSpline(track);
+
+    // Initial car placement at start line (Gate 0)
+    var p0 = trackPath[0];
+    var p1 = trackPath[5];
+    var startAngle = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+
+    car.x = p0.x;
+    car.y = p0.y;
+    car.vx = 0;
+    car.vy = 0;
+    car.angle = startAngle;
+    car.angularVelocity = 0;
+    car.speed = 0;
+    car.isDrifting = false;
+    car.nitro = 30; // start with a small boost buffer
+    car.isBoosting = false;
+
+    currentLap = 1;
+    currentCheckpoint = 0;
+    raceTime = 0;
+    lapTime = 0;
+    bestLapTime = Infinity;
+    lapTimes = [];
+    driftScore = 0;
+    currentDriftPts = 0;
+    driftMultiplier = 1;
+
+    skidMarks = [];
+    particles = [];
+    currentRunReplay = [];
+
+    // Load recorded ghost
+    ghostData = loadGhostRun(track.id);
+    ghostIndex = 0;
+
+    camera.x = car.x;
+    camera.y = car.y;
+
+    isRacing = true;
+    isPaused = false;
+
+    overlayMenu.classList.add('hidden');
+    overlayHelp.classList.add('hidden');
+    overlayPause.classList.add('hidden');
+    overlayResults.classList.add('hidden');
+
+    updateHud();
+    try {
+      window.parent.postMessage({ type: 'dk:ready', gameId: 'driftlab' }, '*');
+    } catch(e) {}
+  }
+
+  // ---------------- PHYSICS & DRIVING MODEL (60Hz fixed-step) ----------------
+  var FIXED_DT = 1 / 60;
+  var lastFrameTime = performance.now();
+
+  function updatePhysics(dt) {
+    if (!isRacing || isPaused) return;
+
+    // Process player inputs
+    var steerLeft = keys['ArrowLeft'] || keys['KeyA'] || touchInputs.steerLeft;
+    var steerRight = keys['ArrowRight'] || keys['KeyD'] || touchInputs.steerRight;
+    var gas = keys['ArrowUp'] || keys['KeyW'] || touchInputs.gas;
+    var brake = keys['ArrowDown'] || keys['KeyS'] || touchInputs.brake;
+    var driftKey = keys['Space'] || touchInputs.drift;
+    var nitroKey = keys['ShiftLeft'] || keys['ShiftRight'] || touchInputs.nitro;
+
+    var targetSteer = 0;
+    if (steerLeft) targetSteer -= 1;
+    if (steerRight) targetSteer += 1;
+    car.steerInput += (targetSteer - car.steerInput) * 12 * dt;
+
+    // Nitro activation
+    if (nitroKey && car.nitro > 2) {
+      car.isBoosting = true;
+      car.nitro = Math.max(0, car.nitro - 28 * dt);
+      spawnNitroParticles();
+    } else {
+      car.isBoosting = false;
+    }
+
+    // Base acceleration / engine power
+    var maxSpeed = car.isBoosting ? 540 : 360;
+    var accel = car.isBoosting ? 480 : 320;
+    var forwardX = Math.cos(car.angle);
+    var forwardY = Math.sin(car.angle);
+
+    // Current velocity projection
+    var fwdVelocity = car.vx * forwardX + car.vy * forwardY;
+    var rightX = -forwardY;
+    var rightY = forwardX;
+    var latVelocity = car.vx * rightX + car.vy * rightY;
+
+    // Apply Drive Throttle & Reverse
+    if (gas) {
+      if (fwdVelocity < maxSpeed) {
+        car.vx += forwardX * accel * dt;
+        car.vy += forwardY * accel * dt;
+      }
+    } else if (brake) {
+      if (fwdVelocity > 15) {
+        // Active braking
+        car.vx -= forwardX * 450 * dt;
+        car.vy -= forwardY * 450 * dt;
+      } else {
+        // Reverse
+        if (fwdVelocity > -120) {
+          car.vx -= forwardX * 180 * dt;
+          car.vy -= forwardY * 180 * dt;
+        }
+      }
+    }
+
+    // Natural drag / rolling resistance
+    car.vx *= Math.pow(0.97, dt * 60);
+    car.vy *= Math.pow(0.97, dt * 60);
+
+    car.speed = Math.sqrt(car.vx * car.vx + car.vy * car.vy);
+
+    // Steering & Yaw rotation
+    if (car.speed > 10) {
+      var turnSpeed = (car.isDrifting ? 3.6 : 2.8) * car.steerInput;
+      var speedFactor = Math.min(1.0, car.speed / 140);
+      car.angle += turnSpeed * speedFactor * dt;
+    }
+
+    // Drift Detection & Lateral Friction
+    var slip = Math.abs(latVelocity);
+    var wantsDrift = driftKey || (slip > 75 && Math.abs(car.steerInput) > 0.6);
+    car.isDrifting = (wantsDrift && car.speed > 120);
+
+    // Lateral grip friction
+    var grip = car.isDrifting ? 0.82 : 0.28;
+    car.vx -= rightX * latVelocity * (1 - grip) * 22 * dt;
+    car.vy -= rightY * latVelocity * (1 - grip) * 22 * dt;
+
+    // Drift Scoring & Nitro Energy Accumulation
+    if (car.isDrifting) {
+      var slipAngle = Math.abs(Math.atan2(latVelocity, fwdVelocity));
+      var pts = Math.floor(slipAngle * car.speed * 2.8 * dt * driftMultiplier);
+      currentDriftPts += pts;
+      driftScore += pts;
+      car.nitro = Math.min(100, car.nitro + 18 * dt);
+
+      driftTimer += dt;
+      if (driftTimer > 1.2) {
+        driftMultiplier = Math.min(5, driftMultiplier + 1);
+        driftTimer = 0;
+      }
+
+      spawnDriftTireMarks();
+      spawnTireSmoke();
+
+      driftBanner.classList.add('active');
+      driftPtsEl.textContent = '+' + currentDriftPts;
+      driftMultEl.textContent = driftMultiplier + 'x';
+    } else {
+      if (currentDriftPts > 0) {
+        currentDriftPts = 0;
+        driftMultiplier = 1;
+        driftTimer = 0;
+        driftBanner.classList.remove('active');
+      }
+    }
+
+    // Track Distance & Surface Friction (On-track vs Off-track)
+    var distToTrack = getDistanceToTrack(car.x, car.y);
+    var trackHalfWidth = TRACKS[currentTrackIdx].width / 2;
+
+    if (distToTrack > trackHalfWidth) {
+      // Off-track grass/gravel drag
+      car.vx *= 0.94;
+      car.vy *= 0.94;
+      spawnGrassKickup();
+    }
+
+    // Outer Track Wall Boundary Bounce
+    if (distToTrack > trackHalfWidth + 120) {
+      screenShake = 6;
+      playCrashSound();
+      car.vx *= -0.4;
+      car.vy *= -0.4;
+      spawnCrashSparks(car.x, car.y);
+    }
+
+    // Hazard Barrier Collisions
+    var hazards = TRACKS[currentTrackIdx].hazards;
+    for (var h = 0; h < hazards.length; h++) {
+      var hz = hazards[h];
+      var hdx = car.x - hz.x;
+      var hdy = car.y - hz.y;
+      var hdist = Math.sqrt(hdx * hdx + hdy * hdy);
+      if (hdist < hz.r + 14) {
+        // Elastic rebound
+        var normX = hdx / (hdist || 1);
+        var normY = hdy / (hdist || 1);
+        car.vx = normX * 180;
+        car.vy = normY * 180;
+        screenShake = 10;
+        playCrashSound();
+        spawnCrashSparks(car.x, car.y);
+      }
+    }
+
+    // Update Car Position
+    car.x += car.vx * dt;
+    car.y += car.vy * dt;
+
+    // Checkpoint & Lap Progress
+    checkCheckpointGates();
+
+    // Record ghost run frame (~20Hz)
+    raceTime += dt;
+    lapTime += dt;
+    if (isRacing && Math.floor(raceTime * 20) > currentRunReplay.length) {
+      currentRunReplay.push({
+        t: raceTime,
+        x: car.x,
+        y: car.y,
+        angle: car.angle,
+        drift: car.isDrifting,
+        nitro: car.isBoosting
+      });
+    }
+
+    // Sound Updates
+    var speedKmh = Math.floor(car.speed * 0.45);
+    updateAudio(speedKmh, car.isDrifting, car.isBoosting);
+  }
+
+  // ---------------- TRACK DISTANCE & BOUNDS ----------------
+  function getDistanceToTrack(px, py) {
+    var minDist = Infinity;
+    for (var i = 0; i < trackPath.length; i += 3) {
+      var dx = px - trackPath[i].x;
+      var dy = py - trackPath[i].y;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d < minDist) minDist = d;
+    }
+    return minDist;
+  }
+
+  // ---------------- CHECKPOINT & LAP VALIDATION ----------------
+  function checkCheckpointGates() {
+    var nextCpIndex = (currentCheckpoint + 1) % totalCheckpoints;
+    var gate = checkpoints[nextCpIndex];
+    var gdx = car.x - gate.x;
+    var gdy = car.y - gate.y;
+    var gdist = Math.sqrt(gdx * gdx + gdy * gdy);
+
+    if (gdist < gate.width * 0.75) {
+      currentCheckpoint = nextCpIndex;
+
+      // Finish / Start Line crossed (Gate 0)
+      if (currentCheckpoint === 0) {
+        onLapCompleted();
+      }
+    }
+  }
+
+  function onLapCompleted() {
+    playLapSound();
+    lapTimes.push(lapTime);
+    if (lapTime < bestLapTime) {
+      bestLapTime = lapTime;
+      showToast('New Best Lap: ' + formatTime(bestLapTime));
+    }
+
+    lapTime = 0;
+    currentLap++;
+
+    if (currentMode === 'timetrial' && currentLap > TRACKS[currentTrackIdx].totalLaps) {
+      onRaceFinished();
+    } else {
+      updateHud();
+    }
+  }
+
+  function onRaceFinished() {
+    isRacing = false;
+    stopAudio();
+
+    var track = TRACKS[currentTrackIdx];
+    var medal = 'none';
+    if (raceTime <= track.medals.gold) medal = 'gold';
+    else if (raceTime <= track.medals.silver) medal = 'silver';
+    else if (raceTime <= track.medals.bronze) medal = 'bronze';
+
+    // Save personal best & ghost
+    var prevBestTime = getBestTime(track.id);
+    var isNewPB = raceTime < prevBestTime;
+    if (isNewPB) {
+      saveBestTime(track.id, raceTime);
+      saveGhostRun(track.id, currentRunReplay);
+    }
+
+    saveMedal(track.id, medal);
+
+    // Display Results Modal
+    var resMedalIcon = document.getElementById('res-medal-icon');
+    var resHeading = document.getElementById('res-heading');
+    var resSub = document.getElementById('res-sub');
+    var resTime = document.getElementById('res-time');
+    var resBestLap = document.getElementById('res-best-lap');
+    var resDrift = document.getElementById('res-drift');
+    var resDelta = document.getElementById('res-delta');
+    var btnShareDaily = document.getElementById('btn-share-daily');
+
+    if (medal === 'gold') {
+      resMedalIcon.textContent = '🥇';
+      resHeading.textContent = 'GOLD MEDAL!';
+      resSub.textContent = 'Flawless apex clipping and top-tier drift control.';
+    } else if (medal === 'silver') {
+      resMedalIcon.textContent = '🥈';
+      resHeading.textContent = 'SILVER MEDAL!';
+      resSub.textContent = 'Strong pace. Shave tenths to reach Gold.';
+    } else if (medal === 'bronze') {
+      resMedalIcon.textContent = '🥉';
+      resHeading.textContent = 'BRONZE MEDAL!';
+      resSub.textContent = 'Circuit completed. Keep pushing for the podium.';
+    } else {
+      resMedalIcon.textContent = '🏁';
+      resHeading.textContent = 'RACE FINISHED';
+      resSub.textContent = 'Solid run. Review braking lines and try again.';
+    }
+
+    resTime.textContent = formatTime(raceTime);
+    resBestLap.textContent = formatTime(bestLapTime);
+    resDrift.textContent = driftScore.toLocaleString();
+
+    if (prevBestTime < Infinity) {
+      var diff = raceTime - prevBestTime;
+      resDelta.textContent = (diff <= 0 ? '-' : '+') + Math.abs(diff).toFixed(2) + 's';
+      resDelta.style.color = diff <= 0 ? '#34d399' : '#f43f5e';
+    } else {
+      resDelta.textContent = 'FIRST RUN';
+      resDelta.style.color = '#38bdf8';
+    }
+
+    btnShareDaily.style.display = currentMode === 'daily' ? 'flex' : 'none';
+    overlayResults.classList.remove('hidden');
+
+    try {
+      window.parent.postMessage({
+        type: 'dk:gameover',
+        score: driftScore,
+        gameId: 'driftlab'
+      }, '*');
+    } catch(e) {}
+  }
+
+  // ---------------- GHOST RECORDING & PLAYBACK ----------------
+  function saveGhostRun(trackId, runArray) {
+    try {
+      var compact = runArray.map(function(f) {
+        return [
+          Math.round(f.t * 100) / 100,
+          Math.round(f.x),
+          Math.round(f.y),
+          Math.round(f.angle * 100) / 100,
+          f.drift ? 1 : 0
+        ];
+      });
+      localStorage.setItem('dk:driftlab-ghost-' + trackId, JSON.stringify(compact));
+    } catch(e) {}
+  }
+
+  function loadGhostRun(trackId) {
+    try {
+      var str = localStorage.getItem('dk:driftlab-ghost-' + trackId);
+      if (!str) return [];
+      var parsed = JSON.parse(str);
+      return parsed.map(function(item) {
+        return {
+          t: item[0],
+          x: item[1],
+          y: item[2],
+          angle: item[3],
+          drift: item[4] === 1
+        };
+      });
+    } catch(e) {
+      return [];
+    }
+  }
+
+  function getGhostFrameAt(t) {
+    if (!ghostData || ghostData.length === 0) return null;
+    while (ghostIndex < ghostData.length - 1 && ghostData[ghostIndex + 1].t <= t) {
+      ghostIndex++;
+    }
+    var f0 = ghostData[ghostIndex];
+    var f1 = ghostData[ghostIndex + 1] || f0;
+    if (f0 === f1) return f0;
+
+    var span = f1.t - f0.t;
+    var alpha = span > 0 ? (t - f0.t) / span : 0;
+    alpha = Math.max(0, Math.min(1, alpha));
+
+    return {
+      x: f0.x + (f1.x - f0.x) * alpha,
+      y: f0.y + (f1.y - f0.y) * alpha,
+      angle: f0.angle + (f1.angle - f0.angle) * alpha,
+      drift: f0.drift
+    };
+  }
+
+  // ---------------- PARTICLES & VISUAL EFFECTS ----------------
+  function spawnDriftTireMarks() {
+    var cos = Math.cos(car.angle);
+    var sin = Math.sin(car.angle);
+    var leftX = car.x - cos * 14 - sin * 12;
+    var leftY = car.y - sin * 14 + cos * 12;
+    var rightX = car.x - cos * 14 + sin * 12;
+    var rightY = car.y - sin * 14 - cos * 12;
+
+    skidMarks.push({ x: leftX, y: leftY, alpha: 0.5 });
+    skidMarks.push({ x: rightX, y: rightY, alpha: 0.5 });
+    if (skidMarks.length > 500) skidMarks.shift();
+  }
+
+  function spawnTireSmoke() {
+    var cos = Math.cos(car.angle);
+    var sin = Math.sin(car.angle);
+    particles.push({
+      x: car.x - cos * 20 + (Math.random() - 0.5) * 16,
+      y: car.y - sin * 20 + (Math.random() - 0.5) * 16,
+      vx: (Math.random() - 0.5) * 20 - car.vx * 0.1,
+      vy: (Math.random() - 0.5) * 20 - car.vy * 0.1,
+      radius: 4 + Math.random() * 6,
+      alpha: 0.45,
+      color: 'rgba(255, 255, 255, '
+    });
+  }
+
+  function spawnNitroParticles() {
+    var cos = Math.cos(car.angle);
+    var sin = Math.sin(car.angle);
+    for (var i = 0; i < 2; i++) {
+      particles.push({
+        x: car.x - cos * 22 + (Math.random() - 0.5) * 8,
+        y: car.y - sin * 22 + (Math.random() - 0.5) * 8,
+        vx: -cos * (140 + Math.random() * 80),
+        vy: -sin * (140 + Math.random() * 80),
+        radius: 3 + Math.random() * 4,
+        alpha: 0.85,
+        color: Math.random() > 0.4 ? 'rgba(6, 182, 212, ' : 'rgba(245, 158, 11, '
+      });
+    }
+  }
+
+  function spawnGrassKickup() {
+    particles.push({
+      x: car.x + (Math.random() - 0.5) * 16,
+      y: car.y + (Math.random() - 0.5) * 16,
+      vx: -car.vx * 0.2 + (Math.random() - 0.5) * 30,
+      vy: -car.vy * 0.2 + (Math.random() - 0.5) * 30,
+      radius: 3,
+      alpha: 0.6,
+      color: 'rgba(34, 197, 94, '
+    });
+  }
+
+  function spawnCrashSparks(x, y) {
+    for (var i = 0; i < 14; i++) {
+      var angle = Math.random() * Math.PI * 2;
+      var spd = 60 + Math.random() * 120;
+      particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd,
+        radius: 2.5,
+        alpha: 0.95,
+        color: 'rgba(253, 224, 71, '
+      });
+    }
+  }
+
+  // ---------------- CANVAS RENDERING ----------------
+  function render(now) {
+    requestAnimationFrame(render);
+
+    var dt = (now - lastFrameTime) / 1000;
+    lastFrameTime = now;
+    if (dt > 0.1) dt = 0.1; // clamp lag spikes
+
+    // Physics step
+    updatePhysics(dt);
+
+    // Canvas sizing
+    if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+    }
+
+    var W = canvas.width;
+    var H = canvas.height;
+
+    // Camera follow with lookahead
+    var targetCamX = car.x + Math.cos(car.angle) * (car.speed * 0.28);
+    var targetCamY = car.y + Math.sin(car.angle) * (car.speed * 0.28);
+    camera.x += (targetCamX - camera.x) * 6 * dt;
+    camera.y += (targetCamY - camera.y) * 6 * dt;
+
+    // Dynamic zoom based on speed
+    var targetZoom = 1.0 - (car.speed / 540) * 0.18;
+    camera.zoom += (targetZoom - camera.zoom) * 4 * dt;
+
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+
+    // Screen Shake
+    if (screenShake > 0) {
+      ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+      screenShake *= 0.88;
+      if (screenShake < 0.2) screenShake = 0;
+    }
+
+    // World Transform
+    ctx.translate(W / 2, H / 2);
+    ctx.scale(camera.zoom, camera.zoom);
+    ctx.translate(-camera.x, -camera.y);
+
+    // 1. Draw Environmental Terrain Grid
+    renderTerrainGrid();
+
+    // 2. Draw Track Asphalt & Curbs
+    renderTrack();
+
+    // 3. Draw Tire Skid Marks
+    renderSkidMarks();
+
+    // 4. Draw Checkpoint Gates & Finish Line
+    renderCheckpoints();
+
+    // 5. Draw Hazard Obstacles
+    renderHazards();
+
+    // 6. Draw Ghost Car (if active)
+    if (showGhost && isRacing) {
+      var ghostFrame = getGhostFrameAt(raceTime);
+      if (ghostFrame) {
+        renderCar(ghostFrame.x, ghostFrame.y, ghostFrame.angle, true, ghostFrame.drift);
+      }
+    }
+
+    // 7. Draw Player Car
+    renderCar(car.x, car.y, car.angle, false, car.isDrifting);
+
+    // 8. Draw Particles (Smoke, Sparks, Nitro)
+    renderParticles(dt);
+
+    ctx.restore();
+
+    // Update Speedometer & Nitro HUD
+    var speedKmh = Math.floor(car.speed * 0.45);
+    speedoVal.textContent = speedKmh;
+    nitroPct.textContent = Math.floor(car.nitro) + '%';
+    nitroBar.style.width = car.nitro + '%';
+    if (car.isBoosting) {
+      nitroBar.classList.add('boosting');
+    } else {
+      nitroBar.classList.remove('boosting');
+    }
+
+    // Timer display
+    if (isRacing && !isPaused) {
+      hudTimer.textContent = formatTime(currentMode === 'timetrial' ? lapTime : raceTime);
+    }
+  }
+
+  function renderTerrainGrid() {
+    var gridSize = 160;
+    var startX = Math.floor((camera.x - 1200) / gridSize) * gridSize;
+    var endX = startX + 2400;
+    var startY = Math.floor((camera.y - 1200) / gridSize) * gridSize;
+    var endY = startY + 2400;
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (var x = startX; x <= endX; x += gridSize) {
+      ctx.moveTo(x, startY);
+      ctx.lineTo(x, endY);
+    }
+    for (var y = startY; y <= endY; y += gridSize) {
+      ctx.moveTo(startX, y);
+      ctx.lineTo(endX, y);
+    }
+    ctx.stroke();
+  }
+
+  function renderTrack() {
+    var track = TRACKS[currentTrackIdx];
+    var w = track.width;
+
+    // Track Outer Curb Edge Glow
+    ctx.beginPath();
+    for (var i = 0; i < trackPath.length; i++) {
+      var pt = trackPath[i];
+      if (i === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.15)';
+    ctx.lineWidth = w + 24;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Track Red/White Checkered Curbs Underlayer
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = w + 12;
+    ctx.stroke();
+
+    // Track Dark Asphalt Surface
+    ctx.strokeStyle = '#121829';
+    ctx.lineWidth = w;
+    ctx.stroke();
+
+    // Center Dashed Racing Apex Line
+    ctx.setLineDash([20, 20]);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function renderSkidMarks() {
+    ctx.save();
+    for (var i = 0; i < skidMarks.length; i++) {
+      var sm = skidMarks[i];
+      ctx.fillStyle = 'rgba(0, 0, 0, ' + sm.alpha + ')';
+      ctx.beginPath();
+      ctx.arc(sm.x, sm.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function renderCheckpoints() {
+    // Gate 0: Start / Finish Line Checkered Bar
+    var g0 = checkpoints[0];
+    if (g0) {
+      ctx.save();
+      ctx.translate(g0.x, g0.y);
+      var ang = Math.atan2(g0.ny, g0.nx);
+      ctx.rotate(ang);
+
+      var halfW = g0.width / 2;
+      var squares = 12;
+      var sqW = g0.width / squares;
+
+      for (var s = 0; s < squares; s++) {
+        ctx.fillStyle = (s % 2 === 0) ? '#ffffff' : '#0f172a';
+        ctx.fillRect(-halfW + s * sqW, -7, sqW, 14);
+      }
+      ctx.restore();
+    }
+  }
+
+  function renderHazards() {
+    var hazards = TRACKS[currentTrackIdx].hazards;
+    for (var i = 0; i < hazards.length; i++) {
+      var hz = hazards[i];
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(hz.x, hz.y, hz.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#ef4444';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Yellow Warning Cross
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath();
+      ctx.arc(hz.x, hz.y, hz.r * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function renderCar(x, y, angle, isGhost, isDrifting) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+
+    var alpha = isGhost ? 0.38 : 1.0;
+    ctx.globalAlpha = alpha;
+
+    // Neon Underglow
+    ctx.beginPath();
+    ctx.roundRect(-24, -14, 48, 28, 6);
+    ctx.fillStyle = isGhost ? 'rgba(56, 189, 248, 0.4)' : (isDrifting ? 'rgba(244, 63, 94, 0.45)' : 'rgba(6, 182, 212, 0.3)');
+    ctx.fill();
+
+    // Wheels
+    ctx.fillStyle = '#0f172a';
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    // Front Wheels (Turned with steer angle for player car)
+    var steerOffset = isGhost ? 0 : car.steerInput * 0.35;
+    drawWheel(14, -13, steerOffset);
+    drawWheel(14, 13, steerOffset);
+    // Rear Wheels
+    drawWheel(-14, -13, 0);
+    drawWheel(-14, 13, 0);
+
+    // Aerodynamic Chassis
+    ctx.beginPath();
+    ctx.moveTo(22, 0);
+    ctx.lineTo(16, -11);
+    ctx.lineTo(-16, -11);
+    ctx.lineTo(-20, -7);
+    ctx.lineTo(-20, 7);
+    ctx.lineTo(-16, 11);
+    ctx.lineTo(16, 11);
+    ctx.closePath();
+
+    ctx.fillStyle = isGhost ? '#38bdf8' : '#f8fafc';
+    ctx.fill();
+    ctx.strokeStyle = isGhost ? '#0284c7' : '#06b6d4';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Windshield & Cockpit
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.roundRect(-4, -7, 13, 14, 2);
+    ctx.fill();
+
+    ctx.fillStyle = isGhost ? '#bae6fd' : '#38bdf8';
+    ctx.beginPath();
+    ctx.roundRect(1, -6, 6, 12, 2);
+    ctx.fill();
+
+    // Rear Carbon Spoiler
+    ctx.fillStyle = '#0284c7';
+    ctx.fillRect(-22, -12, 4, 24);
+
+    // Headlights
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(20, -9, 2, 4);
+    ctx.fillRect(20, 5, 2, 4);
+
+    if (isGhost) {
+      // Floating GHOST text
+      ctx.rotate(-angle); // un-rotate for horizontal badge
+      ctx.font = '800 11px -apple-system, sans-serif';
+      ctx.fillStyle = '#38bdf8';
+      ctx.textAlign = 'center';
+      ctx.fillText('👻 GHOST PB', 0, -26);
+    }
+
+    ctx.restore();
+  }
+
+  function drawWheel(wx, wy, steerAngle) {
+    ctx.save();
+    ctx.translate(wx, wy);
+    ctx.rotate(steerAngle);
+    ctx.beginPath();
+    ctx.roundRect(-5, -3, 10, 6, 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function renderParticles(dt) {
+    ctx.save();
+    for (var p = particles.length - 1; p >= 0; p--) {
+      var pt = particles[p];
+      pt.x += pt.vx * dt;
+      pt.y += pt.vy * dt;
+      pt.alpha -= 1.4 * dt;
+      if (pt.alpha <= 0) {
+        particles.splice(p, 1);
+        continue;
+      }
+      ctx.fillStyle = pt.color + pt.alpha + ')';
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ---------------- HUD & FORMATTING ----------------
+  function updateHud() {
+    hudLap.textContent = currentLap + '/' + TRACKS[currentTrackIdx].totalLaps;
+    if (bestLapTime < Infinity) {
+      hudBestLap.textContent = formatTime(bestLapTime);
+    } else {
+      hudBestLap.textContent = '--:--.-';
+    }
+  }
+
+  function formatTime(sec) {
+    if (!sec || sec === Infinity) return '--:--.-';
+    var m = Math.floor(sec / 60);
+    var s = Math.floor(sec % 60);
+    var ms = Math.floor((sec % 1) * 10);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s + '.' + ms;
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(function() {
+      toastEl.classList.remove('show');
+    }, 2200);
+  }
+
+  function getBestTime(trackId) {
+    try {
+      return parseFloat(localStorage.getItem('dk:driftlab-best-' + trackId) || '999999');
+    } catch(e) {
+      return Infinity;
+    }
+  }
+
+  function saveBestTime(trackId, time) {
+    try {
+      localStorage.setItem('dk:driftlab-best-' + trackId, String(time));
+    } catch(e) {}
+  }
+
+  function saveMedal(trackId, medal) {
+    try {
+      var cur = localStorage.getItem('dk:driftlab-medal-' + trackId);
+      var ranks = { none: 0, bronze: 1, silver: 2, gold: 3 };
+      if (!cur || ranks[medal] > (ranks[cur] || 0)) {
+        localStorage.setItem('dk:driftlab-medal-' + trackId, medal);
+      }
+    } catch(e) {}
+  }
+
+  function refreshMenuCards() {
+    var medalSymbols = { gold: '🥇', silver: '🥈', bronze: '🥉', none: '·' };
+    TRACKS.forEach(function(t, i) {
+      var medalEl = document.getElementById('medal-track-' + i);
+      if (medalEl) {
+        var m = localStorage.getItem('dk:driftlab-medal-' + t.id) || 'none';
+        medalEl.textContent = medalSymbols[m] || '·';
+      }
+    });
+  }
+
+  // ---------------- USER INTERACTION & CONTROLS ----------------
+  function initInputListeners() {
+    // Keyboard handlers
+    window.addEventListener('keydown', function(e) {
+      initAudio();
+      keys[e.code] = true;
+      if (e.code === 'KeyG') {
+        showGhost = !showGhost;
+        btnGhost.classList.toggle('active', showGhost);
+        showToast('Ghost car ' + (showGhost ? 'enabled' : 'hidden'));
+      }
+      if (e.code === 'KeyR') {
+        initRace(currentTrackIdx);
+      }
+      if (e.code === 'KeyP' || e.code === 'Escape') {
+        if (isRacing) {
+          isPaused = !isPaused;
+          overlayPause.classList.toggle('hidden', !isPaused);
+        }
+      }
+    });
+
+    window.addEventListener('keyup', function(e) {
+      keys[e.code] = false;
+    });
+
+    // Mobile On-Screen Touch Buttons
+    function bindTouch(id, keyProp) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        initAudio();
+        touchInputs[keyProp] = true;
+        el.classList.add('pressed');
+      }, { passive: false });
+
+      el.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        touchInputs[keyProp] = false;
+        el.classList.remove('pressed');
+      });
+
+      el.addEventListener('touchcancel', function(e) {
+        touchInputs[keyProp] = false;
+        el.classList.remove('pressed');
+      });
+    }
+
+    bindTouch('touch-steer-left', 'steerLeft');
+    bindTouch('touch-steer-right', 'steerRight');
+    bindTouch('touch-gas', 'gas');
+    bindTouch('touch-brake', 'brake');
+    bindTouch('touch-drift', 'drift');
+    bindTouch('touch-nitro', 'nitro');
+
+    // HUD Buttons
+    document.getElementById('btn-hud-menu').addEventListener('click', function() {
+      isRacing = false;
+      stopAudio();
+      overlayPause.classList.add('hidden');
+      overlayResults.classList.add('hidden');
+      overlayMenu.classList.remove('hidden');
+      refreshMenuCards();
+    });
+
+    document.getElementById('btn-hud-pause').addEventListener('click', function() {
+      if (!isRacing) return;
+      isPaused = true;
+      overlayPause.classList.remove('hidden');
+    });
+
+    btnGhost.addEventListener('click', function() {
+      showGhost = !showGhost;
+      btnGhost.classList.toggle('active', showGhost);
+      showToast('Ghost car ' + (showGhost ? 'enabled' : 'hidden'));
+    });
+
+    // Sound toggle
+    var btnSound = document.getElementById('btn-hud-sound');
+    var iconOn = document.getElementById('icon-sound-on');
+    var iconOff = document.getElementById('icon-sound-off');
+
+    function updateSoundIcons() {
+      if (soundMuted) {
+        iconOn.style.display = 'none';
+        iconOff.style.display = 'block';
+      } else {
+        iconOn.style.display = 'block';
+        iconOff.style.display = 'none';
+      }
+    }
+    updateSoundIcons();
+
+    btnSound.addEventListener('click', function() {
+      soundMuted = !soundMuted;
+      try {
+        localStorage.setItem('dk:driftlab-muted', String(soundMuted));
+      } catch(e) {}
+      updateSoundIcons();
+      if (soundMuted) stopAudio(); else initAudio();
+    });
+
+    // Pause Overlay Actions
+    document.getElementById('btn-resume-race').addEventListener('click', function() {
+      isPaused = false;
+      overlayPause.classList.add('hidden');
+    });
+
+    document.getElementById('btn-restart-race').addEventListener('click', function() {
+      initRace(currentTrackIdx);
+    });
+
+    document.getElementById('btn-quit-race').addEventListener('click', function() {
+      isRacing = false;
+      stopAudio();
+      overlayPause.classList.add('hidden');
+      overlayMenu.classList.remove('hidden');
+      refreshMenuCards();
+    });
+
+    // Results Actions
+    document.getElementById('btn-retry-race').addEventListener('click', function() {
+      initRace(currentTrackIdx);
+    });
+
+    document.getElementById('btn-menu-res').addEventListener('click', function() {
+      overlayResults.classList.add('hidden');
+      overlayMenu.classList.remove('hidden');
+      refreshMenuCards();
+    });
+
+    document.getElementById('btn-share-daily').addEventListener('click', function() {
+      copyDailySummary();
+    });
+
+    // Menu Actions & Track Select
+    var trackCards = document.querySelectorAll('.track-card');
+    trackCards.forEach(function(card) {
+      card.addEventListener('click', function() {
+        trackCards.forEach(function(c) { c.classList.remove('selected'); });
+        card.classList.add('selected');
+        currentTrackIdx = parseInt(card.getAttribute('data-track'), 10);
+      });
+    });
+
+    // Mode Tabs
+    var modeTabs = document.querySelectorAll('.mode-tab');
+    modeTabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        modeTabs.forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        currentMode = tab.getAttribute('data-mode');
+      });
+    });
+
+    document.getElementById('btn-start-race').addEventListener('click', function() {
+      initAudio();
+      initRace(currentTrackIdx);
+    });
+
+    // Help Modal
+    document.getElementById('btn-show-help').addEventListener('click', function() {
+      overlayHelp.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-help').addEventListener('click', function() {
+      overlayHelp.classList.add('hidden');
+    });
+
+    // PostMessage Protocol for DevKitra
+    window.addEventListener('message', function(e) {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'dk:pause') {
+        isPaused = true;
+        overlayPause.classList.remove('hidden');
+      } else if (e.data.type === 'dk:resume') {
+        isPaused = false;
+        overlayPause.classList.add('hidden');
+      } else if (e.data.type === 'dk:restart') {
+        initRace(currentTrackIdx);
+      }
+    });
+  }
+
+  function copyDailySummary() {
+    var track = TRACKS[currentTrackIdx];
+    var text = 'DRIFTLAB Daily Challenge\n' +
+               'Track: ' + track.name + '\n' +
+               'Time: ' + formatTime(raceTime) + ' 🏁\n' +
+               'Drift Score: ' + driftScore.toLocaleString() + ' pts 🌀\n' +
+               'Play at https://devkitra.in/game/driftlab';
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('Daily summary copied!');
+      });
+    } else {
+      showToast('Score: ' + formatTime(raceTime));
+    }
+  }
+
+  // ---------------- INITIAL STARTUP ----------------
+  initInputListeners();
+  refreshMenuCards();
+  requestAnimationFrame(render);
+
+})();
+</script>
+</body>
+</html>
+
