@@ -1,0 +1,2057 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>BELTBOUND — 2D Factory Automation Puzzle — DevKitra</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    :root {
+      --bg: #090e1a;
+      --surface: #0f172a;
+      --surface-light: #1e293b;
+      --surface-hover: #334155;
+      --border: rgba(255, 255, 255, 0.12);
+      --border-focus: #06b6d4;
+      --cyan: #06b6d4;
+      --cyan-glow: #38bdf8;
+      --amber: #f59e0b;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 30%, #111a2e 0%, #070a12 85%);
+    }
+
+    /* ---------------- TOP HUD BAR ---------------- */
+    .hud-bar {
+      width: 100%;
+      max-width: 600px;
+      padding: 10px 14px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 20;
+    }
+    .hud-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-icon {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.15s ease;
+      backdrop-filter: blur(8px);
+    }
+    .btn-icon:hover {
+      background: rgba(30, 41, 59, 0.95);
+      border-color: var(--cyan);
+      transform: translateY(-1px);
+    }
+    .btn-icon.active {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      background: rgba(6, 182, 212, 0.2);
+    }
+    .hud-card {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      backdrop-filter: blur(8px);
+      min-width: 64px;
+    }
+    .hud-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .hud-val {
+      font-size: 15px;
+      font-weight: 900;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+    .hud-card.alert {
+      border-color: var(--rose);
+      background: rgba(244, 63, 94, 0.15);
+    }
+    .hud-card.alert .hud-val {
+      color: #fda4af;
+    }
+
+    /* ---------------- FACTORY GRID CANVAS ---------------- */
+    #grid-wrap {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      max-width: 540px;
+      max-height: 540px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      margin: auto 0;
+    }
+    canvas#factoryCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      background: #0a0e1a;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), inset 0 0 1px 1px rgba(255, 255, 255, 0.08);
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    /* ---------------- BOTTOM MACHINE TOOLBAR ---------------- */
+    .toolbar-bar {
+      width: 100%;
+      max-width: 600px;
+      padding: 6px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 20;
+    }
+    .tool-row {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      overflow-x: auto;
+      padding: 2px 0;
+    }
+    .tool-btn {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1.5px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 12px;
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      min-width: 56px;
+      height: 52px;
+      gap: 3px;
+      transition: all 0.15s ease;
+      outline: none;
+    }
+    .tool-btn:hover {
+      background: rgba(30, 41, 59, 0.95);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+    .tool-btn.active {
+      background: rgba(6, 182, 212, 0.2);
+      border-color: var(--cyan);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
+    }
+    .tool-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+    .tool-btn span {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    .tool-btn.demolish-btn.active {
+      background: rgba(244, 63, 94, 0.2);
+      border-color: var(--rose);
+      box-shadow: 0 0 12px rgba(244, 63, 94, 0.35);
+    }
+
+    /* Simulation Control Strip */
+    .sim-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 5px 10px;
+    }
+    .sim-status-hint {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sim-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-sim {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.12s ease;
+    }
+    .btn-sim:hover {
+      background: rgba(51, 65, 85, 0.95);
+      border-color: var(--cyan);
+    }
+    .btn-sim.primary {
+      background: linear-gradient(135deg, #06b6d4, #0284c7);
+      border: none;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(6, 182, 212, 0.35);
+    }
+    .btn-sim.paused {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    /* ---------------- OVERLAYS ---------------- */
+    .screen-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(6, 10, 18, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+      transition: opacity 0.22s ease, visibility 0.22s ease;
+      overflow-y: auto;
+    }
+    .screen-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .menu-card {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+    }
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .logo-title {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #ffffff;
+    }
+    .logo-title span {
+      color: var(--cyan);
+      text-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
+    }
+    .logo-sub {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    /* Buttons */
+    .btn-menu-action {
+      background: linear-gradient(135deg, #06b6d4, #0284c7);
+      border: none;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 1px;
+      padding: 13px 20px;
+      border-radius: 12px;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+      transition: all 0.15s ease;
+      margin-bottom: 10px;
+    }
+    .btn-menu-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+    }
+    .btn-menu-secondary {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 11px 18px;
+      border-radius: 12px;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      margin-bottom: 8px;
+    }
+    .btn-menu-secondary:hover {
+      background: rgba(30, 41, 59, 1);
+      border-color: var(--cyan);
+    }
+
+    /* Level Selector Grid (20 Levels) */
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      width: 100%;
+      margin: 14px 0 18px;
+    }
+    .lvl-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .lvl-card:hover:not(.locked) {
+      background: rgba(30, 41, 59, 1);
+      border-color: var(--cyan);
+      transform: translateY(-2px);
+    }
+    .lvl-card.active {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.35);
+    }
+    .lvl-card.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .lvl-num {
+      font-size: 14px;
+      font-weight: 900;
+      color: #ffffff;
+    }
+    .lvl-stars {
+      font-size: 10px;
+      color: var(--amber);
+      margin-top: 2px;
+    }
+
+    /* Level Completion Stats */
+    .stats-summary {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .stat-box {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat-box.highlight {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.12);
+    }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-val {
+      font-size: 20px;
+      font-weight: 900;
+      color: #ffffff;
+      margin-top: 2px;
+    }
+    .stat-box.highlight .stat-val {
+      color: #38bdf8;
+    }
+
+    /* Toast */
+    #toast {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #0284c7;
+      color: #ffffff;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 200;
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <!-- Toast notification -->
+  <div id="toast">Notification</div>
+
+  <!-- HUD Top Bar -->
+  <div class="hud-bar">
+    <div class="hud-group">
+      <button id="btn-hud-menu" class="btn-icon" title="Menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </button>
+      <button id="btn-hud-sound" class="btn-icon" title="Toggle Sound">
+        <svg id="icon-sound-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg id="icon-sound-off" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+      </button>
+      <button id="btn-hud-levels" class="btn-icon" title="Level Select">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+      </button>
+    </div>
+
+    <div class="hud-group">
+      <div class="hud-card">
+        <span class="hud-label" id="hud-mode-label">Level</span>
+        <span class="hud-val" id="hud-level-val">1</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">Delivered</span>
+        <span class="hud-val" id="hud-delivered">0/10</span>
+      </div>
+      <div class="hud-card" id="card-jams">
+        <span class="hud-label">Jams</span>
+        <span class="hud-val" id="hud-jams">0</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">Efficiency</span>
+        <span class="hud-val" id="hud-eff">100%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Factory Grid Canvas Container -->
+  <div id="grid-wrap">
+    <canvas id="factoryCanvas" width="540" height="540"></canvas>
+  </div>
+
+  <!-- Bottom Machine Toolbar -->
+  <div class="toolbar-bar">
+    <div class="sim-strip">
+      <div class="sim-status-hint" id="sim-status-hint">
+        <span>⚙ Simulation Running</span>
+      </div>
+      <div class="sim-actions">
+        <button id="btn-sim-play" class="btn-sim primary" title="Run / Pause [Space]">
+          <span id="sim-play-text">❚❚ Pause</span>
+        </button>
+        <button id="btn-sim-speed" class="btn-sim" title="Simulation Speed">1x</button>
+        <button id="btn-sim-undo" class="btn-sim" title="Undo [U / Ctrl+Z]">↺ Undo</button>
+        <button id="btn-sim-reset" class="btn-sim" title="Reset Level [R]">Reset</button>
+      </div>
+    </div>
+
+    <div class="tool-row" id="tool-row">
+      <!-- Conveyor Tool -->
+      <button class="tool-btn active" data-tool="conveyor" title="Conveyor Belt [1]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+        <span>Belt</span>
+      </button>
+      <!-- Rotate Tool -->
+      <button class="tool-btn" id="btn-rotate-dir" title="Rotate Machine [R]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        <span id="rotate-dir-label">East →</span>
+      </button>
+      <!-- Splitter Tool -->
+      <button class="tool-btn" data-tool="splitter" title="Splitter [2]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 12h8M12 12l6-6M12 12l6 6"/>
+        </svg>
+        <span>Split</span>
+      </button>
+      <!-- Merger Tool -->
+      <button class="tool-btn" data-tool="merger" title="Merger [3]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6l8 6M4 18l8-6M12 12h8"/>
+        </svg>
+        <span>Merge</span>
+      </button>
+      <!-- Sorter Tool -->
+      <button class="tool-btn" data-tool="sorter" title="Color Sorter [4]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        <span>Sorter</span>
+      </button>
+      <!-- Demolish Tool -->
+      <button class="tool-btn demolish-btn" data-tool="demolish" title="Demolish / Delete [X]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <span style="color: #f43f5e;">Clear</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: MAIN MENU ---------------- -->
+  <div id="overlay-menu" class="screen-overlay">
+    <div class="menu-card">
+      <div class="logo-badge">
+        <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+          <rect x="6" y="14" width="28" height="12" rx="3" stroke="#06b6d4" stroke-width="3"/>
+          <path d="M12 20h16M22 16l4 4-4 4" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <h1 class="logo-title">BELT<span>BOUND</span></h1>
+      </div>
+      <p class="logo-sub">2D Factory Automation &amp; Logistics</p>
+
+      <button id="btn-menu-campaign" class="btn-menu-action">Play Campaign (20 Levels)</button>
+      <button id="btn-menu-endless" class="btn-menu-secondary">Endless Factory</button>
+      <button id="btn-menu-help" class="btn-menu-secondary">How to Play Tutorial</button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: LEVEL SELECT ---------------- -->
+  <div id="overlay-levels" class="screen-overlay hidden">
+    <div class="menu-card" style="max-width: 520px;">
+      <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 2px;">CAMPAIGN LEVELS</h2>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Route logistics, prevent jams, earn 3 stars.</p>
+
+      <div class="level-grid" id="level-grid">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <button id="btn-close-levels" class="btn-menu-secondary">Back to Factory</button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: HOW TO PLAY ---------------- -->
+  <div id="overlay-help" class="screen-overlay hidden">
+    <div class="menu-card">
+      <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 14px;">Factory Guide</h2>
+
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; font-size: 13px; line-height: 1.4; margin-bottom: 16px;">
+        <div style="background: rgba(30,41,59,0.5); padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
+          <strong style="color: #38bdf8;">1. Place &amp; Rotate Conveyors:</strong><br/>
+          Select <strong>Belt</strong> from the toolbar. Click or touch empty tiles to build. Tap <strong>Rotate</strong> (or press <kbd>R</kbd>) to cycle directions (East, South, West, North).
+        </div>
+        <div style="background: rgba(30,41,59,0.5); padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
+          <strong style="color: #f59e0b;">2. Connecting Sources to Sinks:</strong><br/>
+          Generators spawn colored geometric packages. Connect conveyor paths directly to the matching colored Delivery Terminal!
+        </div>
+        <div style="background: rgba(30,41,59,0.5); padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
+          <strong style="color: #10b981;">3. Splitters, Mergers &amp; Sorters:</strong><br/>
+          Splitters alternate packages 50/50. Mergers cleanly combine routes. Sorters filter designated colors while letting others pass straight.
+        </div>
+        <div style="background: rgba(30,41,59,0.5); padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
+          <strong style="color: #f43f5e;">4. Preventing Factory Jams:</strong><br/>
+          Packages cannot pass if a receiving conveyor is blocked. Jammed tiles blink red! Clear bottlenecks to maintain 100% factory efficiency.
+        </div>
+      </div>
+
+      <button id="btn-close-help" class="btn-menu-action">Got It, Let's Build!</button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: LEVEL COMPLETE ---------------- -->
+  <div id="overlay-complete" class="screen-overlay hidden">
+    <div class="menu-card">
+      <div id="comp-stars" style="font-size: 42px; margin-bottom: 4px; color: var(--amber);">★★★</div>
+      <h2 id="comp-heading" style="font-size: 24px; font-weight: 900; margin-bottom: 2px;">LOGISTICS CERTIFIED!</h2>
+      <p id="comp-sub" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Quota fulfilled with top-tier efficiency.</p>
+
+      <div class="stats-summary">
+        <div class="stat-box highlight">
+          <div class="stat-label">Packages Delivered</div>
+          <div class="stat-val" id="comp-delivered">12/12</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Factory Jams</div>
+          <div class="stat-val" id="comp-jams">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Efficiency</div>
+          <div class="stat-val" id="comp-eff">100%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Time Taken</div>
+          <div class="stat-val" id="comp-time">00:34</div>
+        </div>
+      </div>
+
+      <button id="btn-comp-next" class="btn-menu-action">Next Level</button>
+      <button id="btn-comp-replay" class="btn-menu-secondary">Replay Level</button>
+      <button id="btn-comp-menu" class="btn-menu-secondary">Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * BELTBOUND — 2D Factory Automation Puzzle & Logistics Simulator
+ * Pure deterministic simulation engine with 12x12 discrete grid,
+ * progressive machine unlocks, 20 solvable puzzle levels, and Web Audio synthesis.
+ */
+(function() {
+  'use strict';
+
+  // ---------------- SOUND SYSTEM (Web Audio API) ----------------
+  var audioCtx = null;
+  var soundMuted = false;
+  try {
+    soundMuted = localStorage.getItem('dk:beltbound-muted') === 'true';
+  } catch(e) {}
+
+  function initAudio() {
+    if (!audioCtx) {
+      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        audioCtx = new AudioContextClass();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function playTone(freq, type, duration, vol) {
+    if (soundMuted || !audioCtx) return;
+    try {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol || 0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+
+  function playPlaceSound() {
+    playTone(720, 'triangle', 0.08, 0.12);
+  }
+
+  function playDemolishSound() {
+    playTone(280, 'square', 0.10, 0.10);
+  }
+
+  function playRotateSound() {
+    playTone(950, 'sine', 0.06, 0.09);
+  }
+
+  function playDeliverySound() {
+    if (soundMuted || !audioCtx) return;
+    try {
+      // Pleasant dual chime
+      playTone(659.25, 'sine', 0.22, 0.14);
+      setTimeout(function() {
+        playTone(1046.50, 'sine', 0.35, 0.15);
+      }, 70);
+    } catch(e) {}
+  }
+
+  function playJamSound() {
+    playTone(140, 'sawtooth', 0.20, 0.12);
+  }
+
+  function playVictorySound() {
+    if (soundMuted || !audioCtx) return;
+    [523.25, 659.25, 783.99, 1046.50].forEach(function(f, i) {
+      setTimeout(function() {
+        playTone(f, 'sine', 0.28, 0.14);
+      }, i * 75);
+    });
+  }
+
+  // ---------------- GRID CONSTANTS & GEOMETRY ----------------
+  var GRID_SIZE = 12;
+  var DIRS = ['E', 'S', 'W', 'N'];
+  var DIR_OFFSETS = {
+    E: { dr: 0, dc: 1 },
+    S: { dr: 1, dc: 0 },
+    W: { dr: 0, dc: -1 },
+    N: { dr: -1, dc: 0 }
+  };
+  var OPPOSITE_DIRS = { E: 'W', W: 'E', N: 'S', S: 'N' };
+
+  // Package Definitions: 4 Distinct Colors & Shapes
+  var PACKAGE_TYPES = {
+    red:    { color: '#ef4444', shape: 'square',   label: 'Red' },
+    blue:   { color: '#3b82f6', shape: 'circle',   label: 'Blue' },
+    yellow: { color: '#f59e0b', shape: 'diamond',  label: 'Yellow' },
+    green:  { color: '#10b981', shape: 'triangle', label: 'Green' }
+  };
+
+  // ---------------- 20 HAND-DESIGNED SOLVABLE CAMPAIGN PUZZLES ----------------
+  // Each puzzle has fixed sources, docks, obstacles, and clear target quotas.
+  var CAMPAIGN_LEVELS = [
+    // Level 1: Straight Conveyor Line
+    {
+      id: 1,
+      title: 'First Conveyance',
+      quota: { red: 6 },
+      items: [
+        { type: 'generator', r: 5, c: 2, dir: 'E', pkgColor: 'red', interval: 4 },
+        { type: 'delivery', r: 5, c: 9, dir: 'E', targetColor: 'red' }
+      ]
+    },
+    // Level 2: Simple Turn Corner
+    {
+      id: 2,
+      title: 'Right-Angle Turn',
+      quota: { red: 8 },
+      items: [
+        { type: 'generator', r: 2, c: 3, dir: 'S', pkgColor: 'red', interval: 4 },
+        { type: 'delivery', r: 9, c: 8, dir: 'E', targetColor: 'red' }
+      ]
+    },
+    // Level 3: Obstacle Avoidance S-Curve
+    {
+      id: 3,
+      title: 'Structural Bypass',
+      quota: { blue: 8 },
+      items: [
+        { type: 'generator', r: 3, c: 2, dir: 'E', pkgColor: 'blue', interval: 4 },
+        { type: 'delivery', r: 8, c: 9, dir: 'E', targetColor: 'blue' },
+        { type: 'wall', r: 3, c: 5 }, { type: 'wall', r: 4, c: 5 }, { type: 'wall', r: 5, c: 5 }
+      ]
+    },
+    // Level 4: Dual Color Parallel Lines
+    {
+      id: 4,
+      title: 'Parallel Flow',
+      quota: { red: 6, blue: 6 },
+      items: [
+        { type: 'generator', r: 3, c: 2, dir: 'E', pkgColor: 'red', interval: 4 },
+        { type: 'generator', r: 7, c: 2, dir: 'E', pkgColor: 'blue', interval: 4 },
+        { type: 'delivery', r: 3, c: 9, dir: 'E', targetColor: 'red' },
+        { type: 'delivery', r: 7, c: 9, dir: 'E', targetColor: 'blue' }
+      ]
+    },
+    // Level 5: Diagonal Routing Weave
+    {
+      id: 5,
+      title: 'Elevation Weave',
+      quota: { red: 8, yellow: 8 },
+      items: [
+        { type: 'generator', r: 2, c: 2, dir: 'E', pkgColor: 'red', interval: 4 },
+        { type: 'generator', r: 8, c: 2, dir: 'E', pkgColor: 'yellow', interval: 4 },
+        { type: 'delivery', r: 8, c: 9, dir: 'E', targetColor: 'red' },
+        { type: 'delivery', r: 2, c: 9, dir: 'E', targetColor: 'yellow' },
+        { type: 'wall', r: 5, c: 5 }, { type: 'wall', r: 5, c: 6 }
+      ]
+    },
+    // Level 6: 3-Way Terminal
+    {
+      id: 6,
+      title: 'Tri-Color Depot',
+      quota: { red: 6, blue: 6, yellow: 6 },
+      items: [
+        { type: 'generator', r: 2, c: 2, dir: 'E', pkgColor: 'red', interval: 4 },
+        { type: 'generator', r: 5, c: 2, dir: 'E', pkgColor: 'blue', interval: 4 },
+        { type: 'generator', r: 8, c: 2, dir: 'E', pkgColor: 'yellow', interval: 4 },
+        { type: 'delivery', r: 2, c: 9, dir: 'E', targetColor: 'red' },
+        { type: 'delivery', r: 5, c: 9, dir: 'E', targetColor: 'blue' },
+        { type: 'delivery', r: 8, c: 9, dir: 'E', targetColor: 'yellow' }
+      ]
+    },
+    // Level 7: Perimeter Corridor
+    {
+      id: 7,
+      title: 'Perimeter Route',
+      quota: { green: 10 },
+      items: [
+        { type: 'generator', r: 1, c: 1, dir: 'S', pkgColor: 'green', interval: 3 },
+        { type: 'delivery', r: 1, c: 10, dir: 'N', targetColor: 'green' },
+        { type: 'wall', r: 4, c: 4 }, { type: 'wall', r: 4, c: 5 }, { type: 'wall', r: 4, c: 6 },
+        { type: 'wall', r: 5, c: 4 }, { type: 'wall', r: 5, c: 6 },
+        { type: 'wall', r: 6, c: 4 }, { type: 'wall', r: 6, c: 5 }, { type: 'wall', r: 6, c: 6 }
+      ]
+    },
+    // Level 8: Four Corners
+    {
+      id: 8,
+      title: 'Four Quarters',
+      quota: { red: 5, blue: 5, yellow: 5, green: 5 },
+      items: [
+        { type: 'generator', r: 2, c: 2, dir: 'S', pkgColor: 'red', interval: 4 },
+        { type: 'generator', r: 2, c: 9, dir: 'S', pkgColor: 'blue', interval: 4 },
+        { type: 'generator', r: 9, c: 2, dir: 'N', pkgColor: 'yellow', interval: 4 },
+        { type: 'generator', r: 9, c: 9, dir: 'N', pkgColor: 'green', interval: 4 },
+        { type: 'delivery', r: 5, c: 5, dir: 'E', targetColor: 'red' },
+        { type: 'delivery', r: 5, c: 6, dir: 'W', targetColor: 'blue' },
+        { type: 'delivery', r: 6, c: 5, dir: 'E', targetColor: 'yellow' },
+        { type: 'delivery', r: 6, c: 6, dir: 'W', targetColor: 'green' }
+      ]
+    },
+    // Level 9: Central Hub Outflow
+    {
+      id: 9,
+      title: 'Central Hub',
+      quota: { red: 8, blue: 8 },
+      items: [
+        { type: 'generator', r: 5, c: 5, dir: 'N', pkgColor: 'red', interval: 4 },
+        { type: 'generator', r: 6, c: 6, dir: 'S', pkgColor: 'blue', interval: 4 },
+        { type: 'delivery', r: 1, c: 5, dir: 'N', targetColor: 'red' },
+        { type: 'delivery', r: 10, c: 6, dir: 'S', targetColor: 'blue' }
+      ]
+    },
+    // Level 10: Density Squeeze
+    {
+      id: 10,
+      title: 'Floor Squeeze',
+      quota: { blue: 8, yellow: 8 },
+      items: [
+        { type: 'generator', r: 2, c: 3, dir: 'E', pkgColor: 'blue', interval: 4 },
+        { type: 'generator', r: 8, c: 8, dir: 'W', pkgColor: 'yellow', interval: 4 },
+        { type: 'delivery', r: 2, c: 8, dir: 'E', targetColor: 'yellow' },
+        { type: 'delivery', r: 8, c: 3, dir: 'W', targetColor: 'blue' },
+        { type: 'wall', r: 5, c: 5 }, { type: 'wall', r: 5, c: 6 }
+      ]
+    },
+    // Level 11: Introduction to Splitters
+    {
+      id: 11,
+      title: 'Split Distribution',
+      quota: { red: 12 },
+      items: [
+        { type: 'generator', r: 5, c: 2, dir: 'E', pkgColor: 'red', interval: 2 },
+        { type: 'delivery', r: 3, c: 9, dir: 'E', targetColor: 'red' },
+        { type: 'delivery', r: 7, c: 9, dir: 'E', targetColor: 'red' }
+      ]
+    },
+    // Level 12: Introduction to Mergers
+    {
+      id: 12,
+      title: 'Line Consolidation',
+      quota: { red: 14 },
+      items: [
+        { type: 'generator', r: 3, c: 2, dir: 'E', pkgColor: 'red', interval: 3 },
+        { type: 'generator', r: 7, c: 2, dir: 'E', pkgColor: 'red', interval: 3 },
+        { type: 'delivery', r: 5, c: 9, dir: 'E', targetColor: 'red' }
+      ]
+    },
+    // Level 13: Introduction to Color Sorters
+    {
+      id: 13,
+      title: 'Chromatic Sorter',
+      quota: { red: 8, blue: 8 },
+      items: [
+        { type: 'generator', r: 5, c: 2, dir: 'E', pkgColor: 'mixed_red_blue', interval: 3 },
+        { type: 'delivery', r: 3, c: 9, dir: 'E', targetColor: 'red' },
+        { type: 'delivery', r: 7, c: 9, dir: 'E', targetColor: 'blue' }
+      ]
+    },
+    // Level 14: Tri-Color Separation Line
+    {
+      id: 14,
+      title: 'Multi-Filter Cascade',
+      quota: { red: 6, blue: 6, yellow: 6 },
+      items: [
+        { type: 'generator', r: 5, c: 1, dir: 'E', pkgColor: 'mixed_3', interval: 3 },
+        { type: 'delivery', r: 2, c: 9, dir: 'E', targetColor: 'red' },
+        { type: 'delivery', r: 5, c: 9, dir: 'E', targetColor: 'blue' },
+        { type: 'delivery', r: 8, c: 9, dir: 'E', targetColor: 'yellow' }
+      ]
+    },
+    // Level 15: Pressure Chamber Buffer
+    {
+      id: 15,
+      title: 'Buffer Chamber',
+      quota: { green: 14 },
+      items: [
+        { type: 'generator', r: 5, c: 2, dir: 'E', pkgColor: 'green', interval: 2 },
+        { type: 'delivery', r: 5, c: 9, dir: 'E', targetColor: 'green' },
+        { type: 'wall', r: 4, c: 6 }, { type: 'wall', r: 6, c: 6 }
+      ]
+    },
+    // Level 16: Introduction of Processors (Painter / Transformer)
+    {
+      id: 16,
+      title: 'Color Converter',
+      quota: { green: 10 },
+      items: [
+        // Spawns yellow, player must route through processor to make green!
+        { type: 'generator', r: 5, c: 2, dir: 'E', pkgColor: 'yellow', interval: 3 },
+        { type: 'delivery', r: 5, c: 9, dir: 'E', targetColor: 'green' }
+      ]
+    },
+    // Level 17: Transform & Sort Network
+    {
+      id: 17,
+      title: 'Synthesis Network',
+      quota: { blue: 8, green: 8 },
+      items: [
+        { type: 'generator', r: 3, c: 2, dir: 'E', pkgColor: 'red', interval: 3 },
+        { type: 'generator', r: 7, c: 2, dir: 'E', pkgColor: 'yellow', interval: 3 },
+        { type: 'delivery', r: 3, c: 9, dir: 'E', targetColor: 'blue' },
+        { type: 'delivery', r: 7, c: 9, dir: 'E', targetColor: 'green' }
+      ]
+    },
+    // Level 18: Factory Grid Congestion
+    {
+      id: 18,
+      title: 'Congestion Matrix',
+      quota: { red: 8, blue: 8, yellow: 8 },
+      items: [
+        { type: 'generator', r: 2, c: 2, dir: 'S', pkgColor: 'mixed_red_blue', interval: 3 },
+        { type: 'generator', r: 9, c: 2, dir: 'N', pkgColor: 'yellow', interval: 4 },
+        { type: 'delivery', r: 2, c: 9, dir: 'E', targetColor: 'red' },
+        { type: 'delivery', r: 5, c: 9, dir: 'E', targetColor: 'blue' },
+        { type: 'delivery', r: 9, c: 9, dir: 'E', targetColor: 'yellow' },
+        { type: 'wall', r: 5, c: 4 }, { type: 'wall', r: 6, c: 4 }
+      ]
+    },
+    // Level 19: The Master Exchange
+    {
+      id: 19,
+      title: 'The Exchange',
+      quota: { red: 8, green: 8, yellow: 8 },
+      items: [
+        { type: 'generator', r: 2, c: 5, dir: 'S', pkgColor: 'red', interval: 3 },
+        { type: 'generator', r: 9, c: 5, dir: 'N', pkgColor: 'yellow', interval: 3 },
+        { type: 'delivery', r: 2, c: 1, dir: 'W', targetColor: 'yellow' },
+        { type: 'delivery', r: 5, c: 10, dir: 'E', targetColor: 'green' },
+        { type: 'delivery', r: 9, c: 1, dir: 'W', targetColor: 'red' }
+      ]
+    },
+    // Level 20: Logistics Masterwork (All 4 Colors & Full Roster)
+    {
+      id: 20,
+      title: 'Logistics Masterwork',
+      quota: { red: 8, blue: 8, yellow: 8, green: 8 },
+      items: [
+        { type: 'generator', r: 1, c: 1, dir: 'E', pkgColor: 'mixed_4', interval: 2 },
+        { type: 'delivery', r: 1, c: 10, dir: 'E', targetColor: 'red' },
+        { type: 'delivery', r: 4, c: 10, dir: 'E', targetColor: 'blue' },
+        { type: 'delivery', r: 7, c: 10, dir: 'E', targetColor: 'yellow' },
+        { type: 'delivery', r: 10, c: 10, dir: 'E', targetColor: 'green' },
+        { type: 'wall', r: 4, c: 5 }, { type: 'wall', r: 7, c: 5 }
+      ]
+    }
+  ];
+
+  // ---------------- FACTORY SIMULATION STATE ----------------
+  var grid = []; // 12x12 2D array of Tile objects
+  var packages = []; // active moving packages
+  var currentMode = 'campaign'; // 'campaign' or 'endless'
+  var currentLevelIdx = 0;
+  var isSimRunning = true;
+  var simSpeed = 1; // 1, 2, 3
+  var selectedTool = 'conveyor';
+  var selectedPlacementDir = 'E'; // 'E', 'S', 'W', 'N'
+
+  // Statistics
+  var totalDelivered = 0;
+  var targetQuotaTotal = 0;
+  var deliveredByType = { red: 0, blue: 0, yellow: 0, green: 0 };
+  var quotaByType = { red: 0, blue: 0, yellow: 0, green: 0 };
+  var totalJams = 0;
+  var totalDispatched = 0;
+  var levelElapsedSeconds = 0;
+  var undoStack = [];
+
+  // Generator internal clock
+  var simTick = 0;
+  var packageIdCounter = 1;
+
+  // DOM Elements
+  var canvas = document.getElementById('factoryCanvas');
+  var ctx = canvas.getContext('2d');
+  var hudLevelVal = document.getElementById('hud-level-val');
+  var hudDelivered = document.getElementById('hud-delivered');
+  var hudJams = document.getElementById('hud-jams');
+  var hudEff = document.getElementById('hud-eff');
+  var hudModeLabel = document.getElementById('hud-mode-label');
+  var cardJams = document.getElementById('card-jams');
+  var toastEl = document.getElementById('toast');
+  var rotateDirLabel = document.getElementById('rotate-dir-label');
+  var simPlayText = document.getElementById('sim-play-text');
+  var btnSimPlay = document.getElementById('btn-sim-play');
+  var btnSimSpeed = document.getElementById('btn-sim-speed');
+
+  // Overlays
+  var overlayMenu = document.getElementById('overlay-menu');
+  var overlayLevels = document.getElementById('overlay-levels');
+  var overlayHelp = document.getElementById('overlay-help');
+  var overlayComplete = document.getElementById('overlay-complete');
+  var levelGridEl = document.getElementById('level-grid');
+
+  // ---------------- TILE DATA STRUCTURE ----------------
+  function createEmptyTile(r, c) {
+    return {
+      type: 'empty', // 'empty', 'conveyor', 'splitter', 'merger', 'sorter', 'processor', 'generator', 'delivery', 'wall'
+      r: r,
+      c: c,
+      dir: 'E',
+      fixed: false, // true for level-prescribed generators/docks/walls
+      pkgColor: 'red',
+      targetColor: 'red',
+      interval: 4,
+      lastSpawn: 0,
+      splitterToggle: 0,
+      occupiedPackageId: null
+    };
+  }
+
+  function initEmptyGrid() {
+    grid = [];
+    for (var r = 0; r < GRID_SIZE; r++) {
+      grid[r] = [];
+      for (var c = 0; c < GRID_SIZE; c++) {
+        grid[r][c] = createEmptyTile(r, c);
+      }
+    }
+  }
+
+  // ---------------- LEVEL LOADER ----------------
+  function loadLevel(idx) {
+    currentLevelIdx = idx;
+    var lvl = CAMPAIGN_LEVELS[idx];
+    initEmptyGrid();
+    packages = [];
+    undoStack = [];
+    simTick = 0;
+    totalDelivered = 0;
+    totalJams = 0;
+    totalDispatched = 0;
+    levelElapsedSeconds = 0;
+    deliveredByType = { red: 0, blue: 0, yellow: 0, green: 0 };
+    quotaByType = { red: 0, blue: 0, yellow: 0, green: 0 };
+    targetQuotaTotal = 0;
+
+    // Load Quota
+    for (var k in lvl.quota) {
+      quotaByType[k] = lvl.quota[k];
+      targetQuotaTotal += lvl.quota[k];
+    }
+
+    // Place Preset Level Items
+    for (var i = 0; i < lvl.items.length; i++) {
+      var it = lvl.items[i];
+      var tile = grid[it.r][it.c];
+      tile.type = it.type;
+      tile.fixed = true;
+      if (it.dir) tile.dir = it.dir;
+      if (it.pkgColor) tile.pkgColor = it.pkgColor;
+      if (it.targetColor) tile.targetColor = it.targetColor;
+      if (it.interval) tile.interval = it.interval;
+    }
+
+    isSimRunning = true;
+    updateSimButtonUI();
+    updateHud();
+
+    overlayMenu.classList.add('hidden');
+    overlayLevels.classList.add('hidden');
+    overlayComplete.classList.add('hidden');
+    overlayHelp.classList.add('hidden');
+
+    showToast('Level ' + lvl.id + ': ' + lvl.title);
+  }
+
+  function loadEndlessMode() {
+    currentMode = 'endless';
+    initEmptyGrid();
+    packages = [];
+    undoStack = [];
+    simTick = 0;
+    totalDelivered = 0;
+    totalJams = 0;
+    totalDispatched = 0;
+    levelElapsedSeconds = 0;
+    deliveredByType = { red: 0, blue: 0, yellow: 0, green: 0 };
+    targetQuotaTotal = 99999;
+
+    // Place 3 Generators & 3 Docks on opposite borders
+    grid[3][1].type = 'generator'; grid[3][1].dir = 'E'; grid[3][1].pkgColor = 'red'; grid[3][1].fixed = true; grid[3][1].interval = 4;
+    grid[6][1].type = 'generator'; grid[6][1].dir = 'E'; grid[6][1].pkgColor = 'blue'; grid[6][1].fixed = true; grid[6][1].interval = 4;
+    grid[9][1].type = 'generator'; grid[9][1].dir = 'E'; grid[9][1].pkgColor = 'yellow'; grid[9][1].fixed = true; grid[9][1].interval = 4;
+
+    grid[3][10].type = 'delivery'; grid[3][10].dir = 'E'; grid[3][10].targetColor = 'red'; grid[3][10].fixed = true;
+    grid[6][10].type = 'delivery'; grid[6][10].dir = 'E'; grid[6][10].targetColor = 'blue'; grid[6][10].fixed = true;
+    grid[9][10].type = 'delivery'; grid[9][10].dir = 'E'; grid[9][10].targetColor = 'yellow'; grid[9][10].fixed = true;
+
+    isSimRunning = true;
+    updateSimButtonUI();
+    updateHud();
+
+    overlayMenu.classList.add('hidden');
+    overlayLevels.classList.add('hidden');
+    overlayComplete.classList.add('hidden');
+    overlayHelp.classList.add('hidden');
+
+    showToast('Endless Factory Started!');
+  }
+
+  // ---------------- FACTORY SIMULATION STEP ----------------
+  var SIM_STEP_TIME = 0.55; // base duration per cell progress
+  var simAccumulator = 0;
+
+  function updateSimulation(dt) {
+    if (!isSimRunning) return;
+
+    levelElapsedSeconds += dt;
+    simAccumulator += dt * simSpeed;
+
+    while (simAccumulator >= SIM_STEP_TIME) {
+      simAccumulator -= SIM_STEP_TIME;
+      executeDiscreteTick();
+    }
+  }
+
+  function executeDiscreteTick() {
+    simTick++;
+
+    // 1. Generators spawn packages
+    for (var r = 0; r < GRID_SIZE; r++) {
+      for (var c = 0; c < GRID_SIZE; c++) {
+        var tile = grid[r][c];
+        if (tile.type === 'generator') {
+          if (simTick - tile.lastSpawn >= tile.interval) {
+            trySpawnPackage(tile);
+          }
+        }
+      }
+    }
+
+    // 2. Advance existing packages
+    var currentJamsThisTick = 0;
+
+    for (var i = packages.length - 1; i >= 0; i--) {
+      var p = packages[i];
+      var curTile = grid[p.r][p.c];
+
+      // Determine next cell from current machine
+      var nextCoords = getNextCellForPackage(curTile, p);
+
+      if (!nextCoords) {
+        p.isJammed = true;
+        currentJamsThisTick++;
+        continue;
+      }
+
+      var nr = nextCoords.r;
+      var nc = nextCoords.c;
+
+      // Check bounds
+      if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) {
+        p.isJammed = true;
+        currentJamsThisTick++;
+        continue;
+      }
+
+      var targetTile = grid[nr][nc];
+
+      // Check if target is delivery terminal
+      if (targetTile.type === 'delivery') {
+        if (targetTile.targetColor === p.color) {
+          // Correct Delivery!
+          packages.splice(i, 1);
+          totalDelivered++;
+          deliveredByType[p.color] = (deliveredByType[p.color] || 0) + 1;
+          playDeliverySound();
+          updateHud();
+          checkLevelWinCondition();
+          continue;
+        } else {
+          // Wrong Delivery Terminal
+          p.isJammed = true;
+          currentJamsThisTick++;
+          playJamSound();
+          continue;
+        }
+      }
+
+      // Check if target tile can receive package
+      if (targetTile.type === 'empty' || targetTile.type === 'wall' || targetTile.type === 'generator') {
+        p.isJammed = true;
+        currentJamsThisTick++;
+        continue;
+      }
+
+      // Check if target cell already holds another package
+      var isOccupied = false;
+      for (var k = 0; k < packages.length; k++) {
+        if (k !== i && packages[k].r === nr && packages[k].c === nc) {
+          isOccupied = true;
+          break;
+        }
+      }
+
+      if (isOccupied) {
+        p.isJammed = true;
+        currentJamsThisTick++;
+      } else {
+        // Move package forward
+        p.prevR = p.r;
+        p.prevC = p.c;
+        p.r = nr;
+        p.c = nc;
+        p.isJammed = false;
+        p.moveStartTime = performance.now();
+
+        // Process machine logic upon entering tile
+        if (targetTile.type === 'processor') {
+          // Processor transforms package color
+          if (p.color === 'yellow') p.color = 'green';
+          else if (p.color === 'red') p.color = 'blue';
+          p.shape = PACKAGE_TYPES[p.color].shape;
+        }
+      }
+    }
+
+    if (currentJamsThisTick > 0) {
+      totalJams += currentJamsThisTick;
+      cardJams.classList.add('alert');
+    } else {
+      cardJams.classList.remove('alert');
+    }
+  }
+
+  function trySpawnPackage(genTile) {
+    var outOffset = DIR_OFFSETS[genTile.dir];
+    var outR = genTile.r + outOffset.dr;
+    var outC = genTile.c + outOffset.dc;
+
+    if (outR < 0 || outR >= GRID_SIZE || outC < 0 || outC >= GRID_SIZE) return;
+
+    // Check if exit cell already occupied
+    for (var i = 0; i < packages.length; i++) {
+      if (packages[i].r === outR && packages[i].c === outC) return;
+    }
+
+    // Determine color
+    var pColor = genTile.pkgColor;
+    if (pColor === 'mixed_red_blue') {
+      pColor = (simTick % 2 === 0) ? 'red' : 'blue';
+    } else if (pColor === 'mixed_3') {
+      var arr3 = ['red', 'blue', 'yellow'];
+      pColor = arr3[simTick % 3];
+    } else if (pColor === 'mixed_4') {
+      var arr4 = ['red', 'blue', 'yellow', 'green'];
+      pColor = arr4[simTick % 4];
+    }
+
+    packages.push({
+      id: packageIdCounter++,
+      color: pColor,
+      shape: PACKAGE_TYPES[pColor].shape,
+      r: outR,
+      c: outC,
+      prevR: genTile.r,
+      prevC: genTile.c,
+      isJammed: false,
+      moveStartTime: performance.now()
+    });
+
+    genTile.lastSpawn = simTick;
+    totalDispatched++;
+  }
+
+  function getNextCellForPackage(tile, p) {
+    if (!tile) return null;
+
+    if (tile.type === 'conveyor' || tile.type === 'processor') {
+      var off = DIR_OFFSETS[tile.dir];
+      return { r: tile.r + off.dr, c: tile.c + off.dc };
+    }
+
+    if (tile.type === 'splitter') {
+      // Splitter alternates between Left & Right output
+      var dirs = (tile.dir === 'E' || tile.dir === 'W') ? ['N', 'S'] : ['E', 'W'];
+      var chosenDir = dirs[tile.splitterToggle % 2];
+      tile.splitterToggle++;
+      var sOff = DIR_OFFSETS[chosenDir];
+      return { r: tile.r + sOff.dr, c: tile.c + sOff.dc };
+    }
+
+    if (tile.type === 'sorter') {
+      // If color matches filter, send 90 deg right; else forward
+      var isMatch = (p.color === tile.targetColor);
+      var sDir = isMatch ? getRightTurnDir(tile.dir) : tile.dir;
+      var soOff = DIR_OFFSETS[sDir];
+      return { r: tile.r + soOff.dr, c: tile.c + soOff.dc };
+    }
+
+    if (tile.type === 'merger') {
+      var mOff = DIR_OFFSETS[tile.dir];
+      return { r: tile.r + mOff.dr, c: tile.c + mOff.dc };
+    }
+
+    return null;
+  }
+
+  function getRightTurnDir(d) {
+    if (d === 'N') return 'E';
+    if (d === 'E') return 'S';
+    if (d === 'S') return 'W';
+    if (d === 'W') return 'N';
+    return 'E';
+  }
+
+  // ---------------- WIN CONDITION & STAR RATING ----------------
+  function checkLevelWinCondition() {
+    if (currentMode !== 'campaign') return;
+
+    if (totalDelivered >= targetQuotaTotal) {
+      isSimRunning = false;
+      playVictorySound();
+
+      var eff = Math.max(10, Math.min(100, Math.floor((totalDelivered / Math.max(totalDelivered, totalDispatched)) * 100)));
+      var stars = 1;
+      if (totalJams === 0 && eff >= 85) stars = 3;
+      else if (totalJams <= 3 && eff >= 65) stars = 2;
+
+      saveLevelProgress(currentLevelIdx, stars);
+
+      // Display Victory Modal
+      var starsText = stars === 3 ? '★★★' : (stars === 2 ? '★★☆' : '★☆☆');
+      document.getElementById('comp-stars').textContent = starsText;
+      document.getElementById('comp-delivered').textContent = totalDelivered + '/' + targetQuotaTotal;
+      document.getElementById('comp-jams').textContent = totalJams;
+      document.getElementById('comp-eff').textContent = eff + '%';
+      document.getElementById('comp-time').textContent = formatSeconds(levelElapsedSeconds);
+
+      overlayComplete.classList.remove('hidden');
+
+      try {
+        window.parent.postMessage({
+          type: 'dk:gameover',
+          score: totalDelivered * 100 + stars * 500,
+          gameId: 'beltbound'
+        }, '*');
+      } catch(e) {}
+    }
+  }
+
+  function saveLevelProgress(lvlIdx, stars) {
+    try {
+      var key = 'dk:beltbound-lvl-' + lvlIdx;
+      var cur = parseInt(localStorage.getItem(key) || '0', 10);
+      if (stars > cur) localStorage.setItem(key, String(stars));
+      // Unlock next level
+      var unl = parseInt(localStorage.getItem('dk:beltbound-unlocked') || '0', 10);
+      if (lvlIdx + 1 > unl) localStorage.setItem('dk:beltbound-unlocked', String(lvlIdx + 1));
+    } catch(e) {}
+  }
+
+  // ---------------- USER CONSTRUCTION & MOUSE/TOUCH INTERACTION ----------------
+  function onPointerAction(r, c) {
+    if (r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE) return;
+    initAudio();
+
+    var tile = grid[r][c];
+
+    // Cannot modify fixed level structures
+    if (tile.fixed) {
+      showToast('Fixed factory machinery cannot be moved');
+      return;
+    }
+
+    // Demolish / Clear Tool
+    if (selectedTool === 'demolish') {
+      if (tile.type !== 'empty') {
+        recordUndo(r, c, tile.type, tile.dir, 'empty', 'E');
+        tile.type = 'empty';
+        playDemolishSound();
+      }
+      return;
+    }
+
+    // Click on existing placed item to rotate it!
+    if (tile.type === selectedTool) {
+      var nextDirIdx = (DIRS.indexOf(tile.dir) + 1) % DIRS.length;
+      var newDir = DIRS[nextDirIdx];
+      recordUndo(r, c, tile.type, tile.dir, tile.type, newDir);
+      tile.dir = newDir;
+      playRotateSound();
+      return;
+    }
+
+    // Place new machine
+    recordUndo(r, c, tile.type, tile.dir, selectedTool, selectedPlacementDir);
+    tile.type = selectedTool;
+    tile.dir = selectedPlacementDir;
+    tile.targetColor = 'red'; // default for sorters
+    playPlaceSound();
+  }
+
+  function recordUndo(r, c, oldType, oldDir, newType, newDir) {
+    undoStack.push({
+      r: r,
+      c: c,
+      oldType: oldType,
+      oldDir: oldDir,
+      newType: newType,
+      newDir: newDir
+    });
+    if (undoStack.length > 50) undoStack.shift();
+  }
+
+  function executeUndo() {
+    if (undoStack.length === 0) return;
+    var act = undoStack.pop();
+    var tile = grid[act.r][act.c];
+    tile.type = act.oldType;
+    tile.dir = act.oldDir;
+    playPlaceSound();
+    showToast('Undo action');
+  }
+
+  // ---------------- CANVAS RENDERING ----------------
+  function render(now) {
+    requestAnimationFrame(render);
+
+    var W = canvas.width;
+    var H = canvas.height;
+    var cellSize = W / GRID_SIZE;
+
+    // Simulation update with dt
+    var dt = 0.016; // smooth 60fps tick
+    updateSimulation(dt);
+
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+
+    // 1. Draw Blueprint Background Grid
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    for (var i = 0; i <= GRID_SIZE; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, H);
+      ctx.moveTo(0, i * cellSize); ctx.lineTo(W, i * cellSize);
+      ctx.stroke();
+    }
+
+    // 2. Draw Factory Machinery Tiles
+    for (var r = 0; r < GRID_SIZE; r++) {
+      for (var c = 0; c < GRID_SIZE; c++) {
+        var tile = grid[r][c];
+        var x = c * cellSize;
+        var y = r * cellSize;
+
+        if (tile.type !== 'empty') {
+          renderMachineTile(tile, x, y, cellSize, now);
+        }
+      }
+    }
+
+    // 3. Draw Moving Packages
+    for (var pIdx = 0; pIdx < packages.length; pIdx++) {
+      var p = packages[pIdx];
+      renderPackage(p, cellSize, now);
+    }
+
+    ctx.restore();
+  }
+
+  function renderMachineTile(tile, x, y, size, now) {
+    var cx = x + size / 2;
+    var cy = y + size / 2;
+    var pad = 3;
+
+    ctx.save();
+
+    if (tile.type === 'conveyor') {
+      // Conveyor Belt Base
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.roundRect(x + pad, y + pad, size - pad * 2, size - pad * 2, 6);
+      ctx.fill();
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Moving Directional Chevrons
+      var animOffset = (now * 0.003 * simSpeed) % 1;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(getDirAngle(tile.dir));
+
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      for (var o = -0.3; o <= 0.3; o += 0.3) {
+        var px = (o + animOffset * 0.3) * size * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(px - 5, -8);
+        ctx.lineTo(px + 4, 0);
+        ctx.lineTo(px - 5, 8);
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else if (tile.type === 'splitter') {
+      // Splitter Unit
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.roundRect(x + pad, y + pad, size - pad * 2, size - pad * 2, 8);
+      ctx.fill();
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(getDirAngle(tile.dir));
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.25, 0); ctx.lineTo(0, 0);
+      ctx.moveTo(0, 0); ctx.lineTo(size * 0.25, -size * 0.22);
+      ctx.moveTo(0, 0); ctx.lineTo(size * 0.25, size * 0.22);
+      ctx.stroke();
+      ctx.restore();
+    } else if (tile.type === 'merger') {
+      // Merger Unit
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.roundRect(x + pad, y + pad, size - pad * 2, size - pad * 2, 8);
+      ctx.fill();
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(getDirAngle(tile.dir));
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.25, -size * 0.22); ctx.lineTo(0, 0);
+      ctx.moveTo(-size * 0.25, size * 0.22); ctx.lineTo(0, 0);
+      ctx.moveTo(0, 0); ctx.lineTo(size * 0.25, 0);
+      ctx.stroke();
+      ctx.restore();
+    } else if (tile.type === 'sorter') {
+      // Color Sorter Unit
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.roundRect(x + pad, y + pad, size - pad * 2, size - pad * 2, 8);
+      ctx.fill();
+      ctx.strokeStyle = '#a855f7';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#a855f7';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (tile.type === 'processor') {
+      // Color Processor Unit
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(x + pad, y + pad, size - pad * 2, size - pad * 2, 8);
+      ctx.fill();
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Cog gear graphic
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (tile.type === 'generator') {
+      // Package Generator Terminal
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(x + pad, y + pad, size - pad * 2, size - pad * 2, 8);
+      ctx.fill();
+      ctx.strokeStyle = '#06b6d4';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Spawning icon
+      ctx.fillStyle = '#06b6d4';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('IN', cx, cy);
+    } else if (tile.type === 'delivery') {
+      // Target Delivery Dock
+      var targetCol = PACKAGE_TYPES[tile.targetColor] ? PACKAGE_TYPES[tile.targetColor].color : '#ef4444';
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(x + pad, y + pad, size - pad * 2, size - pad * 2, 8);
+      ctx.fill();
+      ctx.strokeStyle = targetCol;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Target geometric dock outline
+      ctx.fillStyle = targetCol;
+      ctx.beginPath();
+      if (tile.targetColor === 'red') {
+        ctx.fillRect(cx - 8, cy - 8, 16, 16);
+      } else if (tile.targetColor === 'blue') {
+        ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (tile.targetColor === 'yellow') {
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.PI / 4);
+        ctx.fillRect(-7, -7, 14, 14); ctx.restore();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 9); ctx.lineTo(cx + 9, cy + 8); ctx.lineTo(cx - 9, cy + 8);
+        ctx.fill();
+      }
+    } else if (tile.type === 'wall') {
+      // Fixed Concrete Pillar
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(x + pad, y + pad, size - pad * 2, size - pad * 2);
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + pad, y + pad, size - pad * 2, size - pad * 2);
+    }
+
+    ctx.restore();
+  }
+
+  function renderPackage(p, size, now) {
+    var curX = p.c * size + size / 2;
+    var curY = p.r * size + size / 2;
+    var pkgDef = PACKAGE_TYPES[p.color] || PACKAGE_TYPES.red;
+
+    ctx.save();
+    ctx.translate(curX, curY);
+
+    // Blinking Jam Warning if stuck
+    if (p.isJammed) {
+      var jamPulse = Math.sin(now * 0.015) > 0;
+      if (jamPulse) {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.arc(2, 3, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Package Body
+    ctx.fillStyle = pkgDef.color;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.8;
+
+    if (p.shape === 'square') {
+      ctx.beginPath();
+      ctx.roundRect(-9, -9, 18, 18, 3);
+      ctx.fill();
+      ctx.stroke();
+    } else if (p.shape === 'circle') {
+      ctx.beginPath();
+      ctx.arc(0, 0, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    } else if (p.shape === 'diamond') {
+      ctx.save();
+      ctx.rotate(Math.PI / 4);
+      ctx.beginPath();
+      ctx.roundRect(-8, -8, 16, 16, 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } else if (p.shape === 'triangle') {
+      ctx.beginPath();
+      ctx.moveTo(0, -10);
+      ctx.lineTo(10, 8);
+      ctx.lineTo(-10, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function getDirAngle(d) {
+    if (d === 'E') return 0;
+    if (d === 'S') return Math.PI / 2;
+    if (d === 'W') return Math.PI;
+    if (d === 'N') return -Math.PI / 2;
+    return 0;
+  }
+
+  // ---------------- HUD & FORMATTING ----------------
+  function updateHud() {
+    hudLevelVal.textContent = currentMode === 'campaign' ? (currentLevelIdx + 1) : '∞';
+    hudModeLabel.textContent = currentMode === 'campaign' ? 'Level' : 'Mode';
+    hudDelivered.textContent = totalDelivered + '/' + (targetQuotaTotal < 99999 ? targetQuotaTotal : '∞');
+    hudJams.textContent = totalJams;
+
+    var eff = totalDispatched > 0 ? Math.max(10, Math.min(100, Math.floor((totalDelivered / Math.max(totalDelivered, totalDispatched)) * 100))) : 100;
+    hudEff.textContent = eff + '%';
+  }
+
+  function updateSimButtonUI() {
+    if (isSimRunning) {
+      simPlayText.textContent = '❚❚ Pause';
+      btnSimPlay.classList.remove('paused');
+    } else {
+      simPlayText.textContent = '▶ Run';
+      btnSimPlay.classList.add('paused');
+    }
+  }
+
+  function formatSeconds(sec) {
+    var m = Math.floor(sec / 60);
+    var s = Math.floor(sec % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(function() {
+      toastEl.classList.remove('show');
+    }, 2200);
+  }
+
+  // ---------------- UI EVENT LISTENERS & LEVEL SELECTOR ----------------
+  function initListeners() {
+    // Canvas Pointer handling
+    function handleCanvasClick(e) {
+      var rect = canvas.getBoundingClientRect();
+      var scaleX = canvas.width / rect.width;
+      var scaleY = canvas.height / rect.height;
+      var x = (e.clientX - rect.left) * scaleX;
+      var y = (e.clientY - rect.top) * scaleY;
+      var cellSize = canvas.width / GRID_SIZE;
+      var c = Math.floor(x / cellSize);
+      var r = Math.floor(y / cellSize);
+      onPointerAction(r, c);
+    }
+
+    canvas.addEventListener('click', handleCanvasClick);
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', function(e) {
+      initAudio();
+      if (e.code === 'KeyR') {
+        // Rotate current placement tool
+        var nextIdx = (DIRS.indexOf(selectedPlacementDir) + 1) % DIRS.length;
+        selectedPlacementDir = DIRS[nextIdx];
+        updateRotateButtonUI();
+        playRotateSound();
+      } else if (e.code === 'KeyX' || e.code === 'Delete') {
+        selectToolByName('demolish');
+      } else if (e.code === 'KeyU' || (e.ctrlKey && e.code === 'KeyZ')) {
+        executeUndo();
+      } else if (e.code === 'Space') {
+        e.preventDefault();
+        isSimRunning = !isSimRunning;
+        updateSimButtonUI();
+      } else if (e.code === 'Digit1') {
+        selectToolByName('conveyor');
+      } else if (e.code === 'Digit2') {
+        selectToolByName('splitter');
+      } else if (e.code === 'Digit3') {
+        selectToolByName('merger');
+      } else if (e.code === 'Digit4') {
+        selectToolByName('sorter');
+      }
+    });
+
+    // Toolbar Tool Selection
+    var toolButtons = document.querySelectorAll('.tool-btn[data-tool]');
+    toolButtons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var t = btn.getAttribute('data-tool');
+        selectToolByName(t);
+      });
+    });
+
+    // Rotate Button
+    document.getElementById('btn-rotate-dir').addEventListener('click', function() {
+      var nextIdx = (DIRS.indexOf(selectedPlacementDir) + 1) % DIRS.length;
+      selectedPlacementDir = DIRS[nextIdx];
+      updateRotateButtonUI();
+      playRotateSound();
+    });
+
+    // Simulation Controls
+    btnSimPlay.addEventListener('click', function() {
+      initAudio();
+      isSimRunning = !isSimRunning;
+      updateSimButtonUI();
+    });
+
+    btnSimSpeed.addEventListener('click', function() {
+      simSpeed = (simSpeed % 3) + 1;
+      btnSimSpeed.textContent = simSpeed + 'x';
+    });
+
+    document.getElementById('btn-sim-undo').addEventListener('click', function() {
+      executeUndo();
+    });
+
+    document.getElementById('btn-sim-reset').addEventListener('click', function() {
+      loadLevel(currentLevelIdx);
+    });
+
+    // HUD Navigation
+    document.getElementById('btn-hud-menu').addEventListener('click', function() {
+      overlayMenu.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-hud-levels').addEventListener('click', function() {
+      renderLevelGridCards();
+      overlayLevels.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-close-levels').addEventListener('click', function() {
+      overlayLevels.classList.add('hidden');
+    });
+
+    // Sound toggle
+    var btnSound = document.getElementById('btn-hud-sound');
+    var iconOn = document.getElementById('icon-sound-on');
+    var iconOff = document.getElementById('icon-sound-off');
+
+    function updateSoundIcons() {
+      if (soundMuted) {
+        iconOn.style.display = 'none';
+        iconOff.style.display = 'block';
+      } else {
+        iconOn.style.display = 'block';
+        iconOff.style.display = 'none';
+      }
+    }
+    updateSoundIcons();
+
+    btnSound.addEventListener('click', function() {
+      soundMuted = !soundMuted;
+      try {
+        localStorage.setItem('dk:beltbound-muted', String(soundMuted));
+      } catch(e) {}
+      updateSoundIcons();
+      if (!soundMuted) {
+        initAudio();
+        playPlaceSound();
+      }
+    });
+
+    // Menu Actions
+    document.getElementById('btn-menu-campaign').addEventListener('click', function() {
+      renderLevelGridCards();
+      overlayLevels.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-menu-endless').addEventListener('click', function() {
+      loadEndlessMode();
+    });
+
+    document.getElementById('btn-menu-help').addEventListener('click', function() {
+      overlayHelp.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-help').addEventListener('click', function() {
+      overlayHelp.classList.add('hidden');
+    });
+
+    // Level Complete Actions
+    document.getElementById('btn-comp-next').addEventListener('click', function() {
+      overlayComplete.classList.add('hidden');
+      if (currentLevelIdx < CAMPAIGN_LEVELS.length - 1) {
+        loadLevel(currentLevelIdx + 1);
+      } else {
+        renderLevelGridCards();
+        overlayLevels.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btn-comp-replay').addEventListener('click', function() {
+      overlayComplete.classList.add('hidden');
+      loadLevel(currentLevelIdx);
+    });
+
+    document.getElementById('btn-comp-menu').addEventListener('click', function() {
+      overlayComplete.classList.add('hidden');
+      overlayMenu.classList.remove('hidden');
+    });
+
+    // DevKitra postMessage API
+    window.addEventListener('message', function(e) {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'dk:pause') {
+        isSimRunning = false;
+        updateSimButtonUI();
+      } else if (e.data.type === 'dk:resume') {
+        isSimRunning = true;
+        updateSimButtonUI();
+      } else if (e.data.type === 'dk:restart') {
+        loadLevel(currentLevelIdx);
+      }
+    });
+
+    // Responsive Canvas Resizing
+    function resizeCanvas() {
+      var wrap = document.getElementById('grid-wrap');
+      var sz = Math.min(wrap.clientWidth, wrap.clientHeight) - 16;
+      if (sz > 120) {
+        canvas.style.width = sz + 'px';
+        canvas.style.height = sz + 'px';
+      }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+  }
+
+  function selectToolByName(name) {
+    selectedTool = name;
+    var toolButtons = document.querySelectorAll('.tool-btn[data-tool]');
+    toolButtons.forEach(function(b) {
+      b.classList.toggle('active', b.getAttribute('data-tool') === name);
+    });
+  }
+
+  function updateRotateButtonUI() {
+    var map = { E: 'East →', S: 'South ↓', W: 'West ←', N: 'North ↑' };
+    rotateDirLabel.textContent = map[selectedPlacementDir] || 'East →';
+  }
+
+  function renderLevelGridCards() {
+    levelGridEl.innerHTML = '';
+    var unlockedCount = parseInt(localStorage.getItem('dk:beltbound-unlocked') || '0', 10);
+
+    CAMPAIGN_LEVELS.forEach(function(lvl, i) {
+      var card = document.createElement('div');
+      card.className = 'lvl-card';
+      if (i > unlockedCount) card.classList.add('locked');
+      if (i === currentLevelIdx) card.classList.add('active');
+
+      var starsEarned = parseInt(localStorage.getItem('dk:beltbound-lvl-' + i) || '0', 10);
+      var starsStr = starsEarned > 0 ? ('★'.repeat(starsEarned) + '☆'.repeat(3 - starsEarned)) : '···';
+
+      card.innerHTML = '<span class="lvl-num">' + lvl.id + '</span><span class="lvl-stars">' + starsStr + '</span>';
+
+      if (i <= unlockedCount) {
+        card.addEventListener('click', function() {
+          loadLevel(i);
+        });
+      }
+      levelGridEl.appendChild(card);
+    });
+  }
+
+  // ---------------- INITIAL STARTUP ----------------
+  initListeners();
+  loadLevel(0);
+  requestAnimationFrame(render);
+
+})();
+</script>
+</body>
+</html>
+

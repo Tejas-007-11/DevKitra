@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bb-bg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="60%" stop-color="#0b0f19"/>
+      <stop offset="100%" stop-color="#060911"/>
+    </radialGradient>
+    <linearGradient id="belt-steel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="neon-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="pkg-red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+    <linearGradient id="pkg-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="pkg-yellow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="pkg-green" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="400" fill="url(#bb-bg)"/>
+
+  <!-- Blueprint Factory Grid -->
+  <g stroke="rgba(255, 255, 255, 0.04)" stroke-width="1.5">
+    <line x1="60" y1="0" x2="60" y2="400"/>
+    <line x1="120" y1="0" x2="120" y2="400"/>
+    <line x1="180" y1="0" x2="180" y2="400"/>
+    <line x1="240" y1="0" x2="240" y2="400"/>
+    <line x1="300" y1="0" x2="300" y2="400"/>
+    <line x1="360" y1="0" x2="360" y2="400"/>
+    <line x1="420" y1="0" x2="420" y2="400"/>
+    <line x1="480" y1="0" x2="480" y2="400"/>
+    <line x1="540" y1="0" x2="540" y2="400"/>
+    <line x1="0" y1="60" x2="600" y2="60"/>
+    <line x1="0" y1="120" x2="600" y2="120"/>
+    <line x1="0" y1="180" x2="600" y2="180"/>
+    <line x1="0" y1="240" x2="600" y2="240"/>
+    <line x1="0" y1="300" x2="600" y2="300"/>
+    <line x1="0" y1="360" x2="600" y2="360"/>
+  </g>
+
+  <!-- Conveyor System Route 1 (Top Horizontal to Splitter) -->
+  <g fill="#1e293b" stroke="#475569" stroke-width="2">
+    <!-- Generator Unit Left -->
+    <rect x="70" y="130" width="60" height="60" rx="8" fill="#0f172a" stroke="#06b6d4" stroke-width="3"/>
+    <circle cx="100" cy="160" r="14" fill="#06b6d4" opacity="0.25"/>
+    <polygon points="94,152 108,160 94,168" fill="#38bdf8"/>
+
+    <!-- Horizontal Conveyor Belt -->
+    <rect x="130" y="136" width="160" height="48" rx="4" fill="url(#belt-steel)"/>
+    <!-- Belt Chevrons -->
+    <path d="M 160 148 L 175 160 L 160 172 M 210 148 L 225 160 L 210 172 M 260 148 L 275 160 L 260 172" 
+          fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Splitter Machine Center -->
+    <rect x="290" y="130" width="60" height="60" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
+    <path d="M 305 160 L 325 160 M 325 160 L 335 146 M 325 160 L 335 174" 
+          fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Upper Branch to Red Dock -->
+    <path d="M 350 146 L 430 146" fill="none" stroke="url(#belt-steel)" stroke-width="36" stroke-linecap="round"/>
+    <!-- Lower Branch to Blue Dock -->
+    <path d="M 350 174 L 380 174 L 380 230 L 430 230" fill="none" stroke="url(#belt-steel)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Red Delivery Terminal -->
+    <rect x="430" y="116" width="60" height="60" rx="8" fill="#0f172a" stroke="#f43f5e" stroke-width="3"/>
+    <rect x="446" y="132" width="28" height="28" rx="4" fill="#f43f5e" opacity="0.3"/>
+    <rect x="452" y="138" width="16" height="16" rx="2" fill="#f43f5e"/>
+
+    <!-- Blue Delivery Terminal -->
+    <rect x="430" y="200" width="60" height="60" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="3"/>
+    <circle cx="460" cy="230" r="14" fill="#3b82f6" opacity="0.3"/>
+    <circle cx="460" cy="230" r="8" fill="#3b82f6"/>
+  </g>
+
+  <!-- Transporting Packages on Belts -->
+  <!-- Red Package (Square) on upper branch -->
+  <g transform="translate(390, 146)">
+    <rect x="-14" y="-14" width="28" height="28" rx="5" fill="url(#pkg-red)" stroke="#ffffff" stroke-width="2"/>
+    <rect x="-6" y="-6" width="12" height="12" fill="#ffffff" opacity="0.9"/>
+  </g>
+
+  <!-- Blue Package (Circle) on lower branch -->
+  <g transform="translate(380, 210)">
+    <circle cx="0" cy="0" r="14" fill="url(#pkg-blue)" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="0" cy="0" r="6" fill="#ffffff" opacity="0.9"/>
+  </g>
+
+  <!-- Yellow Package (Diamond) on main belt -->
+  <g transform="translate(190, 160) rotate(45)">
+    <rect x="-13" y="-13" width="26" height="26" rx="4" fill="url(#pkg-yellow)" stroke="#ffffff" stroke-width="2"/>
+    <rect x="-5" y="-5" width="10" height="10" fill="#ffffff" opacity="0.9"/>
+  </g>
+
+  <!-- Green Package (Triangle) on generator exit -->
+  <g transform="translate(136, 160)">
+    <polygon points="0,-14 14,12 -14,12" fill="url(#pkg-green)" stroke="#ffffff" stroke-width="2"/>
+  </g>
+
+  <!-- Decorative Status HUD Indicator -->
+  <rect x="180" y="295" width="240" height="28" rx="14" fill="rgba(6, 182, 212, 0.12)" stroke="#06b6d4" stroke-width="1.5"/>
+  <text x="300" y="314" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="11" fill="#38bdf8" letter-spacing="3">FACTORY AUTOMATION</text>
+
+  <!-- Typography Title -->
+  <text x="300" y="360" text-anchor="middle" font-family="'Segoe UI', -apple-system, sans-serif" font-weight="900" font-size="34" fill="#ffffff" letter-spacing="6">
+    BELT<tspan fill="#06b6d4">BOUND</tspan>
+  </text>
+</svg>
+

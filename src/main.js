@@ -128,6 +128,7 @@ function matchRoute(path) {
     if (slug === 'speed-dash') return { page: 'redirect', target: '/game/road-hopper' };
     if (slug === 'graviton') return { page: 'redirect', target: '/game/sky-jump' };
     if (slug === 'archery' || slug === 'void-strike') return { page: 'redirect', target: '/game/loopbreak' };
+    if (slug === 'driftlab') return { page: 'redirect', target: '/game/beltbound' };
     return { page: 'game', slug: slug };
   }
   return { page: 'not-found' };
