@@ -2,273 +2,716 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>Memory Match — DevKitra Gaming</title>
-<meta name="description" content="Flip cards and find matching pairs in as few moves as possible. Play Memory Match with 3 difficulty tiers." />
-<link rel="canonical" href="https://devkitra.in/game/memory-match" />
 <style>
-* { box-sizing: border-box; }
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
 :root {
-  --ink: #07090e;
-  --panel: #0d121c;
-  --line: #1c2638;
-  --text: #e8edf5;
-  --muted: #7e8b9f;
+  --bg: #090d16;
+  --panel: #111827;
+  --line: #1f293d;
   --accent: #ec4899;
   --accent-glow: rgba(236, 72, 153, 0.35);
   --matched: #10b981;
+  --gold: #f59e0b;
 }
-html, body { margin: 0; height: 100%; background: var(--ink); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 1rem; }
-header { width: 100%; max-width: 440px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0 0.8rem; flex-wrap: wrap; }
-h1 { margin: 0; font-size: 1.15rem; letter-spacing: -0.02em; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; }
-h1::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-a.back { color: var(--muted); text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 6px; border: 1px solid var(--line); transition: all 0.15s ease; }
-a.back:hover { color: var(--text); border-color: var(--accent); background: rgba(236, 72, 153, 0.08); }
-#wrap { max-width: 440px; width: 100%; border-radius: 14px; padding: 0.75rem; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6); position: relative; }
-.diff-bar { display: flex; gap: 4px; margin-bottom: 0.6rem; background: #080c14; padding: 4px; border-radius: 8px; border: 1px solid var(--line); }
-.diff-btn { flex: 1; padding: 4px 6px; font-size: 11px; font-weight: 800; color: var(--muted); border-radius: 6px; border: none; background: transparent; cursor: pointer; text-transform: uppercase; transition: all 0.12s; }
-.diff-btn.active { color: #fff; background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
-.hud { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem; font-variant-numeric: tabular-nums; }
-.hud b { color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1rem; }
-.streak-banner { display: none; font-size: 0.75rem; font-weight: 800; color: #f59e0b; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase; animation: pulse 0.7s infinite; }
-@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } }
-.board { display: grid; gap: 8px; margin: 0 auto; max-width: 400px; touch-action: none; perspective: 1000px; }
-.board.cols-4 { grid-template-columns: repeat(4, 1fr); }
-.board.cols-6 { grid-template-columns: repeat(6, 1fr); }
-.card { position: relative; aspect-ratio: 1; border-radius: 8px; cursor: pointer; transform-style: preserve-3d; transition: transform 0.26s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.card.flipped { transform: rotateY(180deg); }
-.card.matched { transform: rotateY(180deg); opacity: 0.65; cursor: default; }
-.card .face { position: absolute; inset: 0; border-radius: 8px; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; }
-.card .face.front { background: #0c121d; border: 1px solid var(--line); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); }
-.card .face.front::after { content: '◆'; color: rgba(255, 255, 255, 0.15); font-size: 1.1rem; }
-.card .face.back { background: #15102a; border: 1px solid var(--accent); box-shadow: 0 0 16px var(--accent-glow); transform: rotateY(180deg); }
-.card.matched .face.back { border-color: var(--matched); box-shadow: 0 0 16px rgba(16, 185, 129, 0.4); }
-.symbol { width: 50%; height: 50%; border-radius: 50%; border: 4px solid; }
-.symbol.s1 { border-radius: 50%; border-color: #00f0ff; }
-.symbol.s2 { border-radius: 0; border-color: #f59e0b; }
-.symbol.s3 { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 22px solid #ff3366; }
-.symbol.s4 { width: 34%; height: 34%; transform: rotate(45deg); border: 4px solid #a855f7; }
-.symbol.s5 { width: 10px; height: 26px; background: #10b981; position: relative; }
-.symbol.s5::after { content: ''; position: absolute; inset: 0; background: #10b981; transform: rotate(90deg); }
-.symbol.s6 { width: 30%; height: 30%; border: 4px solid #38bdf8; border-radius: 50%; }
-.symbol.s7 { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid #fb923c; }
-.symbol.s8 { width: 26%; height: 26%; border: 3px solid #ec4899; border-radius: 3px; }
-.symbol.s9 { width: 36%; height: 14%; border: 3px solid #22d3ee; }
-.symbol.s10 { width: 14%; height: 36%; border: 3px solid #f43f5e; }
-.symbol.s11 { border-radius: 50%; border: 3px dashed #eab308; }
-.symbol.s12 { border-radius: 3px; border: 3px dotted #818cf8; }
-.overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; background: rgba(7, 9, 14, 0.94); backdrop-filter: blur(4px); border-radius: 14px; z-index: 10; text-align: center; padding: 1.5rem; }
-.overlay h2 { margin: 0 0 0.4rem; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.03em; color: var(--text); }
-.overlay p { margin: 0 0 1.25rem; color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
-.stars { font-size: 1.8rem; color: #f59e0b; margin-bottom: 0.5rem; letter-spacing: 0.2rem; }
-.btn { border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 8px; padding: 0.65rem 1.4rem; font-weight: 800; cursor: pointer; font-size: 0.95rem; box-shadow: 0 0 20px var(--accent-glow); transition: all 0.15s ease; text-transform: uppercase; }
-.btn:hover { background: #f472b6; transform: translateY(-1px); }
-@media (max-width: 440px) { header { padding: 0.4rem 0 0.6rem; } .board { gap: 5px; } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#game-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+}
+.hud-bar {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.diff-bar {
+  display: flex;
+  gap: 6px;
+  background: #111827;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+.diff-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #94a3b8;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.diff-btn.active {
+  color: #ffffff;
+  background: #2563eb;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4);
+}
+.hud-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hud-chip {
+  background: #111827;
+  border: 1px solid var(--line);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #f8fafc;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.hud-chip b {
+  color: #38bdf8;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.combo-chip {
+  display: none;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #facc15;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  animation: pulse 0.7s infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+.board-container {
+  flex: 1;
+  width: 100%;
+  max-width: 600px;
+  max-height: 580px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.board {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  max-width: 540px;
+  max-height: 520px;
+  perspective: 1000px;
+}
+.board.grid-4x2 { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); }
+.board.grid-4x4 { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); }
+.board.grid-6x4 { grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr); }
+
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.card:hover:not(.flipped):not(.matched) {
+  transform: translateY(-2px) scale(1.02);
+}
+.card.flipped {
+  transform: rotateY(180deg);
+}
+
+/* Post-Match Celebration Animation */
+.card.matched {
+  transform: rotateY(180deg);
+  animation: matchPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  cursor: default;
+}
+@keyframes matchPop {
+  0% { transform: rotateY(180deg) scale(1); }
+  50% { transform: rotateY(180deg) scale(1.12); box-shadow: 0 0 24px rgba(16, 185, 129, 0.8); }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+
+.card .face {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Front Face (Hidden Card Backing) */
+.card .face.front {
+  background: linear-gradient(135deg, #131d2e 0%, #0d1522 100%);
+  border: 2px solid #233149;
+  transition: border-color 0.2s;
+}
+.card:hover .face.front {
+  border-color: #38bdf8;
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.2);
+}
+.card .face.front::after {
+  content: '✦';
+  font-size: 22px;
+  color: rgba(56, 189, 248, 0.25);
+  transition: color 0.2s, transform 0.2s;
+}
+.card:hover .face.front::after {
+  color: rgba(56, 189, 248, 0.6);
+  transform: scale(1.2);
+}
+
+/* Back Face (Revealed Symbol) */
+.card .face.back {
+  background: linear-gradient(135deg, #192438 0%, #111a29 100%);
+  border: 2px solid #38bdf8;
+  transform: rotateY(180deg);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+}
+
+/* Matched Card Appearance - Radiant, glowing, beautiful */
+.card.matched .face.back {
+  background: linear-gradient(135deg, #0d281e 0%, #061f16 100%);
+  border-color: #10b981;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.5), inset 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+/* Solved checkmark badge */
+.matched-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes badgePop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+.icon-svg {
+  width: 52%;
+  height: 52%;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+  transition: transform 0.2s ease;
+}
+.card.matched .icon-svg {
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+/* Sparkle particles canvas */
+#fx-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 25;
+}
+
+/* Floating callout */
+.callout {
+  position: absolute;
+  font-size: 16px;
+  font-weight: 900;
+  color: #10b981;
+  pointer-events: none;
+  z-index: 30;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+  animation: floatFade 0.7s ease-out forwards;
+}
+@keyframes floatFade {
+  0% { opacity: 0; transform: translateY(0) scale(0.8); }
+  30% { opacity: 1; transform: translateY(-10px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(1); }
+}
+
+/* Overlay Modal */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(9, 13, 22, 0.88);
+  backdrop-filter: blur(8px);
+  z-index: 40;
+  padding: 24px;
+}
+.card-modal {
+  background: #111827;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 20px;
+  padding: 32px 28px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.stars {
+  font-size: 32px;
+  color: #f59e0b;
+  margin-bottom: 8px;
+  letter-spacing: 4px;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+}
+.card-modal h2 {
+  font-size: 24px;
+  font-weight: 900;
+  color: #38bdf8;
+  margin-bottom: 6px;
+}
+.card-modal p {
+  color: #94a3b8;
+  font-size: 14px;
+  margin-bottom: 22px;
+}
+.btn {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+  transition: all 0.15s ease;
+  width: 100%;
+}
+.btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+}
 </style>
 </head>
 <body>
-<header>
-  <h1>Memory Match</h1>
-  <a class="back" href="/game/memory-match">← Library</a>
-</header>
-<div id="wrap">
-  <div class="diff-bar">
-    <button class="diff-btn" data-cards="8">Casual (8)</button>
-    <button class="diff-btn active" data-cards="16">Classic (16)</button>
-    <button class="diff-btn" data-cards="24">Master (24)</button>
+
+<div id="game-wrap">
+  <div class="hud-bar">
+    <div class="diff-bar">
+      <button class="diff-btn" data-cards="8">Casual (8)</button>
+      <button class="diff-btn active" data-cards="16">Classic (16)</button>
+      <button class="diff-btn" data-cards="24">Master (24)</button>
+    </div>
+    <div class="hud-group">
+      <span class="combo-chip" id="combo-chip">Combo x2</span>
+      <div class="hud-chip">Moves: <b id="moves-display">0</b></div>
+      <div class="hud-chip">Best: <b id="best-display">0</b></div>
+    </div>
   </div>
-  <div class="hud">
-    <div>Moves <b id="moves">0</b></div>
-    <span class="streak-banner" id="streak-banner">2x Combo!</span>
-    <div>Best <b id="best">0</b></div>
+
+  <div class="board-container" id="board-container">
+    <canvas id="fx-canvas"></canvas>
+    <div class="board grid-4x4" id="board"></div>
   </div>
-  <div class="board cols-4" id="board"></div>
+
   <div id="won" class="overlay">
-    <div class="stars" id="star-rating">★★★</div>
-    <h2>Memory Master!</h2>
-    <p>Completed in <b id="final-moves" style="color:var(--accent);">0</b> moves · Best: <b id="final-best">0</b></p>
-    <button class="btn" id="restart-btn">Play Again</button>
+    <div class="card-modal">
+      <div class="stars" id="star-rating">★★★</div>
+      <h2>MEMORY MASTER!</h2>
+      <p>Solved in <b id="final-moves" style="color:#38bdf8;">0</b> moves! Best: <b id="final-best">0</b></p>
+      <button class="btn" id="restart-btn">PLAY AGAIN</button>
+    </div>
   </div>
 </div>
+
 <script>
-let audioCtx = null;
-function playSound(type) {
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    const now = audioCtx.currentTime;
-    if (type === 'flip') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(420, now);
-      gain.gain.setValueAtTime(0.06, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.05);
-      osc.start(now); osc.stop(now + 0.05);
-    } else if (type === 'match') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(520, now);
-      osc.frequency.exponentialRampToValueAtTime(1040, now + 0.18);
-      gain.gain.setValueAtTime(0.18, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.18);
-      osc.start(now); osc.stop(now + 0.18);
-    } else if (type === 'miss') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(220, now);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.12);
-      osc.start(now); osc.stop(now + 0.12);
+(function() {
+  var audioCtx = null;
+  function getAudio() {
+    if (!audioCtx) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch(e) {}
     }
-  } catch (_) {}
-}
-
-const boardEl = document.getElementById('board');
-const movesEl = document.getElementById('moves');
-const bestEl = document.getElementById('best');
-const wonEl = document.getElementById('won');
-const finalMovesEl = document.getElementById('final-moves');
-const finalBestEl = document.getElementById('final-best');
-const streakEl = document.getElementById('streak-banner');
-const starRatingEl = document.getElementById('star-rating');
-const diffBtns = document.querySelectorAll('.diff-btn');
-const wrapEl = document.getElementById('wrap');
-
-let cardCount = 16;
-let best = Number(localStorage.getItem('dk:memory-best') || 0);
-bestEl.textContent = best;
-let moves = 0, first = null, lock = false, matched = 0, streak = 0;
-
-const ALL_SYMBOLS = [
-  { kind: 's1' }, { kind: 's2' }, { kind: 's3' }, { kind: 's4' },
-  { kind: 's5' }, { kind: 's6' }, { kind: 's7' }, { kind: 's8' },
-  { kind: 's9' }, { kind: 's10' }, { kind: 's11' }, { kind: 's12' },
-];
-
-const embed = new URLSearchParams(window.location.search).has('embed');
-if (embed) { document.querySelector('header')?.remove(); wrapEl.style.padding = '0.5rem'; }
-
-function post(payload) {
-  if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*');
-}
-window.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'dk:restart') resetGame();
-});
-
-diffBtns.forEach((btn) => {
-  btn.addEventListener('click', () => {
-    diffBtns.forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    cardCount = Number(btn.dataset.cards);
-    boardEl.className = cardCount === 24 ? 'board cols-6' : 'board cols-4';
-    resetGame();
-  });
-});
-
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-}
-
-function resetGame() {
-  moves = 0;
-  matched = 0;
-  first = null;
-  lock = false;
-  streak = 0;
-  movesEl.textContent = moves;
-  streakEl.style.display = 'none';
-  wonEl.style.display = 'none';
-  boardEl.innerHTML = '';
-
-  const pairsNeeded = cardCount / 2;
-  const pool = ALL_SYMBOLS.slice(0, pairsNeeded);
-  const ids = shuffle([...pool, ...pool]);
-
-  ids.forEach((symbol, index) => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.dataset.kind = symbol.kind;
-    card.dataset.index = index;
-    card.innerHTML = `
-      <div class="face front"></div>
-      <div class="face back"><div class="symbol ${symbol.kind}"></div></div>
-    `;
-    card.addEventListener('pointerdown', () => flip(card));
-    boardEl.appendChild(card);
-  });
-  post({ type: 'dk:ready', id: 'memory-match', title: 'Memory Match' });
-}
-
-function flip(card) {
-  if (lock || card === first || card.classList.contains('matched') || card.classList.contains('flipped')) return;
-  card.classList.add('flipped');
-  playSound('flip');
-
-  if (!first) {
-    first = card;
-    return;
+    return audioCtx;
   }
 
-  lock = true;
-  moves++;
-  movesEl.textContent = moves;
+  function playTone(freq, type, dur, gainVal, endFreq) {
+    var actx = getAudio();
+    if (!actx) return;
+    try {
+      var osc = actx.createOscillator();
+      var gain = actx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, actx.currentTime);
+      if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, actx.currentTime + dur);
+      gain.gain.setValueAtTime(gainVal || 0.08, actx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(actx.destination);
+      osc.start();
+      osc.stop(actx.currentTime + dur);
+    } catch(e) {}
+  }
 
-  if (first.dataset.kind === card.dataset.kind) {
-    streak++;
-    if (streak > 1) {
-      streakEl.textContent = `Combo x${streak}!`;
-      streakEl.style.display = 'inline-block';
+  function sfxFlip() { playTone(340, 'sine', 0.05, 0.06, 520); }
+  function sfxMatch() {
+    playTone(523.25, 'sine', 0.12, 0.1, 784);
+    setTimeout(function() {
+      playTone(1046.5, 'sine', 0.22, 0.12, 1318.5);
+    }, 70);
+  }
+  function sfxMiss() {
+    playTone(240, 'triangle', 0.12, 0.08, 160);
+  }
+
+  // 12 High-Definition SVGs for matching symbols
+  var SYMBOLS = [
+    {
+      id: 'gem',
+      color: '#06b6d4',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M11 3 8 9l4 12 4-12-3-6"/><path d="M2 9h20"/></svg>'
+    },
+    {
+      id: 'star',
+      color: '#facc15',
+      svg: '<svg viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
+    },
+    {
+      id: 'rocket',
+      color: '#f43f5e',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>'
+    },
+    {
+      id: 'crown',
+      color: '#f59e0b',
+      svg: '<svg viewBox="0 0 24 24" fill="#f59e0b" stroke="#d97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg>'
+    },
+    {
+      id: 'heart',
+      color: '#ec4899',
+      svg: '<svg viewBox="0 0 24 24" fill="#ec4899" stroke="#db2777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>'
+    },
+    {
+      id: 'bolt',
+      color: '#38bdf8',
+      svg: '<svg viewBox="0 0 24 24" fill="#38bdf8" stroke="#0284c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>'
+    },
+    {
+      id: 'planet',
+      color: '#a855f7',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><circle cx="12" cy="12" r="7"/><path d="M2 12c2.5-4 10-6 17-2s3 8-.5 10"/></svg>'
+    },
+    {
+      id: 'shield',
+      color: '#10b981',
+      svg: '<svg viewBox="0 0 24 24" fill="#10b981" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+    },
+    {
+      id: 'flame',
+      color: '#ea580c',
+      svg: '<svg viewBox="0 0 24 24" fill="#ea580c" stroke="#c2410c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>'
+    },
+    {
+      id: 'gamepad',
+      color: '#818cf8',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/><rect width="20" height="12" x="2" y="6" rx="6"/></svg>'
+    },
+    {
+      id: 'trophy',
+      color: '#fbbf24',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>'
+    },
+    {
+      id: 'compass',
+      color: '#2dd4bf',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-svg"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>'
     }
-    playSound('match');
-    first.classList.add('matched');
-    card.classList.add('matched');
-    matched += 2;
-    first = null;
-    lock = false;
-    if (matched === cardCount) endGame();
-    return;
+  ];
+
+  var boardEl = document.getElementById('board');
+  var containerEl = document.getElementById('board-container');
+  var movesDisplay = document.getElementById('moves-display');
+  var bestDisplay = document.getElementById('best-display');
+  var comboChip = document.getElementById('combo-chip');
+  var wonEl = document.getElementById('won');
+  var finalMoves = document.getElementById('final-moves');
+  var finalBest = document.getElementById('final-best');
+  var starRating = document.getElementById('star-rating');
+  var restartBtn = document.getElementById('restart-btn');
+  var diffBtns = document.querySelectorAll('.diff-btn');
+
+  var fxCanvas = document.getElementById('fx-canvas');
+  var fxCtx = fxCanvas.getContext('2d');
+
+  function resizeFX() {
+    var rect = containerEl.getBoundingClientRect();
+    fxCanvas.width = rect.width;
+    fxCanvas.height = rect.height;
+  }
+  window.addEventListener('resize', resizeFX);
+
+  var cardCount = 16;
+  var best = Number(localStorage.getItem('dk:memory-best') || 0);
+  bestDisplay.textContent = best;
+
+  var moves = 0;
+  var firstCard = null;
+  var lockBoard = false;
+  var matchedPairs = 0;
+  var streak = 0;
+  var particles = [];
+
+  diffBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      diffBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      cardCount = Number(btn.dataset.cards);
+      resetGame();
+    });
+  });
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var temp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = temp;
+    }
+    return arr;
   }
 
-  streak = 0;
-  streakEl.style.display = 'none';
-  playSound('miss');
-
-  setTimeout(() => {
-    first.classList.remove('flipped');
-    card.classList.remove('flipped');
-    first = null;
-    lock = false;
-  }, 650);
-}
-
-function endGame() {
-  if (!best || moves < best) {
-    best = moves;
-    try { localStorage.setItem('dk:memory-best', String(best)); } catch (_) {}
-    bestEl.textContent = best;
+  function spawnParticles(x, y, color) {
+    for (var i = 0; i < 20; i++) {
+      var ang = Math.random() * Math.PI * 2;
+      var speed = Math.random() * 4 + 2;
+      particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(ang) * speed,
+        vy: Math.sin(ang) * speed,
+        size: Math.random() * 4 + 2,
+        color: color || '#10b981',
+        life: 1
+      });
+    }
   }
-  finalMovesEl.textContent = moves;
-  finalBestEl.textContent = best;
 
-  const target = cardCount;
-  const stars = moves <= target * 0.9 ? '★★★' : moves <= target * 1.4 ? '★★☆' : '★☆☆';
-  starRatingEl.textContent = stars;
+  function spawnCallout(text, x, y) {
+    var el = document.createElement('div');
+    el.className = 'callout';
+    el.textContent = text;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    containerEl.appendChild(el);
+    setTimeout(function() { el.remove(); }, 700);
+  }
 
-  wonEl.style.display = 'flex';
-  post({ type: 'dk:gameover', score: moves });
-}
+  function resetGame() {
+    moves = 0;
+    matchedPairs = 0;
+    firstCard = null;
+    lockBoard = false;
+    streak = 0;
+    particles = [];
 
-document.getElementById('restart-btn').addEventListener('click', resetGame);
+    movesDisplay.textContent = '0';
+    comboChip.style.display = 'none';
+    wonEl.style.display = 'none';
+    boardEl.innerHTML = '';
 
-resetGame();
-post({ type: 'dk:ready', id: 'memory-match', title: 'Memory Match' });
+    if (cardCount === 8) boardEl.className = 'board grid-4x2';
+    else if (cardCount === 24) boardEl.className = 'board grid-6x4';
+    else boardEl.className = 'board grid-4x4';
+
+    var pairsNeeded = cardCount / 2;
+    var pool = SYMBOLS.slice(0, pairsNeeded);
+    var deck = shuffle(pool.concat(pool));
+
+    deck.forEach(function(item, idx) {
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.id = item.id;
+      card.dataset.color = item.color;
+      card.innerHTML = `
+        <div class="face front"></div>
+        <div class="face back">
+          ${item.svg}
+        </div>
+      `;
+      card.addEventListener('pointerdown', function() { flipCard(card); });
+      boardEl.appendChild(card);
+    });
+
+    resizeFX();
+  }
+
+  function flipCard(card) {
+    if (lockBoard || card === firstCard || card.classList.contains('matched') || card.classList.contains('flipped')) return;
+    getAudio();
+
+    card.classList.add('flipped');
+    sfxFlip();
+
+    if (!firstCard) {
+      firstCard = card;
+      return;
+    }
+
+    lockBoard = true;
+    moves++;
+    movesDisplay.textContent = moves;
+
+    if (firstCard.dataset.id === card.dataset.id) {
+      // MATCH FOUND!
+      streak++;
+      sfxMatch();
+
+      if (streak > 1) {
+        comboChip.style.display = 'inline-block';
+        comboChip.textContent = `Combo x${streak}!`;
+      }
+
+      // Add celebration class + badge
+      firstCard.classList.add('matched');
+      card.classList.add('matched');
+
+      var badge1 = document.createElement('div');
+      badge1.className = 'matched-badge';
+      badge1.textContent = '✓';
+      firstCard.querySelector('.face.back').appendChild(badge1);
+
+      var badge2 = document.createElement('div');
+      badge2.className = 'matched-badge';
+      badge2.textContent = '✓';
+      card.querySelector('.face.back').appendChild(badge2);
+
+      // Particle explosion from card center
+      var rect1 = firstCard.getBoundingClientRect();
+      var rect2 = card.getBoundingClientRect();
+      var cRect = containerEl.getBoundingClientRect();
+
+      var cx1 = rect1.left - cRect.left + rect1.width / 2;
+      var cy1 = rect1.top - cRect.top + rect1.height / 2;
+      var cx2 = rect2.left - cRect.left + rect2.width / 2;
+      var cy2 = rect2.top - cRect.top + rect2.height / 2;
+
+      spawnParticles(cx1, cy1, firstCard.dataset.color);
+      spawnParticles(cx2, cy2, card.dataset.color);
+      spawnCallout(streak > 1 ? `COMBO x${streak}!` : 'MATCH! ★', (cx1 + cx2) / 2 - 30, (cy1 + cy2) / 2);
+
+      matchedPairs += 2;
+      firstCard = null;
+      lockBoard = false;
+
+      if (matchedPairs === cardCount) {
+        setTimeout(endGame, 500);
+      }
+      return;
+    }
+
+    // Miss
+    streak = 0;
+    comboChip.style.display = 'none';
+    sfxMiss();
+
+    setTimeout(function() {
+      firstCard.classList.remove('flipped');
+      card.classList.remove('flipped');
+      firstCard = null;
+      lockBoard = false;
+    }, 650);
+  }
+
+  function endGame() {
+    if (!best || moves < best) {
+      best = moves;
+      try { localStorage.setItem('dk:memory-best', String(best)); } catch(e) {}
+      bestDisplay.textContent = best;
+    }
+    finalMoves.textContent = moves;
+    finalBest.textContent = best;
+
+    var stars = moves <= cardCount ? '★★★' : moves <= cardCount * 1.5 ? '★★☆' : '★☆☆';
+    starRating.textContent = stars;
+    wonEl.style.display = 'flex';
+
+    try {
+      window.parent.postMessage({ type: 'dk:gameover', score: moves }, '*');
+    } catch(e) {}
+  }
+
+  restartBtn.addEventListener('click', resetGame);
+
+  // DevKitra bus
+  window.addEventListener('message', function(e) {
+    var data = e.data || {};
+    if (data.type === 'dk:restart') resetGame();
+    else if (data.type === 'dk:resize') resizeFX();
+  });
+
+  // Particle render loop
+  function loop() {
+    fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+    for (var i = particles.length - 1; i >= 0; i--) {
+      var p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 0.035;
+
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+
+      fxCtx.save();
+      fxCtx.globalAlpha = p.life;
+      fxCtx.fillStyle = p.color;
+      fxCtx.beginPath();
+      fxCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      fxCtx.fill();
+      fxCtx.restore();
+    }
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  resetGame();
+})();
 </script>
 </body>
 </html>

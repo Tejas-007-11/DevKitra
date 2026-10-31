@@ -733,8 +733,10 @@
       wrap.addEventListener('mousemove', function(e) {
         if (!isRunning || player.crashed) return;
         var rect = canvas.getBoundingClientRect();
-        var normalizedX = ((e.clientX - rect.left) / rect.width) * 2 - 1; // -1 to +1
-        player.targetX = normalizedX * (TRACK_WIDTH * 0.44);
+        var normalizedX = ((e.clientX - rect.left) / rect.width) * 2 - 1; // -1 (left) to +1 (right)
+        // Camera looks along +Z where world -X is screen-right and +X is screen-left.
+        // Inverting normalizedX ensures cursor right steers ball right, cursor left steers ball left.
+        player.targetX = -normalizedX * (TRACK_WIDTH * 0.44);
       });
 
       // 3. Touch Drag Steering on Mobile
@@ -742,7 +744,7 @@
         if (!isRunning || player.crashed || !e.touches.length) return;
         var rect = canvas.getBoundingClientRect();
         var normalizedX = ((e.touches[0].clientX - rect.left) / rect.width) * 2 - 1;
-        player.targetX = normalizedX * (TRACK_WIDTH * 0.44);
+        player.targetX = -normalizedX * (TRACK_WIDTH * 0.44);
       }, { passive: true });
 
       // Click to focus & start
@@ -835,10 +837,10 @@
           // Snappy, responsive keyboard steering
           var steerSpeed = 0.38;
           if (keys.left) {
-            player.targetX -= steerSpeed;
+            player.targetX += steerSpeed; // World +X is screen Left
             mouseSteerActive = false;
           } else if (keys.right) {
-            player.targetX += steerSpeed;
+            player.targetX -= steerSpeed; // World -X is screen Right
             mouseSteerActive = false;
           }
 
@@ -851,8 +853,8 @@
           player.vx = diffX * 0.28;
           player.x += player.vx;
 
-          // Camera Banking Angle (tilts smoothly like an aircraft)
-          var targetBank = -player.vx * 0.25;
+          // Camera Banking Angle (tilts smoothly like an aircraft into turns)
+          var targetBank = player.vx * 0.25;
           player.bankAngle += (targetBank - player.bankAngle) * 0.2;
 
           // Acceleration
@@ -861,7 +863,7 @@
 
           // Rolling ball rotation
           player.rotX += player.vz * 2.0;
-          player.rotZ -= player.vx * 1.8;
+          player.rotZ += player.vx * 1.8;
 
           // Record player trail
           if (globalTime % 0.04 < 0.02) {

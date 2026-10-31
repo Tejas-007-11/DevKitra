@@ -1,307 +1,501 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Reaction Test — DevKitra Gaming</title>
-<meta name="description" content="Wait for the screen to turn green, then tap as fast as you can. Play Reaction Test instantly in your browser." />
-<link rel="canonical" href="https://devkitra.in/game/reaction-test" />
-<style>
-* { box-sizing: border-box; }
-:root {
-  --ink: #07090e;
-  --panel: #0d121c;
-  --line: #1c2638;
-  --text: #e8edf5;
-  --muted: #7e8b9f;
-  --accent: #00f0ff;
-  --good: #10b981;
-  --good-glow: rgba(16, 185, 129, 0.4);
-  --bad: #ff3366;
-  --bad-glow: rgba(255, 51, 102, 0.3);
-}
-html, body { margin: 0; height: 100%; background: var(--ink); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 1rem; }
-header { width: 100%; max-width: 440px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0 0.8rem; flex-wrap: wrap; }
-h1 { margin: 0; font-size: 1.15rem; letter-spacing: -0.02em; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; }
-h1::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 10px var(--good); }
-a.back { color: var(--muted); text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 6px; border: 1px solid var(--line); transition: all 0.15s ease; }
-a.back:hover { color: var(--text); border-color: var(--accent); background: rgba(0, 240, 255, 0.08); }
-#wrap { max-width: 440px; width: 100%; border-radius: 14px; padding: 0.75rem; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6); }
-.status { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.6rem; text-align: center; font-variant-numeric: tabular-nums; display: flex; justify-content: space-between; }
-.status b { color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.95rem; }
-#zone { width: 100%; height: 260px; border-radius: 12px; border: 2px solid var(--line); position: relative; overflow: hidden; cursor: pointer; touch-action: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 900; letter-spacing: -0.02em; transition: background 0.08s, border-color 0.08s, box-shadow 0.08s; user-select: none; }
-#zone.waiting { background: #130a12; border-color: var(--bad); color: #ff88a3; box-shadow: inset 0 0 40px var(--bad-glow); }
-#zone.ready { background: #061c14; border-color: var(--good); color: #4ade80; box-shadow: inset 0 0 50px var(--good-glow); }
-#zone.idle { background: #0c121d; border-color: var(--line); color: var(--text); }
-.zone-sub { font-size: 0.8rem; font-weight: 600; opacity: 0.8; margin-top: 0.3rem; letter-spacing: 0.05em; text-transform: uppercase; }
-.radar-ring { position: absolute; width: 80px; height: 80px; border-radius: 50%; border: 2px solid rgba(255, 51, 102, 0.5); pointer-events: none; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
-@keyframes ping { 75%, 100% { transform: scale(3.5); opacity: 0; } }
-.overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; background: rgba(7, 9, 14, 0.92); backdrop-filter: blur(4px); border-radius: 12px; z-index: 10; text-align: center; padding: 1.25rem; }
-.overlay h2 { margin: 0 0 0.4rem; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.03em; }
-.overlay p { margin: 0 0 1.25rem; color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
-.btn { border: 1px solid var(--accent); background: var(--accent); color: #07090e; border-radius: 8px; padding: 0.65rem 1.4rem; font-weight: 800; cursor: pointer; font-size: 0.95rem; box-shadow: 0 0 20px rgba(0, 240, 255, 0.25); transition: all 0.15s ease; }
-.btn:hover { background: #38f8ff; transform: translateY(-1px); }
-.stats { margin-top: 0.75rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center; }
-.stat { border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.4rem; background: #0f1522; }
-.stat b { display: block; font-size: 1.05rem; color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; }
-.stat span { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
-.rank-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.82rem; font-weight: 800; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.rank-godlike { background: rgba(0, 240, 255, 0.15); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.4); }
-.rank-esports { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4); }
-.rank-pro { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
-.rank-avg { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
-.rank-slow { background: rgba(126, 139, 159, 0.15); color: #94a3b8; border: 1px solid rgba(126, 139, 159, 0.4); }
-.chart-container { margin-top: 0.75rem; border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem; background: #0a0e17; height: 64px; display: flex; align-items: flex-end; gap: 4px; }
-.chart-bar { flex: 1; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.3s ease; position: relative; }
-@media (max-width: 440px) { header { padding: 0.4rem 0 0.6rem; } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Reaction Benchmark — Devkitra Gaming</title>
+  <meta name="description" content="Test your click & touch reflex speed in milliseconds with precision timer benchmarks." />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    :root {
+      --bg: #07090e;
+      --cyan: #00f0ff;
+      --good: #10b981;
+      --good-glow: rgba(16, 185, 129, 0.45);
+      --bad: #ef4444;
+      --bad-glow: rgba(239, 68, 68, 0.45);
+      --amber: #f59e0b;
+      --purple: #8b5cf6;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+    }
+    #game-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .hud-bar {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .hud-chip {
+      background: rgba(13, 18, 28, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #94a3b8;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      letter-spacing: 0.05em;
+    }
+    .hud-chip b {
+      color: var(--cyan);
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 17px;
+    }
+    .hud-chip.best b {
+      color: #f59e0b;
+    }
+
+    #arena {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background 0.1s cubic-bezier(0, 0, 0.2, 1), box-shadow 0.1s cubic-bezier(0, 0, 0.2, 1);
+      position: relative;
+      text-align: center;
+      padding: 24px;
+    }
+
+    /* Arena States */
+    #arena.idle {
+      background: radial-gradient(circle at center, #101929 0%, #07090e 70%);
+      border: 2px solid #1e293b;
+    }
+    #arena.waiting {
+      background: radial-gradient(circle at center, #2e0914 0%, #150308 70%);
+      box-shadow: inset 0 0 100px var(--bad-glow);
+      border: 2px solid var(--bad);
+    }
+    #arena.ready {
+      background: radial-gradient(circle at center, #063d27 0%, #022014 70%);
+      box-shadow: inset 0 0 140px var(--good-glow);
+      border: 2px solid var(--good);
+    }
+    #arena.early {
+      background: radial-gradient(circle at center, #3b0714 0%, #170408 70%);
+      box-shadow: inset 0 0 120px var(--bad-glow);
+      border: 2px solid var(--bad);
+    }
+    #arena.result {
+      background: radial-gradient(circle at center, #0e1e36 0%, #070b14 70%);
+      border: 2px solid rgba(0, 240, 255, 0.3);
+    }
+
+    .pulse-ring {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      pointer-events: none;
+      animation: pulseAnim 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    @keyframes pulseAnim {
+      0% { transform: scale(0.6); opacity: 0.8; }
+      100% { transform: scale(3.2); opacity: 0; }
+    }
+
+    .state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.5));
+      pointer-events: none;
+    }
+    .state-title {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      color: #ffffff;
+      pointer-events: none;
+    }
+    .state-desc {
+      font-size: 16px;
+      font-weight: 600;
+      color: #94a3b8;
+      max-width: 380px;
+      line-height: 1.5;
+      pointer-events: none;
+    }
+
+    /* Rank Pill */
+    .rank-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      pointer-events: none;
+    }
+    .rank-godlike { background: rgba(0, 240, 255, 0.18); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.5); }
+    .rank-esports { background: rgba(139, 92, 246, 0.18); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.5); }
+    .rank-pro { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.5); }
+    .rank-avg { background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); }
+    .rank-slow { background: rgba(148, 163, 184, 0.18); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.4); }
+
+    .score-big {
+      font-size: 72px;
+      font-weight: 900;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      color: var(--cyan);
+      text-shadow: 0 0 24px rgba(0, 240, 255, 0.4);
+      margin-bottom: 6px;
+      pointer-events: none;
+    }
+    .score-unit {
+      font-size: 22px;
+      color: #94a3b8;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .bottom-panel {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+    .chart-strip {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 48px;
+      max-width: 440px;
+      width: 100%;
+      background: rgba(13, 18, 28, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 6px 10px;
+    }
+    .chart-bar {
+      flex: 1;
+      min-height: 4px;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.3s ease;
+    }
+    .retry-tip {
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 0.04em;
+    }
+  </style>
 </head>
 <body>
-<header>
-  <h1>Reaction Test</h1>
-  <a class="back" href="/game/reaction-test">← Library</a>
-</header>
-<div id="wrap">
-  <div class="status">
-    <div>Last <b id="last">--</b> ms</div>
-    <div>Best <b id="best">--</b> ms</div>
-    <div>Average <b id="avg">--</b> ms</div>
+  <div id="game-wrap">
+    <div class="hud-bar">
+      <div class="hud-chip">ROUND <b id="round-val">0</b></div>
+      <div class="hud-chip">AVG <b id="avg-val">--</b></div>
+      <div class="hud-chip best">RECORD <b id="best-val">--</b></div>
+    </div>
+
+    <div id="arena" class="idle">
+      <div class="pulse-ring" id="ring"></div>
+      <div class="state-icon" id="icon">⚡</div>
+      <div class="rank-pill hidden" id="rank-badge">PRO GAMER</div>
+      <div class="score-big hidden" id="time-display">210<span class="score-unit">ms</span></div>
+      <div class="state-title" id="title">TAP TO START</div>
+      <div class="state-desc" id="desc">Wait for the screen to turn vibrant green, then tap or click as fast as humanly possible.</div>
+    </div>
+
+    <div class="bottom-panel">
+      <div class="chart-strip" id="chart"></div>
+      <div class="retry-tip" id="tip">Tap screen or Spacebar to interact</div>
+    </div>
   </div>
-  <div id="zone" class="idle" role="button" aria-label="Reaction chamber" tabindex="0">
-    <div class="radar-ring" id="radar" style="display:none;"></div>
-    <span id="zone-text">Tap anywhere to Start</span>
-    <span class="zone-sub" id="zone-sub">Speed Reflex Chamber</span>
-  </div>
-  <div id="too-early" class="overlay">
-    <h2 style="color:var(--bad);">Too Early!</h2>
-    <p>You triggered before the chamber turned green. Wait for the signal.</p>
-    <button class="btn" id="early-btn">Try Again</button>
-  </div>
-  <div id="result" class="overlay">
-    <div class="rank-badge rank-godlike" id="rank-badge">⚡ Godlike Reflex</div>
-    <h2 id="result-title">Nice!</h2>
-    <p id="result-text">Reaction time: <b id="result-time" style="color:var(--accent);font-size:1.4rem;">0</b> ms</p>
-    <button class="btn" id="again-btn">Next Round</button>
-  </div>
-  <div id="pause" class="overlay">
-    <h2>Paused</h2>
-    <p>Press spacebar to resume.</p>
-  </div>
-  <div class="stats">
-    <div class="stat"><b id="hist-count">0</b><span>ROUNDS</span></div>
-    <div class="stat"><b id="hist-best">--</b><span>RECORD</span></div>
-    <div class="stat"><b id="hist-avg">--</b><span>AVG SPEED</span></div>
-  </div>
-  <div class="chart-container" id="chart" title="Past reaction history"></div>
-</div>
-<script>
-/* Simple Web Audio synth sound generator */
-let audioCtx = null;
-function playSound(type) {
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    const now = audioCtx.currentTime;
-    if (type === 'signal') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(880, now);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.1);
-      osc.start(now); osc.stop(now + 0.1);
-    } else if (type === 'success') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(540, now);
-      osc.frequency.exponentialRampToValueAtTime(1080, now + 0.15);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.15);
-      osc.start(now); osc.stop(now + 0.15);
-    } else if (type === 'early') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(160, now);
-      gain.gain.setValueAtTime(0.25, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.2);
-      osc.start(now); osc.stop(now + 0.2);
-    }
-  } catch (_) {}
-}
 
-const zone = document.getElementById('zone');
-const zoneText = document.getElementById('zone-text');
-const zoneSub = document.getElementById('zone-sub');
-const radar = document.getElementById('radar');
-const lastEl = document.getElementById('last');
-const bestEl = document.getElementById('best');
-const avgEl = document.getElementById('avg');
-const earlyEl = document.getElementById('too-early');
-const resultEl = document.getElementById('result');
-const resultTitle = document.getElementById('result-title');
-const resultTimeEl = document.getElementById('result-time');
-const rankBadge = document.getElementById('rank-badge');
-const chartEl = document.getElementById('chart');
+  <script>
+    (function () {
+      let audioCtx = null;
+      function getAudio() {
+        if (!audioCtx) {
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch (_) {}
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
 
-let best = Number(localStorage.getItem('dk:reaction-best') || 0);
-bestEl.textContent = best || '--';
-let history = [];
-let state = 'idle'; // idle | waiting | ready | result
-let startTime = 0;
-let timerId = null;
-let paused = false;
+      function playSound(type) {
+        const actx = getAudio();
+        if (!actx) return;
+        try {
+          const now = actx.currentTime;
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.connect(gain);
+          gain.connect(actx.destination);
 
-const embed = new URLSearchParams(window.location.search).has('embed');
-if (embed) { document.querySelector('header')?.remove(); document.getElementById('wrap').style.padding = '0.5rem'; }
+          if (type === 'wait') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(320, now);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.linearRampToValueAtTime(0.0001, now + 0.06);
+            osc.start(now);
+            osc.stop(now + 0.06);
+          } else if (type === 'signal') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0.0001, now + 0.12);
+            osc.start(now);
+            osc.stop(now + 0.12);
+          } else if (type === 'success') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(540, now);
+            osc.frequency.exponentialRampToValueAtTime(1080, now + 0.16);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+            osc.start(now);
+            osc.stop(now + 0.16);
+          } else if (type === 'early') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(180, now);
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.linearRampToValueAtTime(0.0001, now + 0.25);
+            osc.start(now);
+            osc.stop(now + 0.25);
+          }
+        } catch (_) {}
+      }
 
-function post(payload) {
-  if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*');
-}
-window.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'dk:restart') { resetUI(); paused = false; }
-  if (event.data && event.data.type === 'dk:pause') pauseGame();
-  if (event.data && event.data.type === 'dk:resume') resumeGame();
-});
+      const arena = document.getElementById('arena');
+      const ring = document.getElementById('ring');
+      const icon = document.getElementById('icon');
+      const title = document.getElementById('title');
+      const desc = document.getElementById('desc');
+      const timeDisplay = document.getElementById('time-display');
+      const rankBadge = document.getElementById('rank-badge');
+      const chart = document.getElementById('chart');
+      const tip = document.getElementById('tip');
 
-function updateChart() {
-  chartEl.innerHTML = '';
-  const recent = history.slice(-14);
-  const maxVal = Math.max(500, ...recent);
-  recent.forEach((ms) => {
-    const bar = document.createElement('div');
-    bar.className = 'chart-bar';
-    const pct = Math.max(8, Math.min(100, (ms / maxVal) * 100));
-    bar.style.height = `${pct}%`;
-    bar.style.background = ms < 220 ? '#00f0ff' : ms < 300 ? '#10b981' : ms < 400 ? '#f59e0b' : '#ff3366';
-    bar.title = `${ms} ms`;
-    chartEl.appendChild(bar);
-  });
-}
+      const roundVal = document.getElementById('round-val');
+      const avgVal = document.getElementById('avg-val');
+      const bestVal = document.getElementById('best-val');
 
-function updateStats() {
-  const count = history.length;
-  document.getElementById('hist-count').textContent = count;
-  document.getElementById('hist-best').textContent = best ? `${best} ms` : '--';
-  const avg = count ? Math.round(history.reduce((a, b) => a + b, 0) / count) : 0;
-  document.getElementById('hist-avg').textContent = count ? `${avg} ms` : '--';
-  avgEl.textContent = count ? avg : '--';
-  updateChart();
-}
+      let state = 'idle'; // 'idle' | 'waiting' | 'ready' | 'result' | 'early'
+      let timer = null;
+      let startTime = 0;
+      let history = [];
+      let best = Number(localStorage.getItem('dk:reaction-best') || 0);
 
-function resetUI() {
-  clearTimeout(timerId);
-  state = 'idle';
-  zone.className = 'idle';
-  zoneText.textContent = 'Tap to Start';
-  zoneSub.textContent = 'Speed Reflex Chamber';
-  radar.style.display = 'none';
-  earlyEl.style.display = 'none';
-  resultEl.style.display = 'none';
-  updateStats();
-  post({ type: 'dk:ready', id: 'reaction-test', title: 'Reaction Test' });
-}
+      if (best > 0) {
+        bestVal.textContent = `${best}ms`;
+      }
 
-function startRound() {
-  state = 'waiting';
-  zone.className = 'waiting';
-  zoneText.textContent = 'WAIT FOR SIGNAL...';
-  zoneSub.textContent = 'Tap instantly when green';
-  radar.style.display = 'block';
-  earlyEl.style.display = 'none';
-  resultEl.style.display = 'none';
+      function post(payload) {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(payload, '*');
+        }
+      }
 
-  const delay = 1400 + Math.random() * 2600;
-  timerId = setTimeout(() => {
-    if (state !== 'waiting') return;
-    state = 'ready';
-    zone.className = 'ready';
-    zoneText.textContent = 'TAP NOW!';
-    zoneSub.textContent = 'REACT!';
-    radar.style.display = 'none';
-    playSound('signal');
-    startTime = performance.now();
-  }, delay);
-}
+      window.addEventListener('message', (event) => {
+        if (!event.data) return;
+        if (event.data.type === 'dk:restart') toIdle();
+        if (event.data.type === 'dk:keydown') {
+          if (event.data.code === 'Space' || event.data.code === 'Enter') {
+            handleInteraction();
+          }
+        }
+      });
 
-function endTooEarly() {
-  clearTimeout(timerId);
-  state = 'idle';
-  zone.className = 'waiting';
-  radar.style.display = 'none';
-  playSound('early');
-  earlyEl.style.display = 'flex';
-}
+      function updateChart() {
+        chart.innerHTML = '';
+        const recent = history.slice(-12);
+        const maxVal = Math.max(450, ...recent);
+        recent.forEach((ms) => {
+          const bar = document.createElement('div');
+          bar.className = 'chart-bar';
+          const pct = Math.max(12, Math.min(100, (ms / maxVal) * 100));
+          bar.style.height = `${pct}%`;
+          bar.style.background = ms < 200 ? '#00f0ff' : ms < 270 ? '#10b981' : ms < 360 ? '#f59e0b' : '#ef4444';
+          chart.appendChild(bar);
+        });
+      }
 
-function getRank(ms) {
-  if (ms < 210) return { title: 'Godlike Reflex', class: 'rank-godlike', desc: 'Elite cyber speed — superhuman!' };
-  if (ms < 260) return { title: 'Esports Tier', class: 'rank-esports', desc: 'Competitive pro gamer tier!' };
-  if (ms < 320) return { title: 'Fast Reflex', class: 'rank-pro', desc: 'Sharper than most players!' };
-  if (ms < 400) return { title: 'Average Human', class: 'rank-avg', desc: 'Solid reaction time.' };
-  return { title: 'Slow Motion', class: 'rank-slow', desc: 'A bit sluggish, keep practicing!' };
-}
+      function toIdle() {
+        clearTimeout(timer);
+        state = 'idle';
+        arena.className = 'idle';
+        ring.style.display = 'block';
+        ring.style.borderColor = 'rgba(0, 240, 255, 0.3)';
+        icon.textContent = '⚡';
+        timeDisplay.style.display = 'none';
+        rankBadge.style.display = 'none';
+        title.textContent = 'TAP TO START';
+        desc.textContent = 'Wait for the screen to turn vibrant green, then tap or click as fast as humanly possible.';
+        tip.textContent = 'Tap anywhere to begin';
+        post({ type: 'dk:ready', id: 'reaction-test', title: 'Reaction Benchmark' });
+      }
 
-function finishReaction() {
-  const ms = Math.round(performance.now() - startTime);
-  history.push(ms);
-  if (!best || ms < best) {
-    best = ms;
-    try { localStorage.setItem('dk:reaction-best', String(best)); } catch (_) {}
-    bestEl.textContent = best;
-  }
-  lastEl.textContent = ms;
-  updateStats();
-  playSound('success');
+      function toWaiting() {
+        clearTimeout(timer);
+        state = 'waiting';
+        arena.className = 'waiting';
+        ring.style.display = 'block';
+        ring.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        icon.textContent = '🔴';
+        timeDisplay.style.display = 'none';
+        rankBadge.style.display = 'none';
+        title.textContent = 'WAIT FOR GREEN...';
+        desc.textContent = 'Focus your eyes and finger. Tap the instant green erupts!';
+        tip.textContent = 'Do not tap yet!';
+        playSound('wait');
 
-  state = 'idle';
-  zone.className = 'idle';
-  radar.style.display = 'none';
+        // Random delay between 1.5s and 4.2s
+        const delay = 1500 + Math.random() * 2700;
+        timer = setTimeout(toReady, delay);
+      }
 
-  const rank = getRank(ms);
-  rankBadge.className = `rank-badge ${rank.class}`;
-  rankBadge.textContent = rank.title;
-  resultTitle.textContent = rank.desc;
-  resultTimeEl.textContent = ms;
-  resultEl.style.display = 'flex';
+      function toReady() {
+        state = 'ready';
+        arena.className = 'ready';
+        ring.style.display = 'none';
+        icon.textContent = '🟢';
+        title.textContent = 'TAP NOW!';
+        desc.textContent = 'FIRE! Click or tap the screen immediately!';
+        tip.textContent = 'CLICK NOW!';
+        playSound('signal');
+        startTime = performance.now();
+      }
 
-  post({ type: 'dk:gameover', score: ms });
-}
+      function toEarly() {
+        clearTimeout(timer);
+        state = 'early';
+        arena.className = 'early';
+        ring.style.display = 'none';
+        icon.textContent = '⚠️';
+        timeDisplay.style.display = 'none';
+        rankBadge.style.display = 'none';
+        title.textContent = 'TOO EARLY!';
+        desc.textContent = 'You jumped before the signal turned green. Wait for the green flash!';
+        tip.textContent = 'Tap anywhere to try again';
+        playSound('early');
+      }
 
-function pauseGame() {
-  if (state === 'paused' || state === 'idle') return;
-  paused = true;
-  state = 'paused';
-  clearTimeout(timerId);
-  document.getElementById('pause').style.display = 'flex';
-}
+      function toResult(reactionMs) {
+        state = 'result';
+        arena.className = 'result';
+        ring.style.display = 'none';
+        playSound('success');
 
-function resumeGame() {
-  if (!paused) return;
-  paused = false;
-  document.getElementById('pause').style.display = 'none';
-  resetUI();
-}
+        history.push(reactionMs);
+        roundVal.textContent = history.length;
+        const avg = Math.round(history.reduce((a, b) => a + b, 0) / history.length);
+        avgVal.textContent = `${avg}ms`;
 
-function attempt() {
-  if (paused) return;
-  if (state === 'waiting') { endTooEarly(); return; }
-  if (state === 'ready') { finishReaction(); return; }
-  if (state === 'idle') { startRound(); }
-}
+        if (!best || reactionMs < best) {
+          best = reactionMs;
+          try { localStorage.setItem('dk:reaction-best', String(best)); } catch (_) {}
+          bestVal.textContent = `${best}ms`;
+        }
 
-zone.addEventListener('pointerdown', attempt);
-window.addEventListener('keydown', (event) => {
-  if (event.code === 'Space' || event.code === 'Enter') {
-    event.preventDefault();
-    attempt();
-  }
-});
-document.getElementById('early-btn').addEventListener('click', startRound);
-document.getElementById('again-btn').addEventListener('click', startRound);
+        timeDisplay.innerHTML = `${reactionMs}<span class="score-unit">ms</span>`;
+        timeDisplay.style.display = 'block';
 
-resetUI();
-post({ type: 'dk:ready', id: 'reaction-test', title: 'Reaction Test' });
-</script>
+        // Calculate Rank Tier
+        rankBadge.style.display = 'inline-flex';
+        if (reactionMs < 190) {
+          rankBadge.className = 'rank-pill rank-godlike';
+          rankBadge.textContent = '⚡ GODLIKE (Top 1%)';
+          icon.textContent = '👑';
+        } else if (reactionMs < 240) {
+          rankBadge.className = 'rank-pill rank-esports';
+          rankBadge.textContent = '🎯 ESPORTS PRO (Top 10%)';
+          icon.textContent = '🚀';
+        } else if (reactionMs < 290) {
+          rankBadge.className = 'rank-pill rank-pro';
+          rankBadge.textContent = '✨ FAST REFLEX';
+          icon.textContent = '⚡';
+        } else if (reactionMs < 370) {
+          rankBadge.className = 'rank-pill rank-avg';
+          rankBadge.textContent = '👍 AVERAGE HUMAN';
+          icon.textContent = '⏱️';
+        } else {
+          rankBadge.className = 'rank-pill rank-slow';
+          rankBadge.textContent = '🐢 RELAXED REFLEX';
+          icon.textContent = '💤';
+        }
+
+        title.textContent = 'PERFECT REACTION!';
+        desc.textContent = 'Round registered. Tap anywhere to take the test again.';
+        tip.textContent = 'Tap anywhere for Next Round';
+
+        updateChart();
+        post({ type: 'dk:score', score: reactionMs });
+      }
+
+      function handleInteraction(e) {
+        if (e) e.preventDefault();
+
+        if (state === 'idle' || state === 'result' || state === 'early') {
+          toWaiting();
+        } else if (state === 'waiting') {
+          toEarly();
+        } else if (state === 'ready') {
+          const delta = Math.round(performance.now() - startTime);
+          toResult(delta);
+        }
+      }
+
+      arena.addEventListener('pointerdown', handleInteraction);
+
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.code === 'Enter') {
+          e.preventDefault();
+          handleInteraction();
+        }
+      });
+
+      toIdle();
+    })();
+  </script>
 </body>
 </html>

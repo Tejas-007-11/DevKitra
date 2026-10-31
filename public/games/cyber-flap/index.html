@@ -1,408 +1,811 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cyber Flap — DevKitra Gaming</title>
-<meta name="description" content="Thrust through laser gates in this high-speed neon cyber flyer." />
-<link rel="canonical" href="https://devkitra.in/game/cyber-flap" />
-<style>
-* { box-sizing: border-box; }
-:root {
-  --ink: #07090e;
-  --panel: #0d121c;
-  --line: #1c2638;
-  --text: #e8edf5;
-  --muted: #7e8b9f;
-  --accent: #00f0ff;
-  --accent-glow: rgba(0, 240, 255, 0.35);
-}
-html, body { margin: 0; height: 100%; background: var(--ink); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 1rem; }
-header { width: 100%; max-width: 440px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0 0.8rem; flex-wrap: wrap; }
-h1 { margin: 0; font-size: 1.15rem; letter-spacing: -0.02em; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; }
-h1::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-a.back { color: var(--muted); text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 6px; border: 1px solid var(--line); transition: all 0.15s ease; }
-a.back:hover { color: var(--text); border-color: var(--accent); background: rgba(0, 240, 255, 0.08); }
-#wrap { position: relative; max-width: 440px; width: 100%; border-radius: 14px; padding: 0.75rem; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6); transition: transform 0.05s ease; }
-.hud { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.6rem; font-variant-numeric: tabular-nums; }
-.hud b { color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1rem; }
-canvas { width: 100%; height: auto; display: block; border-radius: 10px; background: #070a10; border: 1px solid var(--line); cursor: pointer; touch-action: manipulation; }
-.overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; background: rgba(7, 9, 14, 0.94); backdrop-filter: blur(4px); border-radius: 14px; z-index: 10; text-align: center; padding: 1.5rem; }
-.overlay h2 { margin: 0 0 0.4rem; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.03em; color: var(--text); }
-.overlay p { margin: 0 0 1.25rem; color: var(--muted); font-size: 0.88rem; max-width: 280px; line-height: 1.5; }
-.btn { border: 1px solid var(--accent); background: var(--accent); color: #07090e; border-radius: 8px; padding: 0.65rem 1.4rem; font-weight: 800; cursor: pointer; font-size: 0.95rem; box-shadow: 0 0 20px var(--accent-glow); transition: all 0.15s ease; text-transform: uppercase; }
-.btn:hover { background: #38f8ff; transform: translateY(-1px); }
-.hint { margin-top: 0.75rem; font-size: 0.78rem; color: var(--muted); text-align: center; }
-@media (max-width: 440px) { header { padding: 0.4rem 0 0.6rem; } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Cyber Flap — Devkitra Gaming</title>
+  <meta name="description" content="Thrust through neon laser gates in this high-speed cyberpunk flyer." />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    :root {
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.45);
+      --pink: #ec4899;
+      --pink-glow: rgba(236, 72, 153, 0.45);
+      --bg: #07090e;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #game-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #07090e;
+    }
+    canvas {
+      display: block;
+      touch-action: none;
+      cursor: pointer;
+    }
+    .hud-bar {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .hud-chip {
+      background: rgba(13, 18, 28, 0.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #94a3b8;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.04em;
+    }
+    .hud-chip b {
+      color: var(--cyan);
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 18px;
+      text-shadow: 0 0 10px var(--cyan-glow);
+    }
+    .hud-chip.best b {
+      color: #f59e0b;
+      text-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(7, 9, 14, 0.88);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      text-align: center;
+      padding: 20px;
+    }
+    .overlay.hidden { display: none; }
+    .card-modal {
+      background: #0d131f;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      border-radius: 20px;
+      padding: 32px 28px;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 240, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.92); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .modal-icon {
+      font-size: 46px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 0 16px var(--cyan-glow));
+    }
+    .card-modal h2 {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      color: #ffffff;
+      text-shadow: 0 0 14px var(--cyan-glow);
+    }
+    .card-modal p {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 22px;
+      max-width: 290px;
+    }
+    .stats-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 22px;
+    }
+    .stat-box {
+      background: #080c14;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 4px;
+      letter-spacing: 0.08em;
+    }
+    .stat-val {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--cyan);
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+    .stat-val.best {
+      color: #f59e0b;
+    }
+    .btn {
+      background: linear-gradient(135deg, #00f0ff, #0284c7);
+      color: #07090e;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      box-shadow: 0 4px 20px var(--cyan-glow);
+      transition: all 0.15s ease;
+      width: 100%;
+      text-transform: uppercase;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 26px var(--cyan-glow);
+    }
+    .controls-hint {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #64748b;
+      letter-spacing: 0.02em;
+    }
+  </style>
 </head>
 <body>
-<header>
-  <h1>Cyber Flap</h1>
-  <a class="back" href="/game/cyber-flap">← Library</a>
-</header>
-<div id="wrap">
-  <div class="hud">
-    <div>Gates Cleared <b id="score">0</b></div>
-    <div>Best <b id="best">0</b></div>
+  <div id="game-wrap">
+    <div class="hud-bar">
+      <div class="hud-chip">GATES <b id="score-val">0</b></div>
+      <div class="hud-chip best">RECORD <b id="best-val">0</b></div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Start Overlay -->
+    <div id="start-overlay" class="overlay">
+      <div class="card-modal">
+        <div class="modal-icon">🛸</div>
+        <h2>CYBER FLAP</h2>
+        <p>Thrust through electric neon gates. Tap screen, click mouse, or press Spacebar to fire ion engines.</p>
+        <button id="start-btn" class="btn">Launch Ship ▶</button>
+        <span class="controls-hint">Spacebar · Click · Tap to Flap</span>
+      </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="over-overlay" class="overlay hidden">
+      <div class="card-modal">
+        <div class="modal-icon">💥</div>
+        <h2>SHIP DOWN</h2>
+        <p>Hull breach detected! Review flight telemetry:</p>
+        <div class="stats-summary">
+          <div class="stat-box">
+            <div class="stat-label">Gates Cleared</div>
+            <div class="stat-val" id="final-score">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Personal Best</div>
+            <div class="stat-val best" id="final-best">0</div>
+          </div>
+        </div>
+        <button id="restart-btn" class="btn">Relaunch Ship ↺</button>
+        <span class="controls-hint">Press Spacebar or Click to try again</span>
+      </div>
+    </div>
+
+    <!-- Pause Overlay -->
+    <div id="pause-overlay" class="overlay hidden">
+      <div class="card-modal">
+        <div class="modal-icon">⏸</div>
+        <h2>SYSTEM PAUSED</h2>
+        <p>Flight paused. Press Spacebar or click Resume to continue.</p>
+        <button id="resume-btn" class="btn">Resume Flight ▶</button>
+      </div>
+    </div>
   </div>
-  <canvas id="game" width="400" height="520"></canvas>
-  <div id="start" class="overlay">
-    <h2>Cyber Flap</h2>
-    <p>Tap, Click, or press Spacebar to fire thrusters and navigate laser gates.</p>
-    <button class="btn" id="start-btn">Launch Jet ▶</button>
-  </div>
-  <div id="over" class="overlay">
-    <h2>Ship Down!</h2>
-    <p>Gates Cleared: <b id="final-score" style="color:var(--accent);">0</b> · Best: <b id="final-best">0</b></p>
-    <button class="btn" id="restart-btn">Try Again</button>
-  </div>
-  <div id="pause" class="overlay">
-    <h2>Paused</h2>
-    <p>Press spacebar to resume flight.</p>
-  </div>
-  <p class="hint">Tap screen or press Spacebar to flap thrusters.</p>
-</div>
-<script>
-let audioCtx = null;
-function playSound(type) {
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    const now = audioCtx.currentTime;
-    if (type === 'flap') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(420, now);
-      osc.frequency.exponentialRampToValueAtTime(700, now + 0.08);
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.08);
-      osc.start(now); osc.stop(now + 0.08);
-    } else if (type === 'pass') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(600, now);
-      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.12);
-      gain.gain.setValueAtTime(0.16, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.12);
-      osc.start(now); osc.stop(now + 0.12);
-    } else if (type === 'crash') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(260, now);
-      osc.frequency.exponentialRampToValueAtTime(70, now + 0.3);
-      gain.gain.setValueAtTime(0.22, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.3);
-      osc.start(now); osc.stop(now + 0.3);
-    }
-  } catch (_) {}
-}
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-const scoreEl = document.getElementById('score');
-const bestEl = document.getElementById('best');
-const startEl = document.getElementById('start');
-const overEl = document.getElementById('over');
-const finalScoreEl = document.getElementById('final-score');
-const finalBestEl = document.getElementById('final-best');
-const startBtn = document.getElementById('start-btn');
-const restartBtn = document.getElementById('restart-btn');
-const wrapEl = document.getElementById('wrap');
-
-let best = Number(localStorage.getItem('dk:flap-best') || 0);
-bestEl.textContent = best;
-let score = 0, running = false, paused = false;
-
-const GRAVITY = 0.34;
-const JUMP = -6.4;
-let bird = { x: 80, y: 220, vy: 0, r: 13, angle: 0 };
-let pipes = [];
-let particles = [];
-let stars = [];
-let spawnTimer = 0;
-
-/* Parallax skyline stars */
-for (let i = 0; i < 35; i++) {
-  stars.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * (canvas.height - 100),
-    size: Math.random() * 2 + 0.8,
-    speed: Math.random() * 0.4 + 0.1,
-  });
-}
-
-const embed = new URLSearchParams(window.location.search).has('embed');
-if (embed) { document.querySelector('header')?.remove(); wrapEl.style.padding = '0.5rem'; }
-
-function post(payload) {
-  if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*');
-}
-window.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'dk:restart') { resetGame(); startLoop(); }
-  if (event.data && event.data.type === 'dk:pause') pauseGame();
-  if (event.data && event.data.type === 'dk:resume') resumeGame();
-});
-
-function shakeScreen() {
-  wrapEl.style.transform = 'translate(-4px, 2px)';
-  setTimeout(() => { wrapEl.style.transform = 'translate(4px, -2px)'; }, 40);
-  setTimeout(() => { wrapEl.style.transform = 'translate(0, 0)'; }, 90);
-}
-
-function spawnFlapParticles(x, y) {
-  for (let i = 0; i < 8; i++) {
-    particles.push({
-      x: x - 10, y: y + (Math.random() * 6 - 3),
-      vx: -2.5 - Math.random() * 2.5,
-      vy: Math.random() * 3 - 1.5,
-      size: 3 + Math.random() * 3,
-      alpha: 1,
-      color: Math.random() > 0.4 ? '#00f0ff' : '#ec4899',
-    });
-  }
-}
-
-function resetGame() {
-  score = 0;
-  scoreEl.textContent = score;
-  bird = { x: 80, y: 220, vy: 0, r: 13, angle: 0 };
-  pipes = [];
-  particles = [];
-  spawnTimer = 0;
-  running = false;
-  startEl.style.display = 'flex';
-  overEl.style.display = 'none';
-  post({ type: 'dk:ready', id: 'cyber-flap', title: 'Cyber Flap' });
-  draw();
-}
-
-function flap() {
-  if (!running) return;
-  bird.vy = JUMP;
-  playSound('flap');
-  spawnFlapParticles(bird.x, bird.y);
-}
-
-function tick() {
-  if (!running || paused) return;
-
-  bird.vy += GRAVITY;
-  bird.y += bird.vy;
-  bird.angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 5, bird.vy * 0.08));
-
-  /* Floor & Ceiling Collision */
-  if (bird.y + bird.r >= canvas.height - 15 || bird.y - bird.r <= 0) {
-    endGame();
-    return;
-  }
-
-  /* Pipe spawning */
-  spawnTimer++;
-  if (spawnTimer >= 95) {
-    spawnTimer = 0;
-    const gap = 125;
-    const minTop = 60;
-    const maxTop = canvas.height - 180;
-    const topH = Math.floor(minTop + Math.random() * (maxTop - minTop));
-    pipes.push({
-      x: canvas.width,
-      w: 48,
-      top: topH,
-      bottom: topH + gap,
-      passed: false,
-    });
-  }
-
-  /* Update pipes */
-  for (let i = pipes.length - 1; i >= 0; i--) {
-    const p = pipes[i];
-    p.x -= 2.6;
-
-    /* Collision Check */
-    if (bird.x + bird.r > p.x && bird.x - bird.r < p.x + p.w) {
-      if (bird.y - bird.r < p.top || bird.y + bird.r > p.bottom) {
-        endGame();
-        return;
+  <script>
+    (function () {
+      // Audio Synthesizer
+      let audioCtx = null;
+      function getAudio() {
+        if (!audioCtx) {
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch (_) {}
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
       }
-    }
 
-    /* Score check */
-    if (!p.passed && p.x + p.w < bird.x) {
-      p.passed = true;
-      score++;
-      scoreEl.textContent = score;
-      playSound('pass');
-    }
+      function playSound(type) {
+        const actx = getAudio();
+        if (!actx) return;
+        try {
+          const now = actx.currentTime;
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.connect(gain);
+          gain.connect(actx.destination);
 
-    if (p.x + p.w < -10) pipes.splice(i, 1);
-  }
-}
+          if (type === 'flap') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(420, now);
+            osc.frequency.exponentialRampToValueAtTime(740, now + 0.08);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.linearRampToValueAtTime(0.0001, now + 0.08);
+            osc.start(now);
+            osc.stop(now + 0.08);
+          } else if (type === 'gate') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(580, now);
+            osc.frequency.exponentialRampToValueAtTime(1160, now + 0.14);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+            osc.start(now);
+            osc.stop(now + 0.14);
+          } else if (type === 'crash') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(260, now);
+            osc.frequency.exponentialRampToValueAtTime(50, now + 0.35);
+            gain.gain.setValueAtTime(0.24, now);
+            gain.gain.linearRampToValueAtTime(0.0001, now + 0.35);
+            osc.start(now);
+            osc.stop(now + 0.35);
+          }
+        } catch (_) {}
+      }
 
-function endGame() {
-  running = false;
-  paused = false;
-  playSound('crash');
-  shakeScreen();
-  if (score > best) {
-    best = score;
-    try { localStorage.setItem('dk:flap-best', String(best)); } catch (_) {}
-    bestEl.textContent = best;
-  }
-  finalScoreEl.textContent = score;
-  finalBestEl.textContent = best;
-  overEl.style.display = 'flex';
-  post({ type: 'dk:gameover', score });
-}
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const wrap = document.getElementById('game-wrap');
+      const scoreVal = document.getElementById('score-val');
+      const bestVal = document.getElementById('best-val');
+      const startOverlay = document.getElementById('start-overlay');
+      const overOverlay = document.getElementById('over-overlay');
+      const pauseOverlay = document.getElementById('pause-overlay');
+      const finalScore = document.getElementById('final-score');
+      const finalBest = document.getElementById('final-best');
+      const startBtn = document.getElementById('start-btn');
+      const restartBtn = document.getElementById('restart-btn');
+      const resumeBtn = document.getElementById('resume-btn');
 
-function pauseGame() {
-  if (!running || paused) return;
-  paused = true;
-  document.getElementById('pause').style.display = 'flex';
-}
+      let W = 460;
+      let H = 680;
+      let dpr = 1;
 
-function resumeGame() {
-  if (!paused) return;
-  paused = false;
-  document.getElementById('pause').style.display = 'none';
-}
+      let score = 0;
+      let best = Number(localStorage.getItem('dk:flap-best') || 0);
+      bestVal.textContent = best;
 
-function draw() {
-  ctx.fillStyle = '#070a10';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+      let running = false;
+      let paused = false;
 
-  /* Stars */
-  ctx.fillStyle = '#ffffff';
-  for (const s of stars) {
-    if (running && !paused) {
-      s.x -= s.speed;
-      if (s.x < 0) s.x = canvas.width;
-    }
-    ctx.fillRect(s.x, s.y, s.size, s.size);
-  }
+      const GRAVITY = 0.32;
+      const FLAP_FORCE = -6.2;
 
-  /* Pipes (Laser Gates) */
-  for (const p of pipes) {
-    /* Top Gate */
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(p.x, 0, p.w, p.top);
-    ctx.strokeStyle = '#00f0ff';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(p.x, -2, p.w, p.top + 2);
+      const ship = {
+        x: 100,
+        y: 300,
+        vy: 0,
+        r: 14,
+        angle: 0,
+      };
 
-    /* Laser Node Top */
-    ctx.fillStyle = '#00f0ff';
-    ctx.fillRect(p.x - 3, p.top - 10, p.w + 6, 10);
+      let gates = [];
+      let particles = [];
+      let floatTexts = [];
+      let stars = [];
+      let buildings = [];
+      let spawnTimer = 0;
+      let shakeTime = 0;
 
-    /* Bottom Gate */
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(p.x, p.bottom, p.w, canvas.height - p.bottom);
-    ctx.strokeRect(p.x, p.bottom, p.w, canvas.height - p.bottom + 2);
+      function resize() {
+        const wrapW = wrap.clientWidth || window.innerWidth;
+        const wrapH = wrap.clientHeight || window.innerHeight;
 
-    /* Laser Node Bottom */
-    ctx.fillRect(p.x - 3, p.bottom, p.w + 6, 10);
+        // Maintain attractive aspect ratio (around 9:14 max)
+        const targetW = Math.min(wrapW, Math.floor(wrapH * (480 / 700)));
+        const targetH = wrapH;
 
-    /* Laser Beam Aura */
-    ctx.fillStyle = 'rgba(0, 240, 255, 0.06)';
-    ctx.fillRect(p.x + 8, p.top, p.w - 16, p.bottom - p.top);
-  }
+        W = targetW;
+        H = targetH;
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-  /* Particles */
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const pt = particles[i];
-    pt.x += pt.vx;
-    pt.y += pt.vy;
-    pt.alpha -= 0.04;
-    if (pt.alpha <= 0) {
-      particles.splice(i, 1);
-      continue;
-    }
-    ctx.save();
-    ctx.globalAlpha = pt.alpha;
-    ctx.fillStyle = pt.color;
-    ctx.beginPath();
-    ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
+        canvas.width = Math.floor(W * dpr);
+        canvas.height = Math.floor(H * dpr);
+        canvas.style.width = `${W}px`;
+        canvas.style.height = `${H}px`;
 
-  /* Cyber Jet Bird */
-  ctx.save();
-  ctx.translate(bird.x, bird.y);
-  ctx.rotate(bird.angle);
+        initBackdrop();
+      }
 
-  /* Engine glow */
-  ctx.fillStyle = 'rgba(0, 240, 255, 0.3)';
-  ctx.beginPath();
-  ctx.arc(-8, 0, 10, 0, Math.PI * 2);
-  ctx.fill();
+      function initBackdrop() {
+        stars = [];
+        for (let i = 0; i < 45; i++) {
+          stars.push({
+            x: Math.random() * W,
+            y: Math.random() * (H * 0.75),
+            size: Math.random() * 2 + 0.8,
+            speed: Math.random() * 0.4 + 0.1,
+            alpha: Math.random() * 0.6 + 0.4,
+          });
+        }
 
-  /* Fuselage */
-  ctx.fillStyle = '#00f0ff';
-  ctx.beginPath();
-  ctx.moveTo(14, 0);
-  ctx.lineTo(-10, -9);
-  ctx.lineTo(-6, 0);
-  ctx.lineTo(-10, 9);
-  ctx.closePath();
-  ctx.fill();
+        buildings = [];
+        let curX = 0;
+        while (curX < W + 120) {
+          const bW = 40 + Math.random() * 45;
+          const bH = 80 + Math.random() * 160;
+          buildings.push({
+            x: curX,
+            w: bW,
+            h: bH,
+            speed: 0.5,
+            color: Math.random() > 0.5 ? '#0c1322' : '#080d17',
+            lightColor: Math.random() > 0.5 ? 'rgba(0, 240, 255, 0.3)' : 'rgba(236, 72, 153, 0.3)',
+          });
+          curX += bW + 8;
+        }
+      }
 
-  /* Cockpit Visor */
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.ellipse(2, -2, 5, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+      window.addEventListener('resize', resize);
+      resize();
 
-  /* Cyber Grid Ground */
-  ctx.fillStyle = '#090d16';
-  ctx.fillRect(0, canvas.height - 15, canvas.width, 15);
-  ctx.strokeStyle = '#00f0ff';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(0, canvas.height - 15);
-  ctx.lineTo(canvas.width, canvas.height - 15);
-  ctx.stroke();
-}
+      function post(payload) {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(payload, '*');
+        }
+      }
 
-function loop() {
-  tick();
-  draw();
-  requestAnimationFrame(loop);
-}
+      window.addEventListener('message', (event) => {
+        if (!event.data) return;
+        if (event.data.type === 'dk:restart') resetGame(true);
+        if (event.data.type === 'dk:pause') pauseGame();
+        if (event.data.type === 'dk:resume') resumeGame();
+        if (event.data.type === 'dk:keydown') {
+          if (event.data.code === 'Space' || event.data.code === 'ArrowUp' || event.data.code === 'KeyW') {
+            flap();
+          }
+        }
+      });
 
-function startLoop() {
-  running = true;
-  startEl.style.display = 'none';
-  overEl.style.display = 'none';
-  flap();
-  post({ type: 'dk:ready', id: 'cyber-flap', title: 'Cyber Flap' });
-}
+      function resetGame(autoStart = false) {
+        score = 0;
+        scoreVal.textContent = '0';
+        ship.x = Math.floor(W * 0.25);
+        ship.y = Math.floor(H * 0.45);
+        ship.vy = 0;
+        ship.angle = 0;
+        gates = [];
+        particles = [];
+        floatTexts = [];
+        spawnTimer = 0;
+        shakeTime = 0;
+        paused = false;
 
-window.addEventListener('keydown', (event) => {
-  if (event.code === 'Space' || event.code === 'ArrowUp') {
-    event.preventDefault();
-    if (!running) startLoop();
-    else flap();
-  }
-});
+        overOverlay.classList.add('hidden');
+        pauseOverlay.classList.add('hidden');
 
-canvas.addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  if (!running) startLoop();
-  else flap();
-});
+        if (autoStart) {
+          startOverlay.classList.add('hidden');
+          running = true;
+          flap();
+        } else {
+          startOverlay.classList.remove('hidden');
+          running = false;
+        }
 
-startBtn.addEventListener('click', startLoop);
-restartBtn.addEventListener('click', () => { resetGame(); startLoop(); });
+        post({ type: 'dk:ready', id: 'cyber-flap', title: 'Cyber Flap' });
+      }
 
-resetGame();
-loop();
-post({ type: 'dk:ready', id: 'cyber-flap', title: 'Cyber Flap' });
-</script>
+      function flap() {
+        if (paused) return;
+        if (!running) {
+          resetGame(true);
+          return;
+        }
+        ship.vy = FLAP_FORCE;
+        playSound('flap');
+
+        // Spawn plasma exhaust particles
+        for (let i = 0; i < 7; i++) {
+          particles.push({
+            x: ship.x - 12,
+            y: ship.y + (Math.random() * 8 - 4),
+            vx: -3 - Math.random() * 3,
+            vy: Math.random() * 2 - 1,
+            size: 3 + Math.random() * 4,
+            alpha: 1,
+            color: Math.random() > 0.4 ? '#00f0ff' : '#ec4899',
+          });
+        }
+      }
+
+      function pauseGame() {
+        if (!running || paused) return;
+        paused = true;
+        pauseOverlay.classList.remove('hidden');
+      }
+
+      function resumeGame() {
+        if (!paused) return;
+        paused = false;
+        pauseOverlay.classList.add('hidden');
+      }
+
+      function endGame() {
+        running = false;
+        paused = false;
+        shakeTime = 16;
+        playSound('crash');
+
+        // Crash explosion particles
+        for (let i = 0; i < 28; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 2 + Math.random() * 6;
+          particles.push({
+            x: ship.x,
+            y: ship.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: 3 + Math.random() * 5,
+            alpha: 1,
+            color: Math.random() > 0.5 ? '#ff3366' : Math.random() > 0.3 ? '#f59e0b' : '#00f0ff',
+          });
+        }
+
+        if (score > best) {
+          best = score;
+          try { localStorage.setItem('dk:flap-best', String(best)); } catch (_) {}
+          bestVal.textContent = best;
+        }
+
+        finalScore.textContent = score;
+        finalBest.textContent = best;
+        overOverlay.classList.remove('hidden');
+
+        post({ type: 'dk:gameover', score });
+      }
+
+      function spawnGate() {
+        const gap = Math.max(130, 160 - Math.min(30, score * 1.5));
+        const minTop = 60;
+        const maxTop = H - 90 - gap;
+        const topH = Math.floor(minTop + Math.random() * (maxTop - minTop));
+
+        gates.push({
+          x: W + 10,
+          w: 52,
+          top: topH,
+          bottom: topH + gap,
+          passed: false,
+          pulse: 0,
+        });
+      }
+
+      function update() {
+        if (shakeTime > 0) shakeTime--;
+
+        if (!running || paused) {
+          // Bob the ship gently when waiting
+          if (!running) {
+            ship.y = H * 0.45 + Math.sin(Date.now() * 0.004) * 8;
+            ship.angle = 0;
+          }
+          return;
+        }
+
+        ship.vy += GRAVITY;
+        ship.y += ship.vy;
+        ship.angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 5, ship.vy * 0.08));
+
+        // Floor and ceiling collisions
+        const floorY = H - 24;
+        if (ship.y + ship.r >= floorY || ship.y - ship.r <= 4) {
+          endGame();
+          return;
+        }
+
+        // Spawn gates
+        spawnTimer++;
+        const spawnInterval = Math.max(82, 105 - Math.floor(score * 0.8));
+        if (spawnTimer >= spawnInterval) {
+          spawnTimer = 0;
+          spawnGate();
+        }
+
+        // Move and collide gates
+        const gateSpeed = 2.8 + Math.min(1.8, score * 0.05);
+        for (let i = gates.length - 1; i >= 0; i--) {
+          const g = gates[i];
+          g.x -= gateSpeed;
+          g.pulse = (g.pulse + 0.08) % (Math.PI * 2);
+
+          // Collision check
+          if (ship.x + ship.r > g.x && ship.x - ship.r < g.x + g.w) {
+            if (ship.y - ship.r < g.top || ship.y + ship.r > g.bottom) {
+              endGame();
+              return;
+            }
+          }
+
+          // Score check
+          if (!g.passed && g.x + g.w < ship.x) {
+            g.passed = true;
+            score++;
+            scoreVal.textContent = score;
+            playSound('gate');
+
+            // Floating +1 text
+            floatTexts.push({
+              x: ship.x + 20,
+              y: ship.y - 15,
+              text: '+1',
+              alpha: 1,
+            });
+
+            post({ type: 'dk:score', score });
+          }
+
+          if (g.x + g.w < -20) {
+            gates.splice(i, 1);
+          }
+        }
+      }
+
+      function draw() {
+        ctx.save();
+        ctx.scale(dpr, dpr);
+
+        if (shakeTime > 0) {
+          const dx = (Math.random() - 0.5) * 8;
+          const dy = (Math.random() - 0.5) * 8;
+          ctx.translate(dx, dy);
+        }
+
+        // Deep gradient sky
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+        skyGrad.addColorStop(0, '#05070c');
+        skyGrad.addColorStop(0.65, '#0b111e');
+        skyGrad.addColorStop(1, '#0e172a');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Stars
+        ctx.fillStyle = '#ffffff';
+        for (const s of stars) {
+          if (running && !paused) {
+            s.x -= s.speed;
+            if (s.x < 0) s.x = W;
+          }
+          ctx.globalAlpha = s.alpha;
+          ctx.fillRect(s.x, s.y, s.size, s.size);
+        }
+        ctx.globalAlpha = 1;
+
+        // Skyline Buildings (Parallax)
+        for (const b of buildings) {
+          if (running && !paused) {
+            b.x -= b.speed;
+            if (b.x + b.w < 0) {
+              b.x = W + 10;
+            }
+          }
+          ctx.fillStyle = b.color;
+          ctx.fillRect(b.x, H - b.h - 24, b.w, b.h);
+
+          // Windows
+          ctx.fillStyle = b.lightColor;
+          for (let wy = H - b.h - 16; wy < H - 36; wy += 14) {
+            for (let wx = b.x + 6; wx < b.x + b.w - 6; wx += 10) {
+              if (Math.sin(wx * 2 + wy) > 0.1) {
+                ctx.fillRect(wx, wy, 4, 6);
+              }
+            }
+          }
+        }
+
+        // Energy Laser Gates
+        for (const g of gates) {
+          // Top Pylon
+          ctx.fillStyle = '#0a101d';
+          ctx.fillRect(g.x, 0, g.w, g.top);
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(g.x + 1, -2, g.w - 2, g.top + 2);
+
+          // Top Emitter Node
+          ctx.fillStyle = '#00f0ff';
+          ctx.shadowColor = '#00f0ff';
+          ctx.shadowBlur = 12;
+          ctx.fillRect(g.x - 3, g.top - 12, g.w + 6, 12);
+
+          // Bottom Pylon
+          ctx.fillStyle = '#0a101d';
+          ctx.shadowBlur = 0;
+          ctx.fillRect(g.x, g.bottom, g.w, H - g.bottom - 24);
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(g.x + 1, g.bottom, g.w - 2, H - g.bottom - 22);
+
+          // Bottom Emitter Node
+          ctx.fillStyle = '#00f0ff';
+          ctx.shadowColor = '#00f0ff';
+          ctx.shadowBlur = 12;
+          ctx.fillRect(g.x - 3, g.bottom, g.w + 6, 12);
+
+          // Shimmering Laser Beam Aura between nodes
+          const beamPulse = (Math.sin(g.pulse) + 1) * 0.5;
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = `rgba(0, 240, 255, ${0.08 + beamPulse * 0.1})`;
+          ctx.fillRect(g.x + 8, g.top, g.w - 16, g.bottom - g.top);
+
+          // Crackling core beam
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + beamPulse * 0.4})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(g.x + g.w * 0.5, g.top);
+          ctx.lineTo(g.x + g.w * 0.5, g.bottom);
+          ctx.stroke();
+        }
+
+        // Cyber Road Ground
+        const groundY = H - 24;
+        ctx.fillStyle = '#060a12';
+        ctx.fillRect(0, groundY, W, 24);
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, groundY);
+        ctx.lineTo(W, groundY);
+        ctx.stroke();
+
+        // Particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= 0.035;
+          if (p.alpha <= 0) {
+            particles.splice(i, 1);
+            continue;
+          }
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // Floating score popup texts
+        for (let i = floatTexts.length - 1; i >= 0; i--) {
+          const ft = floatTexts[i];
+          ft.y -= 1.2;
+          ft.alpha -= 0.025;
+          if (ft.alpha <= 0) {
+            floatTexts.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = ft.alpha;
+          ctx.fillStyle = '#00f0ff';
+          ctx.font = 'bold 20px monospace';
+          ctx.fillText(ft.text, ft.x, ft.y);
+          ctx.restore();
+        }
+
+        // Cyber Ship
+        ctx.save();
+        ctx.translate(ship.x, ship.y);
+        ctx.rotate(ship.angle);
+
+        // Ion engine glow
+        ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
+        ctx.beginPath();
+        ctx.arc(-10, 0, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ship Fuselage
+        ctx.fillStyle = '#00f0ff';
+        ctx.beginPath();
+        ctx.moveTo(18, 0);
+        ctx.lineTo(-12, -11);
+        ctx.lineTo(-7, 0);
+        ctx.lineTo(-12, 11);
+        ctx.closePath();
+        ctx.fill();
+
+        // Ship Wing Accents (Magenta)
+        ctx.fillStyle = '#ec4899';
+        ctx.beginPath();
+        ctx.moveTo(6, 0);
+        ctx.lineTo(-9, -8);
+        ctx.lineTo(-6, 0);
+        ctx.lineTo(-9, 8);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cockpit Visor
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.ellipse(3, -2, 5, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        ctx.restore();
+      }
+
+      function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      // Input Event Listeners
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+          e.preventDefault();
+          flap();
+        }
+      });
+
+      canvas.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        flap();
+      });
+
+      startBtn.addEventListener('click', () => resetGame(true));
+      restartBtn.addEventListener('click', () => resetGame(true));
+      resumeBtn.addEventListener('click', resumeGame);
+
+      resetGame(false);
+      loop();
+    })();
+  </script>
 </body>
 </html>
-
