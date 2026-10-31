@@ -1,0 +1,1671 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>FLIPSHIFT — Gravity-Switching Arcade — DevKitra</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    :root {
+      --bg: #090d16;
+      --surface: #0f172a;
+      --surface-light: #1e293b;
+      --border: rgba(255, 255, 255, 0.14);
+      --cyan: #06b6d4;
+      --cyan-glow: #38bdf8;
+      --magenta: #f43f5e;
+      --amber: #f59e0b;
+      --emerald: #10b981;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      overflow: hidden;
+      background: #090d16;
+    }
+    canvas#gameCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    /* ---------------- TOP HUD OVERLAY ---------------- */
+    .hud-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .hud-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .btn-hud {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.15s ease;
+      backdrop-filter: blur(8px);
+    }
+    .btn-hud:hover {
+      background: rgba(30, 41, 59, 0.95);
+      border-color: var(--cyan);
+      transform: translateY(-1px);
+    }
+    .hud-card {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 5px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      backdrop-filter: blur(8px);
+      min-width: 72px;
+    }
+    .hud-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .hud-val {
+      font-size: 18px;
+      font-weight: 900;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+    .hud-card.multiplier-active {
+      border-color: var(--amber);
+      background: rgba(245, 158, 11, 0.18);
+    }
+    .hud-card.multiplier-active .hud-val {
+      color: #fde047;
+      text-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+    }
+
+    /* ---------------- OVERLAY SCREENS ---------------- */
+    .screen-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(6, 10, 18, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 100;
+      transition: opacity 0.22s ease, visibility 0.22s ease;
+      overflow-y: auto;
+    }
+    .screen-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .menu-card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 26px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.75);
+    }
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .logo-title {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: 5px;
+      color: #ffffff;
+    }
+    .logo-title span {
+      color: var(--cyan);
+      text-shadow: 0 0 14px rgba(6, 182, 212, 0.65);
+    }
+    .logo-sub {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    /* Mode Selector Buttons */
+    .mode-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .mode-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      text-align: left;
+    }
+    .mode-card:hover, .mode-card.selected {
+      background: rgba(30, 41, 59, 0.95);
+      border-color: var(--cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(6, 182, 212, 0.2);
+    }
+    .mode-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mode-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+      letter-spacing: 0.5px;
+      background: rgba(6, 182, 212, 0.2);
+      color: #38bdf8;
+    }
+    .mode-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Orb Theme Selector Row */
+    .skin-picker-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 18px;
+      background: rgba(30, 41, 59, 0.5);
+      padding: 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .skin-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .skin-btn:hover {
+      transform: scale(1.15);
+    }
+    .skin-btn.active {
+      border-color: #ffffff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+      transform: scale(1.15);
+    }
+    .skin-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+
+    /* Buttons */
+    .btn-action {
+      background: linear-gradient(135deg, #06b6d4, #0284c7);
+      border: none;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: 1px;
+      padding: 13px 24px;
+      border-radius: 12px;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4);
+      transition: all 0.15s ease;
+      margin-bottom: 10px;
+    }
+    .btn-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(6, 182, 212, 0.55);
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 13px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      margin-bottom: 8px;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Stats summary */
+    .stats-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .stat-box {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat-box.highlight {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.12);
+    }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-val {
+      font-size: 22px;
+      font-weight: 900;
+      color: #ffffff;
+      margin-top: 2px;
+    }
+    .stat-box.highlight .stat-val {
+      color: #38bdf8;
+    }
+
+    /* Toast */
+    #toast {
+      position: absolute;
+      top: 64px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #0284c7;
+      color: #ffffff;
+      padding: 8px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 200;
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <!-- Toast message -->
+  <div id="toast">Result copied!</div>
+
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD Layer -->
+  <div class="hud-layer">
+    <div class="hud-group">
+      <button id="btn-hud-menu" class="btn-hud" title="Main Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </button>
+      <button id="btn-hud-sound" class="btn-hud" title="Sound Mute">
+        <svg id="icon-sound-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg id="icon-sound-off" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="hud-group">
+      <div class="hud-card" id="card-multiplier">
+        <span class="hud-label">Multiplier</span>
+        <span class="hud-val" id="hud-multiplier">1x</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">Distance</span>
+        <span class="hud-val" id="hud-distance">0m</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">Score</span>
+        <span class="hud-val" id="hud-score">0</span>
+      </div>
+      <button id="btn-hud-pause" class="btn-hud" title="Pause [P / Esc]">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <rect x="6" y="4" width="4" height="16"></rect>
+          <rect x="14" y="4" width="4" height="16"></rect>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: MAIN MENU ---------------- -->
+  <div id="overlay-menu" class="screen-overlay">
+    <div class="menu-card">
+      <div class="logo-badge">
+        <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="16" stroke="#06b6d4" stroke-width="3" stroke-dasharray="8 4"/>
+          <circle cx="20" cy="20" r="8" fill="#38bdf8"/>
+        </svg>
+        <h1 class="logo-title">FLIP<span>SHIFT</span></h1>
+      </div>
+      <p class="logo-sub">One Tap · Flip Gravity · Survive</p>
+
+      <!-- Orb Theme Customizer -->
+      <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 6px;">SELECT ORB CORE</div>
+      <div class="skin-picker-row">
+        <div class="skin-btn active" data-skin="cyan" title="Neon Cyan" style="background: rgba(6,182,212,0.25);">
+          <div class="skin-dot" style="background:#06b6d4;"></div>
+        </div>
+        <div class="skin-btn" data-skin="amber" title="Solar Flare" style="background: rgba(245,158,11,0.25);">
+          <div class="skin-dot" style="background:#f59e0b;"></div>
+        </div>
+        <div class="skin-btn" data-skin="magenta" title="Electric Void" style="background: rgba(244,63,94,0.25);">
+          <div class="skin-dot" style="background:#f43f5e;"></div>
+        </div>
+        <div class="skin-btn" data-skin="emerald" title="Matrix Emerald" style="background: rgba(16,185,129,0.25);">
+          <div class="skin-dot" style="background:#10b981;"></div>
+        </div>
+      </div>
+
+      <!-- Mode Selector Cards -->
+      <div class="mode-list">
+        <div class="mode-card selected" data-mode="endless">
+          <div>
+            <div class="mode-name">Endless Run <span class="mode-badge" id="badge-endless-best">Best: 0</span></div>
+            <div class="mode-desc">Procedural hazard corridor · Escalating speed</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </div>
+
+        <div class="mode-card" data-mode="daily">
+          <div>
+            <div class="mode-name">Daily Challenge <span class="mode-badge" id="badge-daily-status">Today</span></div>
+            <div class="mode-desc">Deterministic 1,500m seed · Identical worldwide</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </div>
+
+        <div class="mode-card" data-mode="timeattack">
+          <div>
+            <div class="mode-name">Time Attack (90s) <span class="mode-badge" id="badge-time-best">Best: 0</span></div>
+            <div class="mode-desc">Fixed duration sprint · Maximum score density</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </div>
+      </div>
+
+      <button id="btn-start-run" class="btn-action">Tap to Play</button>
+      <button id="btn-show-help" class="btn-secondary">Controls &amp; Physics Guide</button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: HOW TO PLAY ---------------- -->
+  <div id="overlay-help" class="screen-overlay hidden">
+    <div class="menu-card">
+      <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 14px;">How to Play</h2>
+
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; font-size: 13px; line-height: 1.4; margin-bottom: 16px;">
+        <div style="background: rgba(30,41,59,0.5); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+          <strong style="color: #38bdf8;">1. One-Tap Gravity Flip:</strong><br/>
+          Press <kbd style="background:#090d16; padding:2px 6px; border-radius:4px;">SPACE</kbd>, <kbd style="background:#090d16; padding:2px 6px; border-radius:4px;">↑</kbd>, or <strong>Tap/Click anywhere</strong> to instantly switch gravity between the Floor and Ceiling!
+        </div>
+
+        <div style="background: rgba(30,41,59,0.5); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+          <strong style="color: #f59e0b;">2. Dynamic Obstacles:</strong><br/>
+          Dodge floor/ceiling spikes, oscillating pistons, laser gates, and rotating crosses. Every sequence is validated for 100% fair reaction time!
+        </div>
+
+        <div style="background: rgba(30,41,59,0.5); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+          <strong style="color: #10b981;">3. Energy Orbs &amp; Multipliers:</strong><br/>
+          Collect floating diamond energy orbs. Clearing consecutive hazard sections elevates your multiplier from <strong>1x up to 5x</strong>!
+        </div>
+      </div>
+
+      <button id="btn-close-help" class="btn-action">Ready to Flip</button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: PAUSE ---------------- -->
+  <div id="overlay-pause" class="screen-overlay hidden">
+    <div class="menu-card">
+      <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 18px; letter-spacing: 2px;">PAUSED</h2>
+      <button id="btn-resume" class="btn-action">Resume [Space]</button>
+      <button id="btn-restart" class="btn-secondary">Restart [R]</button>
+      <button id="btn-quit" class="btn-secondary" style="color:#fda4af; border-color: rgba(244, 63, 94, 0.4);">Quit to Menu</button>
+    </div>
+  </div>
+
+  <!-- ---------------- OVERLAY: GAME OVER ---------------- -->
+  <div id="overlay-gameover" class="screen-overlay hidden">
+    <div class="menu-card">
+      <div id="go-icon" style="font-size: 44px; margin-bottom: 4px;">💥</div>
+      <h2 id="go-heading" style="font-size: 24px; font-weight: 900; margin-bottom: 2px;">RUN TERMINATED</h2>
+      <p id="go-sub" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Collision with hazard barrier.</p>
+
+      <div class="stats-grid">
+        <div class="stat-box highlight">
+          <div class="stat-label">Final Score</div>
+          <div class="stat-val" id="go-score">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Best Record</div>
+          <div class="stat-val" id="go-best">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Distance</div>
+          <div class="stat-val" id="go-dist">0m</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Energy Orbs</div>
+          <div class="stat-val" id="go-orbs">0</div>
+        </div>
+      </div>
+
+      <button id="btn-retry" class="btn-action">Try Again [Space]</button>
+      <button id="btn-share-daily" class="btn-secondary" style="display:none;">Share Daily Result</button>
+      <button id="btn-menu-go" class="btn-secondary">Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * FLIPSHIFT — 2D Gravity-Switching Arcade Game
+ * - Single glowing geometric orb with instant, smooth physics.
+ * - Fair procedural obstacle generator with guaranteed safe transit windows.
+ * - 3 Game Modes: Endless, Daily Challenge, Time Attack.
+ * - Web Audio API synthesized sound effects.
+ */
+(function() {
+  'use strict';
+
+  // ---------------- SOUND SYSTEM (Web Audio API) ----------------
+  var audioCtx = null;
+  var soundMuted = false;
+  try {
+    soundMuted = localStorage.getItem('dk:flipshift-muted') === 'true';
+  } catch(e) {}
+
+  function initAudio() {
+    if (!audioCtx) {
+      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        audioCtx = new AudioContextClass();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function playTone(freq, type, duration, vol) {
+    if (soundMuted || !audioCtx) return;
+    try {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol || 0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+
+  function playFlipSound(toCeiling) {
+    if (soundMuted || !audioCtx) return;
+    try {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      var fStart = toCeiling ? 260 : 540;
+      var fEnd = toCeiling ? 580 : 240;
+      osc.frequency.setValueAtTime(fStart, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(fEnd, audioCtx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.14, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
+    } catch(e) {}
+  }
+
+  function playEnergySound() {
+    playTone(784, 'sine', 0.15, 0.14);
+  }
+
+  function playMultiplierSound(mult) {
+    if (soundMuted || !audioCtx) return;
+    var baseFreq = 440 + mult * 110;
+    playTone(baseFreq, 'triangle', 0.25, 0.15);
+  }
+
+  function playCrashSound() {
+    if (soundMuted || !audioCtx) return;
+    try {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.35);
+      gain.gain.setValueAtTime(0.24, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.35);
+    } catch(e) {}
+  }
+
+  // ---------------- SEEDED PRNG (Mulberry32) for Daily Challenge ----------------
+  var currentSeed = 123456789;
+  function seededRandom() {
+    currentSeed |= 0;
+    currentSeed = (currentSeed + 0x6D2B79F5) | 0;
+    var t = Math.imul(currentSeed ^ (currentSeed >>> 15), 1 | currentSeed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
+  function getDailySeed() {
+    var d = new Date();
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }
+
+  function getDailyDateString() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  // ---------------- COLOR THEMES & SKINS ----------------
+  var ORB_SKINS = {
+    cyan:    { hex: '#06b6d4', glow: '#38bdf8', core: '#ffffff', trail: 'rgba(6, 182, 212, ' },
+    amber:   { hex: '#f59e0b', glow: '#fde047', core: '#ffffff', trail: 'rgba(245, 158, 11, ' },
+    magenta: { hex: '#f43f5e', glow: '#fda4af', core: '#ffffff', trail: 'rgba(244, 63, 94, ' },
+    emerald: { hex: '#10b981', glow: '#6ee7b7', core: '#ffffff', trail: 'rgba(16, 185, 129, ' }
+  };
+  var activeSkinKey = 'cyan';
+  try {
+    var savedSkin = localStorage.getItem('dk:flipshift-skin');
+    if (savedSkin && ORB_SKINS[savedSkin]) activeSkinKey = savedSkin;
+  } catch(e) {}
+
+  // ---------------- GAME STATE ----------------
+  var currentMode = 'endless'; // 'endless', 'daily', 'timeattack'
+  var isPlaying = false;
+  var isPaused = false;
+  var isGameOver = false;
+
+  var score = 0;
+  var distance = 0; // in meters
+  var energyCollected = 0;
+  var comboMultiplier = 1;
+  var streakHazardClears = 0;
+  var timeAttackRemaining = 90; // seconds
+
+  // Corridor boundaries (calculated on canvas resize)
+  var corridor = {
+    ceilingY: 55,
+    floorY: 345,
+    height: 290
+  };
+
+  // Player Physics
+  var player = {
+    x: 0,
+    y: 0,
+    radius: 14,
+    vy: 0,
+    gravityDir: 1, // 1 = floor, -1 = ceiling
+    scaleX: 1.0,
+    scaleY: 1.0,
+    onSurface: true
+  };
+
+  // Scrolling & Procedural World
+  var scrollSpeed = 300; // px/sec
+  var obstacles = [];
+  var collectibles = [];
+  var particles = [];
+  var trail = [];
+  var screenShake = 0;
+  var nextSpawnDistance = 300;
+
+  // DOM Elements
+  var canvas = document.getElementById('gameCanvas');
+  var ctx = canvas.getContext('2d');
+  var hudScore = document.getElementById('hud-score');
+  var hudDistance = document.getElementById('hud-distance');
+  var hudMultiplier = document.getElementById('hud-multiplier');
+  var cardMultiplier = document.getElementById('card-multiplier');
+  var toastEl = document.getElementById('toast');
+
+  // Overlays
+  var overlayMenu = document.getElementById('overlay-menu');
+  var overlayHelp = document.getElementById('overlay-help');
+  var overlayPause = document.getElementById('overlay-pause');
+  var overlayGameOver = document.getElementById('overlay-gameover');
+
+  // ---------------- START / RESET GAME ----------------
+  function startGame(mode) {
+    currentMode = mode || 'endless';
+    if (currentMode === 'daily') {
+      currentSeed = getDailySeed();
+    }
+
+    score = 0;
+    distance = 0;
+    energyCollected = 0;
+    comboMultiplier = 1;
+    streakHazardClears = 0;
+    timeAttackRemaining = 90;
+    scrollSpeed = 300;
+
+    // Reset player position on floor
+    player.x = canvas.width * 0.22;
+    player.y = corridor.floorY - player.radius;
+    player.vy = 0;
+    player.gravityDir = 1;
+    player.scaleX = 1.0;
+    player.scaleY = 1.0;
+    player.onSurface = true;
+
+    obstacles = [];
+    collectibles = [];
+    particles = [];
+    trail = [];
+    screenShake = 0;
+    nextSpawnDistance = 280;
+
+    isPlaying = true;
+    isPaused = false;
+    isGameOver = false;
+
+    overlayMenu.classList.add('hidden');
+    overlayHelp.classList.add('hidden');
+    overlayPause.classList.add('hidden');
+    overlayGameOver.classList.add('hidden');
+
+    updateHud();
+
+    try {
+      window.parent.postMessage({ type: 'dk:ready', gameId: 'flipshift' }, '*');
+    } catch(e) {}
+  }
+
+  // ---------------- GRAVITY FLIP ACTION ----------------
+  function flipGravity() {
+    if (!isPlaying || isPaused || isGameOver) return;
+    initAudio();
+
+    player.gravityDir = -player.gravityDir;
+    player.onSurface = false;
+    player.scaleX = 0.8;
+    player.scaleY = 1.3; // stretch along flip trajectory
+
+    playFlipSound(player.gravityDir === -1);
+    spawnFlipBurst(player.x, player.y);
+  }
+
+  // ---------------- PHYSICS & GAME LOOP ----------------
+  var lastFrameTime = performance.now();
+
+  function updateGame(dt) {
+    if (!isPlaying || isPaused || isGameOver) return;
+
+    // Time Attack countdown
+    if (currentMode === 'timeattack') {
+      timeAttackRemaining -= dt;
+      if (timeAttackRemaining <= 0) {
+        onGameOver(true, 'TIME COMPLETED!', '90-second sprint finished.');
+        return;
+      }
+    }
+
+    // Scroll speed progression
+    scrollSpeed = Math.min(520, 300 + (distance / 80) * 12);
+
+    // Update distance & score
+    var moveDist = scrollSpeed * dt;
+    distance += Math.floor(moveDist * 0.1);
+    score += Math.floor(moveDist * 0.1 * comboMultiplier);
+
+    // Gravity vertical kinematic acceleration
+    var gravAccel = 2400 * player.gravityDir;
+    player.vy += gravAccel * dt;
+    player.vy = Math.max(-1000, Math.min(1000, player.vy));
+    player.y += player.vy * dt;
+
+    // Surface collision with floor / ceiling
+    var topLimit = corridor.ceilingY + player.radius;
+    var bottomLimit = corridor.floorY - player.radius;
+
+    if (player.y <= topLimit) {
+      if (!player.onSurface && player.gravityDir === -1) {
+        // Landing on ceiling
+        spawnLandingDust(player.x, corridor.ceilingY, true);
+        player.scaleX = 1.3;
+        player.scaleY = 0.75;
+      }
+      player.y = topLimit;
+      player.vy = 0;
+      player.onSurface = (player.gravityDir === -1);
+    } else if (player.y >= bottomLimit) {
+      if (!player.onSurface && player.gravityDir === 1) {
+        // Landing on floor
+        spawnLandingDust(player.x, corridor.floorY, false);
+        player.scaleX = 1.3;
+        player.scaleY = 0.75;
+      }
+      player.y = bottomLimit;
+      player.vy = 0;
+      player.onSurface = (player.gravityDir === 1);
+    } else {
+      player.onSurface = false;
+    }
+
+    // Recover squash / stretch
+    player.scaleX += (1.0 - player.scaleX) * 14 * dt;
+    player.scaleY += (1.0 - player.scaleY) * 14 * dt;
+
+    // Trail recording
+    trail.push({ x: player.x, y: player.y, alpha: 0.65, r: player.radius });
+    if (trail.length > 22) trail.shift();
+
+    // Procedural Obstacle & Collectible Spawner
+    nextSpawnDistance -= moveDist;
+    if (nextSpawnDistance <= 0) {
+      spawnFairObstacleSequence();
+    }
+
+    // Update Obstacles & Check Collisions
+    for (var i = obstacles.length - 1; i >= 0; i--) {
+      var obs = obstacles[i];
+      obs.x -= moveDist;
+
+      // Update moving obstacle animations
+      if (obs.type === 'moving_piston') {
+        obs.y += obs.speed * obs.dir * dt;
+        if (obs.y < obs.minY || obs.y > obs.maxY) obs.dir *= -1;
+      } else if (obs.type === 'rotating_cross') {
+        obs.angle += 3.2 * dt;
+      } else if (obs.type === 'laser_gate') {
+        obs.laserTimer = (obs.laserTimer + dt) % 2.0;
+        obs.laserActive = obs.laserTimer < 1.1;
+      }
+
+      // Check clearance for combo multiplier
+      if (!obs.cleared && obs.x < player.x - player.radius) {
+        obs.cleared = true;
+        streakHazardClears++;
+        if (streakHazardClears % 3 === 0 && comboMultiplier < 5) {
+          comboMultiplier++;
+          playMultiplierSound(comboMultiplier);
+          cardMultiplier.classList.add('multiplier-active');
+        }
+      }
+
+      // Collision Detection
+      if (checkObstacleCollision(obs)) {
+        onGameOver(false, 'COLLISION DETECTED', 'Struck hazard barrier.');
+        return;
+      }
+
+      // Cleanup off-screen
+      if (obs.x < -100) {
+        obstacles.splice(i, 1);
+      }
+    }
+
+    // Update Collectibles
+    for (var c = collectibles.length - 1; c >= 0; c--) {
+      var orb = collectibles[c];
+      orb.x -= moveDist;
+      orb.rot += 3 * dt;
+
+      // Check Collection
+      var cdx = player.x - orb.x;
+      var cdy = player.y - orb.y;
+      var cdist = Math.sqrt(cdx * cdx + cdy * cdy);
+
+      if (cdist < player.radius + orb.radius) {
+        // Collect!
+        collectibles.splice(c, 1);
+        energyCollected++;
+        score += 150 * comboMultiplier;
+        playEnergySound();
+        spawnEnergySparks(orb.x, orb.y);
+        updateHud();
+        continue;
+      }
+
+      if (orb.x < -50) {
+        collectibles.splice(c, 1);
+      }
+    }
+
+    // Check Daily Challenge Goal Completion (1,500m)
+    if (currentMode === 'daily' && distance >= 1500) {
+      onGameOver(true, 'DAILY COMPLETED!', '1,500m challenge conquered.');
+      return;
+    }
+
+    updateHud();
+  }
+
+  // ---------------- FAIR PROCEDURAL GENERATION ----------------
+  function getRandom() {
+    return currentMode === 'daily' ? seededRandom() : Math.random();
+  }
+
+  function spawnFairObstacleSequence() {
+    var rng = getRandom();
+    var spawnX = canvas.width + 60;
+    var safeTransitTime = 0.28;
+    var reactionBuffer = 0.38;
+    var fairGap = scrollSpeed * (safeTransitTime + reactionBuffer);
+
+    if (rng < 0.28) {
+      // 1. Floor Spike
+      obstacles.push({
+        type: 'spike_floor',
+        x: spawnX,
+        y: corridor.floorY,
+        w: 34,
+        h: 48,
+        cleared: false
+      });
+      // Spawn reward orb near ceiling
+      collectibles.push({ x: spawnX + 16, y: corridor.ceilingY + 36, radius: 9, rot: 0 });
+      nextSpawnDistance = fairGap + 40;
+    } else if (rng < 0.54) {
+      // 2. Ceiling Spike
+      obstacles.push({
+        type: 'spike_ceiling',
+        x: spawnX,
+        y: corridor.ceilingY,
+        w: 34,
+        h: 48,
+        cleared: false
+      });
+      // Spawn reward orb near floor
+      collectibles.push({ x: spawnX + 16, y: corridor.floorY - 36, radius: 9, rot: 0 });
+      nextSpawnDistance = fairGap + 40;
+    } else if (rng < 0.72) {
+      // 3. Moving Vertical Piston (Guarantees safe pass either top or bottom)
+      var isHighPiston = getRandom() > 0.5;
+      obstacles.push({
+        type: 'moving_piston',
+        x: spawnX,
+        y: isHighPiston ? corridor.ceilingY + 30 : corridor.floorY - 110,
+        w: 26,
+        h: 80,
+        minY: corridor.ceilingY + 15,
+        maxY: corridor.floorY - 95,
+        speed: 120,
+        dir: 1,
+        cleared: false
+      });
+      collectibles.push({ x: spawnX + 70, y: (corridor.ceilingY + corridor.floorY) / 2, radius: 9, rot: 0 });
+      nextSpawnDistance = fairGap + 80;
+    } else if (rng < 0.88) {
+      // 4. Laser Gate (Timed on/off rhythm)
+      obstacles.push({
+        type: 'laser_gate',
+        x: spawnX,
+        y: corridor.ceilingY,
+        w: 12,
+        h: corridor.height,
+        laserTimer: 0,
+        laserActive: false,
+        cleared: false
+      });
+      nextSpawnDistance = fairGap + 60;
+    } else {
+      // 5. Rotating Cross Hazard (Center-aligned, allowing floor or ceiling flight)
+      obstacles.push({
+        type: 'rotating_cross',
+        x: spawnX,
+        y: (corridor.ceilingY + corridor.floorY) / 2,
+        radius: 36,
+        angle: 0,
+        cleared: false
+      });
+      collectibles.push({ x: spawnX, y: corridor.ceilingY + 28, radius: 9, rot: 0 });
+      collectibles.push({ x: spawnX, y: corridor.floorY - 28, radius: 9, rot: 0 });
+      nextSpawnDistance = fairGap + 90;
+    }
+  }
+
+  // ---------------- COLLISION DETECTION ----------------
+  function checkObstacleCollision(obs) {
+    var px = player.x;
+    var py = player.y;
+    var pr = player.radius - 2; // slightly forgiving hit box for fair play
+
+    if (obs.type === 'spike_floor') {
+      // Triangle on floor
+      return checkCircleTriangleCollision(px, py, pr, obs.x, obs.y, obs.x + obs.w / 2, obs.y - obs.h, obs.x + obs.w, obs.y);
+    } else if (obs.type === 'spike_ceiling') {
+      // Triangle on ceiling
+      return checkCircleTriangleCollision(px, py, pr, obs.x, obs.y, obs.x + obs.w / 2, obs.y + obs.h, obs.x + obs.w, obs.y);
+    } else if (obs.type === 'moving_piston') {
+      // AABB check
+      return (px + pr > obs.x && px - pr < obs.x + obs.w && py + pr > obs.y && py - pr < obs.y + obs.h);
+    } else if (obs.type === 'laser_gate') {
+      if (!obs.laserActive) return false;
+      return (px + pr > obs.x && px - pr < obs.x + obs.w && py + pr > obs.y && py - pr < obs.y + obs.h);
+    } else if (obs.type === 'rotating_cross') {
+      var dx = px - obs.x;
+      var dy = py - obs.y;
+      return (Math.sqrt(dx * dx + dy * dy) < pr + obs.radius * 0.7);
+    }
+    return false;
+  }
+
+  function checkCircleTriangleCollision(cx, cy, r, x1, y1, x2, y2, x3, y3) {
+    // Check bounding box first for fast rejection
+    var minX = Math.min(x1, x2, x3);
+    var maxX = Math.max(x1, x2, x3);
+    var minY = Math.min(y1, y2, y3);
+    var maxY = Math.max(y1, y2, y3);
+    if (cx + r < minX || cx - r > maxX || cy + r < minY || cy - r > maxY) return false;
+
+    // Approximate point distance check to triangle apex & base
+    var dApex = Math.hypot(cx - x2, cy - y2);
+    if (dApex < r) return true;
+    var dCenter = Math.hypot(cx - (x1 + x2 + x3) / 3, cy - (y1 + y2 + y3) / 3);
+    if (dCenter < r + 15) return true;
+    return false;
+  }
+
+  // ---------------- GAME OVER / VICTORY ----------------
+  function onGameOver(isWin, title, sub) {
+    isPlaying = false;
+    isGameOver = true;
+    screenShake = 16;
+    playCrashSound();
+
+    spawnCrashBurst(player.x, player.y);
+
+    var bestKey = 'dk:flipshift-best-' + currentMode;
+    var prevBest = parseInt(localStorage.getItem(bestKey) || '0', 10);
+    var isNewRecord = score > prevBest;
+    if (isNewRecord) {
+      localStorage.setItem(bestKey, String(score));
+    }
+
+    if (currentMode === 'daily') {
+      localStorage.setItem('dk:flipshift-daily-' + getDailyDateString(), String(score));
+    }
+
+    // Modal UI
+    document.getElementById('go-icon').textContent = isWin ? '🏆' : '💥';
+    document.getElementById('go-heading').textContent = title;
+    document.getElementById('go-sub').textContent = sub;
+    document.getElementById('go-score').textContent = score.toLocaleString();
+    document.getElementById('go-best').textContent = Math.max(score, prevBest).toLocaleString();
+    document.getElementById('go-dist').textContent = distance + 'm';
+    document.getElementById('go-orbs').textContent = energyCollected;
+
+    document.getElementById('btn-share-daily').style.display = (currentMode === 'daily') ? 'block' : 'none';
+
+    setTimeout(function() {
+      overlayGameOver.classList.remove('hidden');
+    }, 450);
+
+    try {
+      window.parent.postMessage({
+        type: 'dk:gameover',
+        score: score,
+        gameId: 'flipshift'
+      }, '*');
+    } catch(e) {}
+  }
+
+  function copyDailyShareSummary() {
+    var dateStr = getDailyDateString();
+    var text = 'FLIPSHIFT Daily #' + dateStr + '\n' +
+               'Score: ' + score.toLocaleString() + ' | Distance: ' + distance + 'm\n' +
+               'Energy: ' + energyCollected + ' 💎 | Max Multiplier: ' + comboMultiplier + 'x\n' +
+               'Play at https://devkitra.in/game/flipshift';
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('Daily summary copied to clipboard!');
+      });
+    } else {
+      showToast('Score: ' + score.toLocaleString());
+    }
+  }
+
+  // ---------------- VISUAL PARTICLES & BURSTS ----------------
+  function spawnFlipBurst(x, y) {
+    var skin = ORB_SKINS[activeSkinKey] || ORB_SKINS.cyan;
+    for (var i = 0; i < 8; i++) {
+      var angle = Math.random() * Math.PI * 2;
+      particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * (60 + Math.random() * 80),
+        vy: Math.sin(angle) * (60 + Math.random() * 80),
+        radius: 3,
+        alpha: 0.85,
+        color: skin.trail
+      });
+    }
+  }
+
+  function spawnLandingDust(x, y, isCeiling) {
+    for (var i = 0; i < 6; i++) {
+      particles.push({
+        x: x + (Math.random() - 0.5) * 20,
+        y: y,
+        vx: (Math.random() - 0.5) * 80,
+        vy: isCeiling ? Math.random() * 40 : -Math.random() * 40,
+        radius: 2.5,
+        alpha: 0.7,
+        color: 'rgba(255, 255, 255, '
+      });
+    }
+  }
+
+  function spawnEnergySparks(x, y) {
+    for (var i = 0; i < 12; i++) {
+      var angle = Math.random() * Math.PI * 2;
+      particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * (90 + Math.random() * 110),
+        vy: Math.sin(angle) * (90 + Math.random() * 110),
+        radius: 3,
+        alpha: 1.0,
+        color: 'rgba(245, 158, 11, '
+      });
+    }
+  }
+
+  function spawnCrashBurst(x, y) {
+    for (var i = 0; i < 24; i++) {
+      var angle = Math.random() * Math.PI * 2;
+      particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * (100 + Math.random() * 180),
+        vy: Math.sin(angle) * (100 + Math.random() * 180),
+        radius: 3.5,
+        alpha: 1.0,
+        color: 'rgba(244, 63, 94, '
+      });
+    }
+  }
+
+  // ---------------- CANVAS RENDERING ----------------
+  function render(now) {
+    requestAnimationFrame(render);
+
+    var dt = (now - lastFrameTime) / 1000;
+    lastFrameTime = now;
+    if (dt > 0.1) dt = 0.1;
+
+    updateGame(dt);
+
+    // Canvas size
+    if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      corridor.ceilingY = 65;
+      corridor.floorY = canvas.height - 65;
+      corridor.height = corridor.floorY - corridor.ceilingY;
+    }
+
+    var W = canvas.width;
+    var H = canvas.height;
+
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+
+    // Screen Shake
+    if (screenShake > 0) {
+      ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+      screenShake *= 0.86;
+      if (screenShake < 0.2) screenShake = 0;
+    }
+
+    // 1. Draw Parallax Background Grid
+    renderBackgroundThemes(W, H, now);
+
+    // 2. Draw Floor & Ceiling Boundaries
+    renderBoundaries(W, H);
+
+    // 3. Draw Collectibles
+    renderCollectibles();
+
+    // 4. Draw Obstacles
+    renderObstacles(now);
+
+    // 5. Draw Player Trail & Orb
+    renderPlayerOrb(now);
+
+    // 6. Draw Particles
+    renderParticles(dt);
+
+    ctx.restore();
+  }
+
+  function renderBackgroundThemes(W, H, now) {
+    // Dynamic theme shifts with distance
+    var themeHue = (distance * 0.05) % 360;
+    ctx.strokeStyle = 'hsla(' + themeHue + ', 60%, 50%, 0.05)';
+    ctx.lineWidth = 1;
+
+    var gridSpacing = 48;
+    var offsetX = (now * 0.08) % gridSpacing;
+
+    ctx.beginPath();
+    for (var x = -offsetX; x <= W; x += gridSpacing) {
+      ctx.moveTo(x, corridor.ceilingY);
+      ctx.lineTo(x, corridor.floorY);
+    }
+    for (var y = corridor.ceilingY; y <= corridor.floorY; y += gridSpacing) {
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+    }
+    ctx.stroke();
+  }
+
+  function renderBoundaries(W, H) {
+    var skin = ORB_SKINS[activeSkinKey] || ORB_SKINS.cyan;
+
+    // Ceiling Base
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, corridor.ceilingY);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, corridor.ceilingY - 6, W, 6);
+
+    // Floor Base
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, corridor.floorY, W, H - corridor.floorY);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, corridor.floorY, W, 6);
+
+    // Neon Edge Rails
+    ctx.strokeStyle = skin.hex;
+    ctx.lineWidth = 3.5;
+    ctx.shadowColor = skin.glow;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.moveTo(0, corridor.ceilingY); ctx.lineTo(W, corridor.ceilingY);
+    ctx.moveTo(0, corridor.floorY); ctx.lineTo(W, corridor.floorY);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  function renderCollectibles() {
+    ctx.save();
+    for (var i = 0; i < collectibles.length; i++) {
+      var orb = collectibles[i];
+      ctx.save();
+      ctx.translate(orb.x, orb.y);
+      ctx.rotate(orb.rot);
+
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.25)';
+      ctx.beginPath();
+      ctx.arc(0, 0, orb.radius * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rotating diamond shard
+      ctx.fillStyle = '#fde047';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(-orb.radius, -orb.radius, orb.radius * 2, orb.radius * 2, 3);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function renderObstacles(now) {
+    ctx.save();
+    for (var i = 0; i < obstacles.length; i++) {
+      var obs = obstacles[i];
+
+      if (obs.type === 'spike_floor') {
+        ctx.fillStyle = '#f43f5e';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(obs.x, obs.y);
+        ctx.lineTo(obs.x + obs.w / 2, obs.y - obs.h);
+        ctx.lineTo(obs.x + obs.w, obs.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else if (obs.type === 'spike_ceiling') {
+        ctx.fillStyle = '#f43f5e';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(obs.x, obs.y);
+        ctx.lineTo(obs.x + obs.w / 2, obs.y + obs.h);
+        ctx.lineTo(obs.x + obs.w, obs.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else if (obs.type === 'moving_piston') {
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.roundRect(obs.x, obs.y, obs.w, obs.h, 4);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else if (obs.type === 'laser_gate') {
+        if (obs.laserActive) {
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = obs.w;
+          ctx.shadowColor = '#ef4444';
+          ctx.shadowBlur = 14;
+          ctx.beginPath();
+          ctx.moveTo(obs.x + obs.w / 2, obs.y);
+          ctx.lineTo(obs.x + obs.w / 2, obs.y + obs.h);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        } else {
+          // Warning flash indicator
+          ctx.strokeStyle = 'rgba(239, 68, 68, 0.25)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 8]);
+          ctx.beginPath();
+          ctx.moveTo(obs.x + obs.w / 2, obs.y);
+          ctx.lineTo(obs.x + obs.w / 2, obs.y + obs.h);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      } else if (obs.type === 'rotating_cross') {
+        ctx.save();
+        ctx.translate(obs.x, obs.y);
+        ctx.rotate(obs.angle);
+        ctx.fillStyle = '#f43f5e';
+        ctx.fillRect(-obs.radius, -5, obs.radius * 2, 10);
+        ctx.fillRect(-5, -obs.radius, 10, obs.radius * 2);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(-obs.radius, -5, obs.radius * 2, 10);
+        ctx.strokeRect(-5, -obs.radius, 10, obs.radius * 2);
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+  }
+
+  function renderPlayerOrb(now) {
+    var skin = ORB_SKINS[activeSkinKey] || ORB_SKINS.cyan;
+
+    // 1. Particle Trail Ribbon
+    for (var t = 0; t < trail.length; t++) {
+      var tr = trail[t];
+      var progress = t / trail.length;
+      ctx.fillStyle = skin.trail + (progress * 0.45) + ')';
+      ctx.beginPath();
+      ctx.arc(tr.x - (trail.length - t) * 2, tr.y, tr.r * progress * 0.85, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 2. Player Glowing Orb
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.scale(player.scaleX, player.scaleY);
+
+    // Radiant Glow Aura
+    ctx.beginPath();
+    ctx.arc(0, 0, player.radius * 1.9, 0, Math.PI * 2);
+    ctx.fillStyle = skin.trail + '0.28)';
+    ctx.fill();
+
+    // Orb Shell
+    ctx.beginPath();
+    ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+    ctx.fillStyle = skin.hex;
+    ctx.shadowColor = skin.glow;
+    ctx.shadowBlur = 14;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // High-brightness Core
+    ctx.beginPath();
+    ctx.arc(0, 0, player.radius * 0.48, 0, Math.PI * 2);
+    ctx.fillStyle = skin.core;
+    ctx.fill();
+
+    // Directional Gravity Arrow inside Orb
+    ctx.fillStyle = '#090d16';
+    ctx.beginPath();
+    if (player.gravityDir === 1) {
+      // Down arrow
+      ctx.moveTo(-4, -2); ctx.lineTo(4, -2); ctx.lineTo(0, 4);
+    } else {
+      // Up arrow
+      ctx.moveTo(-4, 2); ctx.lineTo(4, 2); ctx.lineTo(0, -4);
+    }
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function renderParticles(dt) {
+    ctx.save();
+    for (var p = particles.length - 1; p >= 0; p--) {
+      var pt = particles[p];
+      pt.x += pt.vx * dt;
+      pt.y += pt.vy * dt;
+      pt.alpha -= 1.4 * dt;
+      if (pt.alpha <= 0) {
+        particles.splice(p, 1);
+        continue;
+      }
+      ctx.fillStyle = pt.color + pt.alpha + ')';
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ---------------- HUD & STORAGE ----------------
+  function updateHud() {
+    hudScore.textContent = score.toLocaleString();
+    hudDistance.textContent = distance + 'm';
+    hudMultiplier.textContent = comboMultiplier + 'x';
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(function() {
+      toastEl.classList.remove('show');
+    }, 2200);
+  }
+
+  function refreshMenuBadges() {
+    var endlessBest = parseInt(localStorage.getItem('dk:flipshift-best-endless') || '0', 10);
+    document.getElementById('badge-endless-best').textContent = 'Best: ' + endlessBest.toLocaleString();
+
+    var timeBest = parseInt(localStorage.getItem('dk:flipshift-best-timeattack') || '0', 10);
+    document.getElementById('badge-time-best').textContent = 'Best: ' + timeBest.toLocaleString();
+
+    var dailySaved = localStorage.getItem('dk:flipshift-daily-' + getDailyDateString());
+    if (dailySaved) {
+      document.getElementById('badge-daily-status').textContent = 'Done (' + parseInt(dailySaved, 10).toLocaleString() + ')';
+    } else {
+      document.getElementById('badge-daily-status').textContent = 'New Today';
+    }
+  }
+
+  // ---------------- CONTROLS & LISTENERS ----------------
+  function initListeners() {
+    // Touch & Click on Canvas: Flip Gravity
+    canvas.addEventListener('pointerdown', function(e) {
+      e.preventDefault();
+      flipGravity();
+    });
+
+    // Keyboard Controls
+    window.addEventListener('keydown', function(e) {
+      initAudio();
+      if (e.code === 'Space' || e.code === 'ArrowUp') {
+        e.preventDefault();
+        if (isGameOver) {
+          startGame(currentMode);
+        } else if (isPaused) {
+          isPaused = false;
+          overlayPause.classList.add('hidden');
+        } else {
+          flipGravity();
+        }
+      } else if (e.code === 'KeyP' || e.code === 'Escape') {
+        if (isPlaying && !isGameOver) {
+          isPaused = !isPaused;
+          overlayPause.classList.toggle('hidden', !isPaused);
+        }
+      } else if (e.code === 'KeyR') {
+        startGame(currentMode);
+      }
+    });
+
+    // HUD Menu & Pause Buttons
+    document.getElementById('btn-hud-menu').addEventListener('click', function() {
+      isPlaying = false;
+      overlayPause.classList.add('hidden');
+      overlayGameOver.classList.add('hidden');
+      overlayMenu.classList.remove('hidden');
+      refreshMenuBadges();
+    });
+
+    document.getElementById('btn-hud-pause').addEventListener('click', function() {
+      if (!isPlaying || isGameOver) return;
+      isPaused = true;
+      overlayPause.classList.remove('hidden');
+    });
+
+    // Sound Toggle
+    var btnSound = document.getElementById('btn-hud-sound');
+    var iconOn = document.getElementById('icon-sound-on');
+    var iconOff = document.getElementById('icon-sound-off');
+
+    function updateSoundIcons() {
+      if (soundMuted) {
+        iconOn.style.display = 'none';
+        iconOff.style.display = 'block';
+      } else {
+        iconOn.style.display = 'block';
+        iconOff.style.display = 'none';
+      }
+    }
+    updateSoundIcons();
+
+    btnSound.addEventListener('click', function() {
+      soundMuted = !soundMuted;
+      try {
+        localStorage.setItem('dk:flipshift-muted', String(soundMuted));
+      } catch(e) {}
+      updateSoundIcons();
+      if (!soundMuted) {
+        initAudio();
+        playEnergySound();
+      }
+    });
+
+    // Menu Mode Selection Cards
+    var modeCards = document.querySelectorAll('.mode-card');
+    modeCards.forEach(function(card) {
+      card.addEventListener('click', function() {
+        modeCards.forEach(function(c) { c.classList.remove('selected'); });
+        card.classList.add('selected');
+        currentMode = card.getAttribute('data-mode');
+      });
+    });
+
+    // Orb Skin Picker
+    var skinButtons = document.querySelectorAll('.skin-btn');
+    skinButtons.forEach(function(b) {
+      if (b.getAttribute('data-skin') === activeSkinKey) b.classList.add('active');
+      b.addEventListener('click', function() {
+        skinButtons.forEach(function(s) { s.classList.remove('active'); });
+        b.classList.add('active');
+        activeSkinKey = b.getAttribute('data-skin');
+        try {
+          localStorage.setItem('dk:flipshift-skin', activeSkinKey);
+        } catch(e) {}
+        initAudio();
+        playEnergySound();
+      });
+    });
+
+    document.getElementById('btn-start-run').addEventListener('click', function() {
+      startGame(currentMode);
+    });
+
+    // Help Modal
+    document.getElementById('btn-show-help').addEventListener('click', function() {
+      overlayHelp.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-help').addEventListener('click', function() {
+      overlayHelp.classList.add('hidden');
+    });
+
+    // Pause Modal Buttons
+    document.getElementById('btn-resume').addEventListener('click', function() {
+      isPaused = false;
+      overlayPause.classList.add('hidden');
+    });
+    document.getElementById('btn-restart').addEventListener('click', function() {
+      startGame(currentMode);
+    });
+    document.getElementById('btn-quit').addEventListener('click', function() {
+      isPlaying = false;
+      overlayPause.classList.add('hidden');
+      overlayMenu.classList.remove('hidden');
+      refreshMenuBadges();
+    });
+
+    // Game Over Buttons
+    document.getElementById('btn-retry').addEventListener('click', function() {
+      startGame(currentMode);
+    });
+    document.getElementById('btn-menu-go').addEventListener('click', function() {
+      overlayGameOver.classList.add('hidden');
+      overlayMenu.classList.remove('hidden');
+      refreshMenuBadges();
+    });
+    document.getElementById('btn-share-daily').addEventListener('click', function() {
+      copyDailyShareSummary();
+    });
+
+    // DevKitra postMessage protocol
+    window.addEventListener('message', function(e) {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'dk:pause') {
+        isPaused = true;
+        overlayPause.classList.remove('hidden');
+      } else if (e.data.type === 'dk:resume') {
+        isPaused = false;
+        overlayPause.classList.add('hidden');
+      } else if (e.data.type === 'dk:restart') {
+        startGame(currentMode);
+      }
+    });
+  }
+
+  // ---------------- INITIAL STARTUP ----------------
+  initListeners();
+  refreshMenuBadges();
+  requestAnimationFrame(render);
+
+})();
+</script>
+</body>
+</html>
+
