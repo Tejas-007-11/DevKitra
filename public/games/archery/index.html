@@ -92,6 +92,33 @@
       opacity: 0.35;
       box-shadow: none;
     }
+    .cam-indicator {
+      position: absolute;
+      top: 60px;
+      left: 16px;
+      background: rgba(2, 132, 199, 0.25);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .cam-indicator.active {
+      display: inline-flex;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.65; }
+    }
     .overlay {
       position: absolute;
       inset: 0;
@@ -215,14 +242,16 @@
       </div>
     </div>
 
+    <div id="cam-indicator" class="cam-indicator">🎯 ARROW CHASE CAM</div>
+
     <canvas id="archeryCanvas"></canvas>
-    <div class="aim-hint">🎯 Hold & Drag to Aim the 3D Bow · Release to Fire!</div>
+    <div class="aim-hint">🎯 Hold & Drag to Aim & Draw String · Release to Fire!</div>
 
     <div id="overlay" class="overlay">
       <div class="card-modal">
         <div class="modal-icon" id="modal-icon">🏹</div>
         <h2 id="overlay-heading">3D ARCHERY MASTER</h2>
-        <p id="overlay-desc">First-person Olympic 3D archery. Aim the bow, compensate for gravity and crosswind, and nail bullseyes down the 3D range!</p>
+        <p id="overlay-desc">Dynamic 3D Olympic archery with real-time arrow chase camera, dramatic target impact close-up zoom, and authentic ballistics!</p>
         <div class="stats-summary" id="stats-summary" style="display:none;">
           <div class="stat-box">
             <div class="stat-label">Final Score</div>
@@ -272,17 +301,24 @@
         } catch(e) {}
       }
 
-      function sfxDraw() { playTone(180, 'sine', 0.15, 0.04, 260); }
-      function sfxShoot() { playTone(360, 'triangle', 0.12, 0.15, 90); }
+      function sfxDraw() { playTone(160, 'sine', 0.16, 0.05, 240); }
+      function sfxShoot() {
+        playTone(420, 'triangle', 0.14, 0.18, 80);
+        setTimeout(function() { playTone(880, 'sine', 0.08, 0.05, 300); }, 30);
+      }
       function sfxHit(isBullseye) {
+        // Deep target thud
+        playTone(130, 'triangle', 0.12, 0.22, 60);
         if (isBullseye) {
-          playTone(523.25, 'triangle', 0.12, 0.16, 260);
           setTimeout(function() {
-            playTone(784.0, 'sine', 0.25, 0.14);
-            playTone(1046.5, 'sine', 0.35, 0.1);
+            playTone(523.25, 'triangle', 0.18, 0.18, 300);
+            playTone(784.0, 'sine', 0.28, 0.14);
+            playTone(1046.5, 'sine', 0.40, 0.12);
           }, 60);
         } else {
-          playTone(220, 'triangle', 0.12, 0.12, 120);
+          setTimeout(function() {
+            playTone(260, 'triangle', 0.14, 0.12, 140);
+          }, 40);
         }
       }
 
@@ -292,14 +328,14 @@
       var scoreDisplay = document.getElementById('score-display');
       var windDisplay = document.getElementById('wind-display');
       var arrowsRack = document.getElementById('arrows-rack');
+      var camIndicator = document.getElementById('cam-indicator');
       var overlay = document.getElementById('overlay');
-      var modalIcon = document.getElementById('modal-icon');
-      var overlayHeading = document.getElementById('overlay-heading');
-      var overlayDesc = document.getElementById('overlay-desc');
       var statsSummary = document.getElementById('stats-summary');
       var finalScore = document.getElementById('final-score');
       var finalBest = document.getElementById('final-best');
       var startBtn = document.getElementById('start-btn');
+      var overlayHeading = document.getElementById('overlay-heading');
+      var overlayDesc = document.getElementById('overlay-desc');
 
       var W = 800;
       var H = 600;
@@ -319,12 +355,12 @@
       window.addEventListener('resize', resize);
       resize();
 
-      // Stages (Olympic distances)
+      // Olympic Range Stages
       var STAGES = [
         { name: '20m Warmup', distance: 20, windMax: 1.2, arrows: 5 },
-        { name: '30m Club', distance: 30, windMax: 2.5, arrows: 5 },
-        { name: '50m National', distance: 50, windMax: 4.2, arrows: 5 },
-        { name: '70m Olympic', distance: 70, windMax: 6.5, arrows: 5 }
+        { name: '30m Club', distance: 30, windMax: 2.2, arrows: 5 },
+        { name: '50m National', distance: 50, windMax: 3.8, arrows: 5 },
+        { name: '70m Olympic', distance: 70, windMax: 5.5, arrows: 5 }
       ];
 
       var stageIndex = 0;
@@ -333,26 +369,42 @@
       try { bestScore = parseInt(localStorage.getItem('dk:archery-best') || '0', 10); } catch(e) {}
 
       var arrowsLeft = 5;
-      var windX = 0; // m/s
+      var windX = 0; // m/s crosswind
       var isRunning = false;
 
       // Bow & Aiming State
       var isAiming = false;
       var aimPos = { x: 0, y: 0 };
       var aimStart = { x: 0, y: 0 };
-      var drawTension = 0; // 0 to 1
+      var drawTension = 0;
       var breathTimer = 0;
 
-      // 3D Ballistics State
-      // Coordinate System:
-      // X: Horizontal (-left, +right)
-      // Y: Vertical (+up, -down)
-      // Z: Distance from shooter (+depth forward)
+      // 3D Ballistics & Camera State
       var flyingArrow = null;
-      var targetArrows = []; // Embedded arrows in the target face
+      var targetArrows = [];
       var callouts = [];
       var particles = [];
-      var zoomCam = 0; // Target camera zoom on impact
+      var speedStreaks = [];
+
+      // Dynamic Camera Modes:
+      // 'aim': At the shooting line with zoom when pulling back
+      // 'flight': Smooth chase camera flying behind the arrow
+      // 'impact': Spotter scope extreme close-up on the target rings
+      var camMode = 'aim';
+      var camPos = { x: 0, y: 1.4, z: 0 };
+      var camTarget = { x: 0, y: 1.3, z: 20 };
+      var camFov = 340;
+      var impactTimer = 0;
+
+      // Seed 25 speed streaks for arrow chase
+      for (var s = 0; s < 25; s++) {
+        speedStreaks.push({
+          x: (Math.random() - 0.5) * 6,
+          y: (Math.random() - 0.5) * 4 + 1.4,
+          z: Math.random() * 40,
+          len: 1.5 + Math.random() * 2
+        });
+      }
 
       function updateArrowsRack() {
         arrowsRack.innerHTML = '';
@@ -371,9 +423,10 @@
         updateArrowsRack();
         targetArrows = [];
         flyingArrow = null;
-        zoomCam = 0;
+        camMode = 'aim';
+        impactTimer = 0;
+        if (camIndicator) camIndicator.className = 'cam-indicator';
 
-        // Generate wind
         var dir = Math.random() > 0.5 ? 1 : -1;
         var spd = Math.round((Math.random() * st.windMax) * 10) / 10;
         windX = dir * spd;
@@ -391,24 +444,26 @@
         initStage();
       }
 
-      // 3D Perspective Projection
-      // Projects 3D world (X, Y, Z in meters) to 2D screen coordinates
+      // Universal 3D Camera Projection System
+      // Transforms any (x, y, z) in world space relative to current dynamic camera position & FOV
       function project3D(x, y, z) {
-        var fov = 340; // Focal length
-        var cameraHeight = 1.4; // 1.4m shooter eye level
-        var vanishY = H * 0.46; // Horizon line
-        var centerX = W / 2;
+        var relX = x - camPos.x;
+        var relY = y - camPos.y;
+        var relZ = z - camPos.z;
 
-        var scale = fov / Math.max(1, z);
-        var screenX = centerX + x * scale;
-        var screenY = vanishY - (y - cameraHeight) * scale;
+        if (relZ <= 0.05) relZ = 0.05; // Guard near plane
 
-        return { x: screenX, y: screenY, scale: scale };
+        var scale = camFov / relZ;
+        var screenX = (W / 2) + relX * scale;
+        var vanishY = H * 0.46;
+        var screenY = vanishY - relY * scale;
+
+        return { x: screenX, y: screenY, scale: scale, relZ: relZ };
       }
 
       // Input Handlers
       function handleStartAim(clientX, clientY) {
-        if (!isRunning || flyingArrow || arrowsLeft <= 0) return;
+        if (!isRunning || flyingArrow || arrowsLeft <= 0 || camMode !== 'aim') return;
         getAudio();
         var rect = canvas.getBoundingClientRect();
         var mx = clientX - rect.left;
@@ -417,7 +472,7 @@
         isAiming = true;
         aimStart = { x: mx, y: my };
         aimPos = { x: mx, y: my };
-        drawTension = 0.1;
+        drawTension = 0.15;
         sfxDraw();
       }
 
@@ -429,7 +484,7 @@
 
         aimPos = { x: mx, y: my };
         var dist = Math.hypot(mx - aimStart.x, my - aimStart.y);
-        drawTension = Math.min(1.0, 0.2 + dist / 90);
+        drawTension = Math.min(1.0, 0.25 + dist / 90);
       }
 
       function handleReleaseAim() {
@@ -447,31 +502,37 @@
         updateArrowsRack();
 
         var st = STAGES[stageIndex];
-        // Convert screen aim crosshair to 3D trajectory
-        // Center screen offset
         var centerX = W / 2;
         var vanishY = H * 0.46;
-        var dx = (aimPos.x - centerX) / (W * 0.35); // Horizontal angle
-        var dy = (vanishY - aimPos.y) / (H * 0.35); // Vertical elevation
+        var dx = (aimPos.x - centerX) / (W * 0.36);
+        var dy = (vanishY - aimPos.y) / (H * 0.36);
 
-        // Physical flight parameters
-        var arrowSpeed = 58 + drawTension * 16; // m/s (approx 210-270 km/h)
+        // Arrow initial trajectory
+        var arrowSpeed = 46 + drawTension * 12; // m/s
         flyingArrow = {
           x: 0,
           y: 1.4, // Eye level
-          z: 0.5,
-          vx: dx * 4.5,
-          vy: dy * 3.8 + (st.distance * 0.045), // Compensate for baseline distance
+          z: 0.8,
+          vx: dx * 3.6,
+          vy: dy * 3.0 + (st.distance * 0.038), // Compensation for elevation drop
           vz: arrowSpeed,
           rot: 0,
           distTarget: st.distance,
+          vibe: 0,
           trail: []
         };
+
+        // Switch camera to Arrow Chase Bullet-Cam!
+        camMode = 'flight';
+        if (camIndicator) {
+          camIndicator.className = 'cam-indicator active';
+          camIndicator.textContent = '🏹 ARROW CHASE CAM';
+        }
 
         drawTension = 0;
       }
 
-      // Mouse & Touch bindings
+      // Input Event Listeners
       canvas.addEventListener('mousedown', function(e) { handleStartAim(e.clientX, e.clientY); });
       window.addEventListener('mousemove', function(e) { handleMoveAim(e.clientX, e.clientY); });
       window.addEventListener('mouseup', handleReleaseAim);
@@ -487,8 +548,6 @@
       // Scoring & Ring Detection
       function processTargetHit(targetX, targetY) {
         var ringDist = Math.hypot(targetX, targetY);
-        // Target face diameter = 1.22m (Olympic 122cm face)
-        // 10 concentric rings of 6.1cm each
         var pts = 0;
         var ringLabel = 'MISS 0';
         var isBullseye = false;
@@ -528,45 +587,36 @@
         score += pts;
         scoreDisplay.textContent = score;
 
-        // Zoom camera in on target for dramatic feedback
-        zoomCam = 1.0;
+        // Cut to Spotter Scope Close-Up Zoom!
+        camMode = 'impact';
+        impactTimer = 1.6; // Hold zoom view for 1.6s
+        if (camIndicator) {
+          camIndicator.className = 'cam-indicator active';
+          camIndicator.textContent = '🎯 SPOTTER SCOPE ZOOM';
+        }
 
         // Hit Callout Banner
-        var st = STAGES[stageIndex];
-        var p = project3D(targetX, 1.3 + targetY, st.distance);
         callouts.push({
           text: ringLabel,
-          x: p.x,
-          y: p.y - 28,
+          x: W / 2,
+          y: H * 0.28,
           color: ringColor,
-          life: 1.3
+          life: 1.5
         });
 
-        // Hit particles
-        for (var i = 0; i < (isBullseye ? 24 : 12); i++) {
+        // Hit celebration particles
+        for (var i = 0; i < (isBullseye ? 28 : 14); i++) {
           var ang = Math.random() * Math.PI * 2;
-          var spd = Math.random() * 3 + 1;
+          var spd = Math.random() * 4 + 1.5;
           particles.push({
-            x: p.x,
-            y: p.y,
+            x: W / 2,
+            y: H * 0.46,
             vx: Math.cos(ang) * spd,
             vy: Math.sin(ang) * spd - 1,
             color: ringColor,
-            size: 3,
-            life: 1
+            size: 3.5,
+            life: 1.2
           });
-        }
-
-        // Check stage progression after brief delay
-        if (arrowsLeft <= 0) {
-          setTimeout(function() {
-            if (stageIndex < STAGES.length - 1) {
-              stageIndex++;
-              initStage();
-            } else {
-              gameOver();
-            }
-          }, 1600);
         }
       }
 
@@ -579,8 +629,8 @@
         finalScore.textContent = score;
         finalBest.textContent = bestScore;
         statsSummary.style.display = 'grid';
-        overlayHeading.textContent = score >= 160 ? 'OLYMPIC GOLD!' : 'MATCH COMPLETE';
-        overlayDesc.textContent = 'All 4 tournament stages completed! Review your final archery scorecard:';
+        overlayHeading.textContent = score >= 160 ? 'OLYMPIC GOLD! 🥇' : 'MATCH COMPLETE';
+        overlayDesc.textContent = 'Tournament completed! Review your final archery scorecard:';
         startBtn.textContent = 'SHOOT AGAIN ▶';
         overlay.classList.remove('hidden');
 
@@ -604,42 +654,98 @@
         else if (e.data.type === 'dk:resize') resize();
       });
 
-      // Animation Loop
+      // Update Loop
       var lastTime = 0;
       function update(dt) {
         breathTimer += dt * 2.2;
+        var st = STAGES[stageIndex];
 
-        if (zoomCam > 0) {
-          zoomCam = Math.max(0, zoomCam - dt * 0.65);
+        // 1. Update Dynamic Camera Positions
+        if (camMode === 'aim') {
+          // Camera at shooting line
+          var targetCamZ = 0;
+          var targetCamX = 0;
+          var targetCamY = 1.4; // Shooter eye level
+          // Aim zoom FOV: draws in from 340 to 480 as bow is pulled
+          var targetFov = isAiming ? (340 + drawTension * 130) : 340;
+
+          camPos.x += (targetCamX - camPos.x) * 0.14;
+          camPos.y += (targetCamY - camPos.y) * 0.14;
+          camPos.z += (targetCamZ - camPos.z) * 0.14;
+          camFov += (targetFov - camFov) * 0.14;
+
+        } else if (camMode === 'flight' && flyingArrow) {
+          // Arrow Chase Bullet-Cam!
+          // Follows closely behind the arrow down the range
+          var chaseZ = flyingArrow.z - 2.2;
+          var chaseX = flyingArrow.x * 0.75;
+          var chaseY = flyingArrow.y + 0.35; // Slightly elevated chase perspective
+
+          camPos.x += (chaseX - camPos.x) * 0.35;
+          camPos.y += (chaseY - camPos.y) * 0.35;
+          camPos.z += (chaseZ - camPos.z) * 0.35;
+          camFov += (380 - camFov) * 0.2;
+
+        } else if (camMode === 'impact') {
+          // Spotter Scope Close-Up on Target!
+          // Camera standing right in front of the target face
+          var impactZ = st.distance - 2.8;
+          var impactX = 0;
+          var impactY = 1.3; // Target center height
+
+          camPos.x += (impactX - camPos.x) * 0.25;
+          camPos.y += (impactY - camPos.y) * 0.25;
+          camPos.z += (impactZ - camPos.z) * 0.25;
+          camFov += (440 - camFov) * 0.2;
+
+          impactTimer -= dt;
+          if (impactTimer <= 0) {
+            // Check next arrow or stage end
+            if (arrowsLeft > 0) {
+              camMode = 'aim';
+              if (camIndicator) camIndicator.className = 'cam-indicator';
+            } else {
+              if (stageIndex < STAGES.length - 1) {
+                stageIndex++;
+                initStage();
+              } else {
+                gameOver();
+              }
+            }
+          }
         }
 
-        // Arrow 3D flight physics
+        // 2. Arrow Flight Physics
         if (flyingArrow) {
           var a = flyingArrow;
-          var st = STAGES[stageIndex];
           var stepDt = Math.min(0.03, dt);
 
-          // Apply physics
           a.z += a.vz * stepDt;
           a.y += a.vy * stepDt;
           a.vy -= 9.8 * stepDt; // Gravity drop
-          a.x += (a.vx + windX * 0.45) * stepDt; // Wind deflection
-          a.rot += 12 * stepDt;
+          a.x += (a.vx + windX * 0.42) * stepDt; // Wind drift
+          a.rot += 14 * stepDt;
 
           a.trail.push({ x: a.x, y: a.y, z: a.z });
-          if (a.trail.length > 8) a.trail.shift();
+          if (a.trail.length > 10) a.trail.shift();
 
-          // Check target plane impact
+          // Check target plane hit
           if (a.z >= a.distTarget) {
             var hitX = a.x;
-            var hitY = a.y - 1.3; // 1.3m is target bullseye center height
-            targetArrows.push({ x: hitX, y: hitY });
+            var hitY = a.y - 1.3; // Relative to target center
+            targetArrows.push({ x: hitX, y: hitY, vibe: 1.0 });
             processTargetHit(hitX, hitY);
             flyingArrow = null;
           }
         }
 
-        // Update particles
+        // 3. Arrow vibration shockwave on target
+        for (var ta = 0; ta < targetArrows.length; ta++) {
+          var ea = targetArrows[ta];
+          if (ea.vibe > 0) ea.vibe = Math.max(0, ea.vibe - dt * 2.5);
+        }
+
+        // 4. Update particles
         for (var p = particles.length - 1; p >= 0; p--) {
           var pt = particles[p];
           pt.x += pt.vx;
@@ -649,15 +755,16 @@
           if (pt.life <= 0) particles.splice(p, 1);
         }
 
-        // Update callouts
+        // 5. Update callouts
         for (var c = callouts.length - 1; c >= 0; c--) {
           var co = callouts[c];
           co.y -= 0.6;
-          co.life -= dt * 0.9;
+          co.life -= dt * 0.85;
           if (co.life <= 0) callouts.splice(c, 1);
         }
       }
 
+      // 3D Drawing Routine
       function draw() {
         ctx.save();
         ctx.clearRect(0, 0, W, H);
@@ -668,17 +775,17 @@
         // 1. Sky Gradient
         var skyGrad = ctx.createLinearGradient(0, 0, 0, vanishY);
         skyGrad.addColorStop(0, '#0a1628');
-        skyGrad.addColorStop(0.6, '#0f243e');
+        skyGrad.addColorStop(0.65, '#0e243d');
         skyGrad.addColorStop(1, '#1b3a5c');
         ctx.fillStyle = skyGrad;
         ctx.fillRect(0, 0, W, vanishY);
 
-        // Distant Trees / Mountains Silhouette
+        // Distant Mountain & Pine Trees Silhouette
         ctx.fillStyle = '#081726';
         ctx.beginPath();
         ctx.moveTo(0, vanishY);
-        for (var mx = 0; mx <= W; mx += 40) {
-          var mh = 12 + Math.sin(mx * 0.02) * 10 + Math.cos(mx * 0.05) * 6;
+        for (var mx = 0; mx <= W; mx += 35) {
+          var mh = 14 + Math.sin(mx * 0.02) * 12 + Math.cos(mx * 0.05) * 6;
           ctx.lineTo(mx, vanishY - mh);
         }
         ctx.lineTo(W, vanishY);
@@ -688,24 +795,25 @@
         // 2. 3D Stadium Turf / Grass Field
         var fieldGrad = ctx.createLinearGradient(0, vanishY, 0, H);
         fieldGrad.addColorStop(0, '#0f381e');
-        fieldGrad.addColorStop(0.3, '#14532d');
+        fieldGrad.addColorStop(0.35, '#14532d');
         fieldGrad.addColorStop(1, '#052e16');
         ctx.fillStyle = fieldGrad;
         ctx.fillRect(0, vanishY, W, H - vanishY);
 
-        // 3D Perspective Range Lines & Distance Markers
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        // 3D Perspective Range Lines & Lane Edges
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
         ctx.lineWidth = 1.5;
-        // Lane guides
-        var pLeftFar = project3D(-2.5, 0, 80);
-        var pLeftNear = project3D(-4.0, 0, 2);
+
+        // Left & Right lane guidelines
+        var pLeftFar = project3D(-2.5, 0, 85);
+        var pLeftNear = project3D(-3.5, 0, 1);
         ctx.beginPath();
         ctx.moveTo(pLeftNear.x, pLeftNear.y);
         ctx.lineTo(pLeftFar.x, pLeftFar.y);
         ctx.stroke();
 
-        var pRightFar = project3D(2.5, 0, 80);
-        var pRightNear = project3D(4.0, 0, 2);
+        var pRightFar = project3D(2.5, 0, 85);
+        var pRightNear = project3D(3.5, 0, 1);
         ctx.beginPath();
         ctx.moveTo(pRightNear.x, pRightNear.y);
         ctx.lineTo(pRightFar.x, pRightFar.y);
@@ -717,245 +825,308 @@
           var dist = marks[m];
           var pl = project3D(-2.5, 0, dist);
           var pr = project3D(2.5, 0, dist);
-          ctx.strokeStyle = dist === st.distance ? '#facc15' : 'rgba(255, 255, 255, 0.2)';
-          ctx.lineWidth = dist === st.distance ? 2 : 1;
+
+          ctx.strokeStyle = dist === st.distance ? '#facc15' : 'rgba(255, 255, 255, 0.18)';
+          ctx.lineWidth = dist === st.distance ? 2.5 : 1;
           ctx.beginPath();
           ctx.moveTo(pl.x, pl.y);
           ctx.lineTo(pr.x, pr.y);
           ctx.stroke();
 
           // Distance Tag Text
-          ctx.fillStyle = dist === st.distance ? '#facc15' : 'rgba(255, 255, 255, 0.4)';
-          ctx.font = 'bold 11px monospace';
-          ctx.fillText(dist + 'm', pr.x + 8, pr.y + 3);
+          if (pr.relZ > 0.5) {
+            ctx.fillStyle = dist === st.distance ? '#facc15' : 'rgba(255, 255, 255, 0.45)';
+            ctx.font = 'bold ' + Math.max(10, Math.min(15, 12 * (pr.scale / 12))) + 'px monospace';
+            ctx.fillText(dist + 'm', pr.x + 8, pr.y + 4);
+          }
         }
 
-        // 3. Draw 3D Target Stand & Rings
+        // Speed streak particles rushing past during Arrow Chase Cam
+        if (camMode === 'flight') {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+          ctx.lineWidth = 1.2;
+          for (var sk = 0; sk < speedStreaks.length; sk++) {
+            var ss = speedStreaks[sk];
+            var sp1 = project3D(ss.x, ss.y, ss.z);
+            var sp2 = project3D(ss.x, ss.y, ss.z + ss.len);
+            if (sp1.relZ > 0.2 && sp2.relZ > 0.2) {
+              ctx.beginPath();
+              ctx.moveTo(sp1.x, sp1.y);
+              ctx.lineTo(sp2.x, sp2.y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        // 3. Draw 3D Target Stand & 10-Ring Face
         var targetDist = st.distance;
         var pTarget = project3D(0, 1.3, targetDist);
         var targetScale = pTarget.scale;
 
-        // Wooden Tripod Legs
-        ctx.strokeStyle = '#78350f';
-        ctx.lineWidth = Math.max(2, 4 * (targetScale / 12));
-        var pLegL = project3D(-0.45, 0, targetDist);
-        var pLegR = project3D(0.45, 0, targetDist);
-        var pTop = project3D(0, 1.8, targetDist);
-        ctx.beginPath();
-        ctx.moveTo(pTop.x, pTop.y);
-        ctx.lineTo(pLegL.x, pLegL.y);
-        ctx.moveTo(pTop.x, pTop.y);
-        ctx.lineTo(pLegR.x, pLegR.y);
-        ctx.stroke();
-
-        // Target Straw Boss (Circular backing)
-        var bossRadius = 0.65 * targetScale;
-        ctx.fillStyle = '#1c1917';
-        ctx.beginPath();
-        ctx.arc(pTarget.x, pTarget.y, bossRadius + 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#44403c';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // 10 Official Concentric Colored Rings
-        // Target 1.22m diameter -> radius 0.61m
-        var ringColors = [
-          { r: 0.61,  color: '#ffffff' }, // 1 (White)
-          { r: 0.549, color: '#f1f5f9' }, // 2 (White)
-          { r: 0.488, color: '#1e293b' }, // 3 (Black)
-          { r: 0.427, color: '#0f172a' }, // 4 (Black)
-          { r: 0.366, color: '#38bdf8' }, // 5 (Blue)
-          { r: 0.305, color: '#0284c7' }, // 6 (Blue)
-          { r: 0.244, color: '#f87171' }, // 7 (Red)
-          { r: 0.183, color: '#dc2626' }, // 8 (Red)
-          { r: 0.122, color: '#fde047' }, // 9 (Gold)
-          { r: 0.061, color: '#eab308' }, // 10 (Gold Inner)
-          { r: 0.030, color: '#ca8a04' }  // X (Center ring)
-        ];
-
-        for (var rc = 0; rc < ringColors.length; rc++) {
-          var ring = ringColors[rc];
-          var pixR = ring.r * targetScale;
-          ctx.fillStyle = ring.color;
+        if (pTarget.relZ > 0.2) {
+          // Wooden Tripod Legs
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = Math.max(2, 4.5 * (targetScale / 12));
+          var pLegL = project3D(-0.48, 0, targetDist);
+          var pLegR = project3D(0.48, 0, targetDist);
+          var pTop = project3D(0, 1.85, targetDist);
           ctx.beginPath();
-          ctx.arc(pTarget.x, pTarget.y, pixR, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-          ctx.lineWidth = 0.8;
+          ctx.moveTo(pTop.x, pTop.y);
+          ctx.lineTo(pLegL.x, pLegL.y);
+          ctx.moveTo(pTop.x, pTop.y);
+          ctx.lineTo(pLegR.x, pLegR.y);
           ctx.stroke();
-        }
 
-        // Center X crosshair
-        var xPix = 0.015 * targetScale;
-        ctx.strokeStyle = '#713f12';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(pTarget.x - xPix, pTarget.y);
-        ctx.lineTo(pTarget.x + xPix, pTarget.y);
-        ctx.moveTo(pTarget.x, pTarget.y - xPix);
-        ctx.lineTo(pTarget.x, pTarget.y + xPix);
-        ctx.stroke();
-
-        // Fluttering Wind Flag atop the target
-        var flagPole = project3D(0, 1.88, targetDist);
-        ctx.strokeStyle = '#94a3b8';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(pTarget.x, pTarget.y - bossRadius);
-        ctx.lineTo(flagPole.x, flagPole.y);
-        ctx.stroke();
-
-        // Flag triangle blowing in wind direction
-        var flagDir = windX >= 0 ? 1 : -1;
-        var flagLen = (12 + Math.abs(windX) * 3) * (targetScale / 14);
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.moveTo(flagPole.x, flagPole.y);
-        ctx.lineTo(flagPole.x + flagDir * flagLen, flagPole.y + 4);
-        ctx.lineTo(flagPole.x, flagPole.y + 8);
-        ctx.closePath();
-        ctx.fill();
-
-        // 4. Draw Embedded Arrows in Target Face
-        for (var ta = 0; ta < targetArrows.length; ta++) {
-          var ea = targetArrows[ta];
-          var ep = project3D(ea.x, 1.3 + ea.y, targetDist);
-
-          // Arrow nock & fletching sticking out in 3D
-          ctx.fillStyle = '#38bdf8';
+          // Target Straw Boss (Circular backing rim)
+          var bossRadius = 0.65 * targetScale;
+          ctx.fillStyle = '#1c1917';
           ctx.beginPath();
-          ctx.arc(ep.x, ep.y, 2.5, 0, Math.PI * 2);
+          ctx.arc(pTarget.x, pTarget.y, bossRadius + 4, 0, Math.PI * 2);
           ctx.fill();
-          ctx.strokeStyle = '#ffffff';
+          ctx.strokeStyle = '#44403c';
+          ctx.lineWidth = Math.max(1.5, 3 * (targetScale / 14));
+          ctx.stroke();
+
+          // 10 Official Concentric Colored Rings (World Archery 122cm Target)
+          var ringColors = [
+            { r: 0.61,  color: '#ffffff' }, // 1 (White)
+            { r: 0.549, color: '#f1f5f9' }, // 2 (White)
+            { r: 0.488, color: '#1e293b' }, // 3 (Black)
+            { r: 0.427, color: '#0f172a' }, // 4 (Black)
+            { r: 0.366, color: '#38bdf8' }, // 5 (Blue)
+            { r: 0.305, color: '#0284c7' }, // 6 (Blue)
+            { r: 0.244, color: '#f87171' }, // 7 (Red)
+            { r: 0.183, color: '#dc2626' }, // 8 (Red)
+            { r: 0.122, color: '#fde047' }, // 9 (Gold)
+            { r: 0.061, color: '#eab308' }, // 10 (Gold Inner)
+            { r: 0.030, color: '#ca8a04' }  // X (Center ring)
+          ];
+
+          for (var rc = 0; rc < ringColors.length; rc++) {
+            var ring = ringColors[rc];
+            var pixR = ring.r * targetScale;
+            ctx.fillStyle = ring.color;
+            ctx.beginPath();
+            ctx.arc(pTarget.x, pTarget.y, pixR, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+
+          // Center X crosshair
+          var xPix = 0.015 * targetScale;
+          ctx.strokeStyle = '#713f12';
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.moveTo(ep.x, ep.y);
-          ctx.lineTo(ep.x - 4, ep.y + 6);
-          ctx.moveTo(ep.x, ep.y);
-          ctx.lineTo(ep.x + 4, ep.y + 6);
+          ctx.moveTo(pTarget.x - xPix, pTarget.y);
+          ctx.lineTo(pTarget.x + xPix, pTarget.y);
+          ctx.moveTo(pTarget.x, pTarget.y - xPix);
+          ctx.lineTo(pTarget.x, pTarget.y + xPix);
           ctx.stroke();
+
+          // Fluttering Wind Flag atop the target
+          var flagPole = project3D(0, 1.9, targetDist);
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(pTarget.x, pTarget.y - bossRadius);
+          ctx.lineTo(flagPole.x, flagPole.y);
+          ctx.stroke();
+
+          var flagDir = windX >= 0 ? 1 : -1;
+          var flagLen = (12 + Math.abs(windX) * 3) * (targetScale / 14);
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.moveTo(flagPole.x, flagPole.y);
+          ctx.lineTo(flagPole.x + flagDir * flagLen, flagPole.y + 4);
+          ctx.lineTo(flagPole.x, flagPole.y + 8);
+          ctx.closePath();
+          ctx.fill();
+
+          // 4. Draw Embedded Arrows in Target Face
+          for (var ta = 0; ta < targetArrows.length; ta++) {
+            var ea = targetArrows[ta];
+            var ep = project3D(ea.x, 1.3 + ea.y, targetDist);
+            var vibeOffset = Math.sin(Date.now() * 0.06) * (ea.vibe || 0) * 3.5;
+
+            // Embedded Arrow Shaft & Fletchings
+            ctx.strokeStyle = '#38bdf8';
+            ctx.fillStyle = '#00f0ff';
+            ctx.lineWidth = Math.max(2, 4 * (targetScale / 25));
+            ctx.beginPath();
+            ctx.arc(ep.x, ep.y + vibeOffset, Math.max(3, 5 * (targetScale / 30)), 0, Math.PI * 2);
+            ctx.fill();
+
+            // Vanes sticking out
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(ep.x, ep.y + vibeOffset);
+            ctx.lineTo(ep.x - 5, ep.y + vibeOffset + 8);
+            ctx.moveTo(ep.x, ep.y + vibeOffset);
+            ctx.lineTo(ep.x + 5, ep.y + vibeOffset + 8);
+            ctx.stroke();
+          }
         }
 
         // 5. Draw Flying 3D Arrow
         if (flyingArrow) {
           var fa = flyingArrow;
           var pArrow = project3D(fa.x, fa.y, fa.z);
-          var pNock = project3D(fa.x, fa.y + 0.05, fa.z - 0.7);
+          var pNock = project3D(fa.x, fa.y + 0.04, fa.z - 0.75);
+
+          // Glowing Arrow Trail Ribbon
+          if (fa.trail.length > 1) {
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (var tr = 0; tr < fa.trail.length; tr++) {
+              var tp = project3D(fa.trail[tr].x, fa.trail[tr].y, fa.trail[tr].z);
+              if (tr === 0) ctx.moveTo(tp.x, tp.y);
+              else ctx.lineTo(tp.x, tp.y);
+            }
+            ctx.stroke();
+          }
 
           // Arrow Shaft
           ctx.strokeStyle = '#f8fafc';
-          ctx.lineWidth = Math.max(1.5, 3.5 * (pArrow.scale / 20));
+          ctx.lineWidth = Math.max(2.5, 6 * (pArrow.scale / 22));
           ctx.beginPath();
           ctx.moveTo(pArrow.x, pArrow.y);
           ctx.lineTo(pNock.x, pNock.y);
           ctx.stroke();
 
-          // Arrow Point
+          // Steel Broadhead Point
           ctx.fillStyle = '#94a3b8';
           ctx.beginPath();
-          ctx.arc(pArrow.x, pArrow.y, 2.5, 0, Math.PI * 2);
+          ctx.arc(pArrow.x, pArrow.y, Math.max(3, 5 * (pArrow.scale / 22)), 0, Math.PI * 2);
           ctx.fill();
 
-          // Vane / Fletchings (Fluorescent Cyan)
+          // Fluorescent Cyan Fletchings (Spinning in 3D)
           ctx.fillStyle = '#00f0ff';
           ctx.beginPath();
-          ctx.arc(pNock.x, pNock.y, 3.5, 0, Math.PI * 2);
+          ctx.arc(pNock.x, pNock.y, Math.max(4, 7 * (pArrow.scale / 22)), 0, Math.PI * 2);
           ctx.fill();
         }
 
-        // 6. Draw First-Person Bow & Sight in Foreground
-        if (!flyingArrow && arrowsLeft > 0 && isRunning) {
-          var bowX = W / 2;
-          var bowY = H;
-          var breathSwayX = Math.sin(breathTimer) * (isAiming ? 3 : 6);
-          var breathSwayY = Math.cos(breathTimer * 1.4) * (isAiming ? 2 : 5);
+        // 6. Draw First-Person Bow & Sight (When in Aim Mode)
+        if (camMode === 'aim' && !flyingArrow && arrowsLeft > 0 && isRunning) {
+          var breathSwayX = Math.sin(breathTimer) * (isAiming ? 2.5 : 5);
+          var breathSwayY = Math.cos(breathTimer * 1.4) * (isAiming ? 1.8 : 4);
 
           var aimScreenX = (isAiming ? aimPos.x : W / 2) + breathSwayX;
           var aimScreenY = (isAiming ? aimPos.y : H * 0.46) + breathSwayY;
 
-          // Draw Aiming Sight Reticle
+          // Olympic Bow-Sight Reticle
           ctx.save();
+          var sightRadius = isAiming ? 18 : 22;
           ctx.strokeStyle = isAiming ? '#38bdf8' : 'rgba(56, 189, 248, 0.4)';
-          ctx.lineWidth = 1.8;
+          ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.arc(aimScreenX, aimScreenY, 16, 0, Math.PI * 2);
+          ctx.arc(aimScreenX, aimScreenY, sightRadius, 0, Math.PI * 2);
           ctx.stroke();
 
-          // Reticle crosshair pin
-          ctx.fillStyle = '#ef4444';
-          ctx.beginPath();
-          ctx.arc(aimScreenX, aimScreenY, 2.5, 0, Math.PI * 2);
-          ctx.fill();
+          // Tension Charge Ring around Reticle
+          if (isAiming) {
+            ctx.strokeStyle = drawTension > 0.8 ? '#facc15' : '#22c55e';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(aimScreenX, aimScreenY, sightRadius + 4, -Math.PI / 2, -Math.PI / 2 + drawTension * Math.PI * 2);
+            ctx.stroke();
+          }
 
-          // Reticle ticks
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-          ctx.lineWidth = 1;
+          // Illuminated Center Pin
+          ctx.fillStyle = '#ef4444';
+          ctx.shadowColor = '#ef4444';
+          ctx.shadowBlur = 8;
           ctx.beginPath();
-          ctx.moveTo(aimScreenX - 22, aimScreenY);
-          ctx.lineTo(aimScreenX - 16, aimScreenY);
-          ctx.moveTo(aimScreenX + 16, aimScreenY);
-          ctx.lineTo(aimScreenX + 22, aimScreenY);
-          ctx.moveTo(aimScreenX, aimScreenY - 22);
-          ctx.lineTo(aimScreenX, aimScreenY - 16);
-          ctx.moveTo(aimScreenX, aimScreenY + 16);
-          ctx.lineTo(aimScreenX, aimScreenY + 22);
+          ctx.arc(aimScreenX, aimScreenY, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Crosshair Reference Ticks
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(aimScreenX - sightRadius - 8, aimScreenY);
+          ctx.lineTo(aimScreenX - sightRadius, aimScreenY);
+          ctx.moveTo(aimScreenX + sightRadius, aimScreenY);
+          ctx.lineTo(aimScreenX + sightRadius + 8, aimScreenY);
+          ctx.moveTo(aimScreenX, aimScreenY - sightRadius - 8);
+          ctx.lineTo(aimScreenX, aimScreenY - sightRadius);
+          ctx.moveTo(aimScreenX, aimScreenY + sightRadius);
+          ctx.lineTo(aimScreenX, aimScreenY + sightRadius + 8);
           ctx.stroke();
           ctx.restore();
 
-          // Draw Recurve Bow Limbs (Foreground)
+          // Draw Recurve Bow (Foreground First-Person)
           ctx.save();
-          var bowTensionPull = drawTension * 65;
-          var bowTipTopX = aimScreenX - 140;
-          var bowTipTopY = aimScreenY - 180;
-          var bowTipBotX = aimScreenX - 140;
-          var bowTipBotY = aimScreenY + 240;
-          var bowGripX = aimScreenX - 120;
+          var bowTensionPull = drawTension * 75;
+          var bowTipTopX = aimScreenX - 150;
+          var bowTipTopY = aimScreenY - 200;
+          var bowTipBotX = aimScreenX - 150;
+          var bowTipBotY = aimScreenY + 260;
+          var bowGripX = aimScreenX - 125;
           var bowGripY = aimScreenY + 30;
 
-          // Upper Limb
-          ctx.strokeStyle = '#92400e';
-          ctx.lineWidth = 10;
+          // Upper Carbon Limb
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 11;
           ctx.beginPath();
           ctx.moveTo(bowGripX, bowGripY);
-          ctx.quadraticCurveTo(bowGripX - 25, bowGripY - 100, bowTipTopX, bowTipTopY);
+          ctx.quadraticCurveTo(bowGripX - 28, bowGripY - 110, bowTipTopX, bowTipTopY);
           ctx.stroke();
 
-          // Lower Limb
+          // Lower Carbon Limb
           ctx.beginPath();
           ctx.moveTo(bowGripX, bowGripY);
-          ctx.quadraticCurveTo(bowGripX - 25, bowGripY + 130, bowTipBotX, bowTipBotY);
+          ctx.quadraticCurveTo(bowGripX - 28, bowGripY + 140, bowTipBotX, bowTipBotY);
+          ctx.stroke();
+
+          // Metallic Riser Accents
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 13;
+          ctx.beginPath();
+          ctx.moveTo(bowGripX - 2, bowGripY - 30);
+          ctx.lineTo(bowGripX - 2, bowGripY + 30);
           ctx.stroke();
 
           // Bowstring
-          var nockPointX = aimScreenX - 120 - bowTensionPull;
-          var nockPointY = aimScreenY + 30;
+          var nockX = aimScreenX - 125 - bowTensionPull;
+          var nockY = aimScreenY + 30;
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2.2;
           ctx.beginPath();
           ctx.moveTo(bowTipTopX, bowTipTopY);
-          ctx.lineTo(nockPointX, nockPointY);
+          ctx.lineTo(nockX, nockY);
           ctx.lineTo(bowTipBotX, bowTipBotY);
           ctx.stroke();
 
-          // Arrow resting on rest
+          // Nocked Carbon Arrow
           ctx.strokeStyle = '#f8fafc';
-          ctx.lineWidth = 4;
+          ctx.lineWidth = 4.5;
           ctx.beginPath();
-          ctx.moveTo(nockPointX, nockPointY);
-          ctx.lineTo(aimScreenX + 60, aimScreenY + 20);
+          ctx.moveTo(nockX, nockY);
+          ctx.lineTo(aimScreenX + 65, aimScreenY + 22);
           ctx.stroke();
 
-          // Cyan Arrow Fletchings
+          // Arrow Point
+          ctx.fillStyle = '#94a3b8';
+          ctx.beginPath();
+          ctx.arc(aimScreenX + 65, aimScreenY + 22, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Dual Fluorescent Fletchings
           ctx.fillStyle = '#00f0ff';
           ctx.beginPath();
-          ctx.arc(nockPointX + 10, nockPointY, 5, 0, Math.PI * 2);
+          ctx.arc(nockX + 12, nockY, 5.5, 0, Math.PI * 2);
           ctx.fill();
 
           ctx.restore();
         }
 
-        // 7. Draw Particles
+        // 7. Draw Celebration Particles
         for (var p = 0; p < particles.length; p++) {
           var pt = particles[p];
           ctx.fillStyle = pt.color;
@@ -964,16 +1135,16 @@
           ctx.fill();
         }
 
-        // 8. Draw Callout Banners
+        // 8. Draw Callout Score Banners
         for (var cl = 0; cl < callouts.length; cl++) {
           var co = callouts[cl];
           ctx.save();
           ctx.globalAlpha = Math.max(0, co.life);
-          ctx.font = '900 22px -apple-system, sans-serif';
+          ctx.font = '900 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           ctx.fillStyle = co.color;
           ctx.textAlign = 'center';
-          ctx.shadowColor = 'rgba(0,0,0,0.85)';
-          ctx.shadowBlur = 12;
+          ctx.shadowColor = 'rgba(0,0,0,0.9)';
+          ctx.shadowBlur = 14;
           ctx.fillText(co.text, co.x, co.y);
           ctx.restore();
         }
