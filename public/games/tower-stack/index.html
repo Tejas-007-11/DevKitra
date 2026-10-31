@@ -328,7 +328,7 @@ canvas {
 
   function toScreen(x, y, z) {
     var centerX = W / 2;
-    var centerY = H * 0.72 - cameraY;
+    var centerY = (H * 0.70) + cameraY;
     var screenX = centerX + (x - z) * ISO_COS;
     var screenY = centerY + (x + z) * ISO_SIN - (y * BLOCK_HEIGHT);
     return { x: screenX, y: screenY };
@@ -475,8 +475,11 @@ canvas {
     score = stack.length - 1;
     scoreDisplay.textContent = score;
 
-    // Camera moves up with each placed block
-    targetCameraY = score * BLOCK_HEIGHT;
+    // Follow the top of the tower:
+    // Keep active block eye-level (~42% from top of screen).
+    // The base stays grounded until the tower reaches eye level, then user vision smoothly follows up.
+    var leadUpDistance = (H * 0.70) - (H * 0.42);
+    targetCameraY = Math.max(0, (stack.length * BLOCK_HEIGHT) - leadUpDistance);
 
     spawnBlock(stack.length);
   }
@@ -554,8 +557,8 @@ canvas {
       }
     }
 
-    // Camera smoothing
-    cameraY += (targetCameraY - cameraY) * 0.1;
+    // Camera smoothing - silky smooth ease as the player's vision follows each placed stack
+    cameraY += (targetCameraY - cameraY) * 0.085;
 
     // Falling 3D Slices
     for (var i = slicedPieces.length - 1; i >= 0; i--) {
@@ -564,7 +567,8 @@ canvas {
       p.y -= p.vy * 0.1;
       p.rot += p.vRot;
 
-      if (p.y * BLOCK_HEIGHT < -200) {
+      var pScreen = toScreen(p.x, p.y, p.z);
+      if (pScreen.y > H + 120) {
         slicedPieces.splice(i, 1);
       }
     }
@@ -606,6 +610,11 @@ canvas {
     // Draw from bottom to top
     for (var i = 0; i < stack.length; i++) {
       var b = stack[i];
+      // Optimize: cull lower blocks that have scrolled past the bottom
+      if (stack.length > 30 && i < stack.length - 25) {
+        var pNear = toScreen(b.x + b.w, b.y, b.z + b.d);
+        if (pNear.y > H + 80) continue;
+      }
       draw3DBlock(b.x, b.y, b.z, b.w, b.d, b.hue, 1.0);
     }
 

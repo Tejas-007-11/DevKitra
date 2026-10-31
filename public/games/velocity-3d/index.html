@@ -437,7 +437,7 @@
 
           // Atmospheric depth fog
           float dist = distance(vWorldPos, uCameraPos);
-          float fog = clamp((dist - 35.0) / 130.0, 0.0, 1.0);
+          float fog = clamp((dist - 55.0) / 160.0, 0.0, 1.0);
           vec3 fogColor = vec3(0.012, 0.027, 0.07);
 
           gl_FragColor = vec4(mix(finalColor, fogColor, fog), 1.0);
@@ -629,8 +629,8 @@
       }
 
       function createSegment(zPos) {
-        var isGap = (zPos > 140 && Math.random() < 0.12);
-        var isJumpRamp = (!isGap && zPos > 90 && Math.random() < 0.14);
+        var isGap = (zPos > 240 && Math.random() < 0.10);
+        var isJumpRamp = (!isGap && zPos > 120 && Math.random() < 0.12);
 
         var seg = {
           z: zPos,
@@ -640,35 +640,38 @@
           hasBooster: isJumpRamp
         };
 
-        if (!isGap && zPos > 50) {
-          if (!isJumpRamp) {
-            // Spawn high-tech laser barrier or hazard prism
-            var obsType = Math.random() < 0.6 ? 'barrier' : 'prism';
-            var numObs = Math.floor(Math.random() * 2) + 1;
-            for (var o = 0; o < numObs; o++) {
-              var ox = (Math.random() * (TRACK_WIDTH - 3.2)) - ((TRACK_WIDTH - 3.2) / 2);
-              obstacles.push({
-                x: ox,
-                y: 0.8,
-                z: zPos + (Math.random() * 8) - 4,
-                w: obsType === 'barrier' ? 2.4 : 1.6,
-                h: obsType === 'barrier' ? 1.6 : 2.0,
-                l: 0.8,
-                type: obsType,
-                color: [0.98, 0.2, 0.35],
-                pulse: Math.random() * Math.PI
-              });
+        if (!isGap) {
+          // Warmup zone (zPos <= 80): pure rolling thrill and gems, zero hazards
+          if (zPos > 80) {
+            if (!isJumpRamp) {
+              var obsType = Math.random() < 0.5 ? 'barrier' : 'prism';
+              // Single obstacle until zPos > 240, then occasional dual hazard
+              var numObs = (zPos > 240 && Math.random() < 0.35) ? 2 : 1;
+              for (var o = 0; o < numObs; o++) {
+                var ox = (Math.random() * (TRACK_WIDTH - 4.2)) - ((TRACK_WIDTH - 4.2) / 2);
+                obstacles.push({
+                  x: ox,
+                  y: 0.8,
+                  z: zPos + (Math.random() * 6) - 3,
+                  w: obsType === 'barrier' ? 2.2 : 1.5,
+                  h: obsType === 'barrier' ? 1.5 : 1.8,
+                  l: 0.8,
+                  type: obsType,
+                  color: [0.98, 0.2, 0.35],
+                  pulse: Math.random() * Math.PI
+                });
+              }
             }
+          }
 
-            // Collectible Gem
-            if (Math.random() < 0.45) {
-              collectibles.push({
-                x: (Math.random() * (TRACK_WIDTH - 3.5)) - ((TRACK_WIDTH - 3.5) / 2),
-                y: 1.2,
-                z: zPos + (Math.random() * 6) - 3,
-                collected: false
-              });
-            }
+          // Plentiful Collectible Emerald Gems
+          if (Math.random() < 0.55) {
+            collectibles.push({
+              x: (Math.random() * (TRACK_WIDTH - 3.6)) - ((TRACK_WIDTH - 3.6) / 2),
+              y: 1.2,
+              z: zPos + (Math.random() * 6) - 3,
+              collected: false
+            });
           }
         }
 
@@ -691,19 +694,19 @@
         player.targetX = 0;
         player.vx = 0;
         player.vy = 0;
-        player.vz = 0.95;
+        player.vz = 0.44; // Balanced, thrilling slope speed (was 0.95!)
         player.rotX = 0;
         player.rotZ = 0;
         player.bankAngle = 0;
         player.onGround = true;
         player.crashed = false;
 
-        for (var z = 0; z < 300; z += SEGMENT_LENGTH) {
+        for (var z = 0; z < 320; z += SEGMENT_LENGTH) {
           segments.push(createSegment(z));
         }
 
         distDisplay.textContent = '0 m';
-        speedDisplay.textContent = '70 km/h';
+        speedDisplay.textContent = '40 km/h';
         gemsDisplay.textContent = '0';
       }
 
@@ -835,7 +838,7 @@
 
         if (isRunning && !isPaused && !player.crashed) {
           // Snappy, responsive keyboard steering
-          var steerSpeed = 0.38;
+          var steerSpeed = 0.28;
           if (keys.left) {
             player.targetX += steerSpeed; // World +X is screen Left
             mouseSteerActive = false;
@@ -844,26 +847,28 @@
             mouseSteerActive = false;
           }
 
-          // Clamp target
-          var maxTrackX = (TRACK_WIDTH / 2) + 1.2;
+          // Clamp target safely within track bounds
+          var maxTrackX = (TRACK_WIDTH / 2) + 0.8;
           player.targetX = Math.max(-maxTrackX, Math.min(maxTrackX, player.targetX));
 
-          // Responsive Lerp to target
+          // Responsive, smooth Lerp to target
           var diffX = player.targetX - player.x;
-          player.vx = diffX * 0.28;
+          player.vx = diffX * 0.24;
           player.x += player.vx;
 
-          // Camera Banking Angle (tilts smoothly like an aircraft into turns)
-          var targetBank = player.vx * 0.25;
-          player.bankAngle += (targetBank - player.bankAngle) * 0.2;
+          // Camera Banking Angle (tilts smoothly into turns)
+          var targetBank = player.vx * 0.22;
+          player.bankAngle += (targetBank - player.bankAngle) * 0.18;
 
-          // Acceleration
-          player.vz += 0.00022; // Speed gradually ramps up
+          // Gentle, progressive acceleration with a fair maximum speed cap
+          if (player.vz < 0.95) {
+            player.vz += 0.000075;
+          }
           player.z += player.vz;
 
           // Rolling ball rotation
-          player.rotX += player.vz * 2.0;
-          player.rotZ += player.vx * 1.8;
+          player.rotX += player.vz * 2.2;
+          player.rotZ += player.vx * 1.6;
 
           // Record player trail
           if (globalTime % 0.04 < 0.02) {
@@ -882,27 +887,27 @@
           });
 
           if (curSeg && !curSeg.isGap && Math.abs(player.x) <= curSeg.w / 2) {
-            if (curSeg.hasBooster && Math.abs(player.x) < 3.0) {
+            if (curSeg.hasBooster && Math.abs(player.x) < 3.2) {
               // Jump Ramp Hit!
-              player.vy = 0.58;
-              player.vz += 0.15;
+              player.vy = 0.44;
+              player.vz = Math.min(0.90, player.vz + 0.035);
               player.onGround = false;
               sfxJump();
-              screenShake = 6;
+              screenShake = 4;
             } else {
               if (player.y <= 0.6) {
                 player.y = 0.6;
                 player.vy = 0;
                 player.onGround = true;
               } else {
-                player.vy -= 0.028;
+                player.vy -= 0.024;
                 player.y += player.vy;
               }
             }
           } else {
             // Off track / over chasm gap
             player.onGround = false;
-            player.vy -= 0.038;
+            player.vy -= 0.034;
             player.y += player.vy;
 
             if (player.y < -14) {
@@ -911,12 +916,12 @@
             }
           }
 
-          // Obstacle collisions
+          // Obstacle collisions - fair, forgiving hitboxes
           for (var i = 0; i < obstacles.length; i++) {
             var obs = obstacles[i];
-            if (Math.abs(player.z - obs.z) < 1.0 &&
-                Math.abs(player.x - obs.x) < (obs.w / 2 + player.radius * 0.7) &&
-                player.y < obs.y + obs.h) {
+            if (Math.abs(player.z - obs.z) < 0.85 &&
+                Math.abs(player.x - obs.x) < (obs.w / 2 + player.radius * 0.55) &&
+                player.y < obs.y + obs.h - 0.15) {
               gameOver();
               return;
             }
@@ -926,8 +931,8 @@
           for (var g = 0; g < collectibles.length; g++) {
             var gem = collectibles[g];
             if (!gem.collected &&
-                Math.abs(player.z - gem.z) < 1.4 &&
-                Math.abs(player.x - gem.x) < 1.4) {
+                Math.abs(player.z - gem.z) < 1.6 &&
+                Math.abs(player.x - gem.x) < 1.6) {
               gem.collected = true;
               gems++;
               gemsDisplay.textContent = gems;
@@ -938,12 +943,12 @@
           // UI readouts
           distance = Math.floor(player.z);
           distDisplay.textContent = distance + ' m';
-          var kmh = Math.floor(player.vz * 80);
+          var kmh = Math.floor(player.vz * 90);
           speedDisplay.textContent = kmh + ' km/h';
 
           // Procedural generation forward
           var farthestZ = segments[segments.length - 1].z;
-          if (farthestZ < player.z + 260) {
+          if (farthestZ < player.z + 280) {
             segments.push(createSegment(farthestZ + SEGMENT_LENGTH));
           }
 
@@ -990,17 +995,17 @@
         gl.clearColor(0.012, 0.027, 0.07, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // Dynamic FOV expands at higher speeds
-        var fov = (62 * Math.PI) / 180 + Math.min(0.25, (player.vz - 0.95) * 0.35);
-        mat4.perspective(pMatrix, fov, W / H, 0.1, 240.0);
+        // Dynamic FOV expands subtly at higher speeds
+        var fov = (60 * Math.PI) / 180 + Math.min(0.18, (player.vz - 0.44) * 0.25);
+        mat4.perspective(pMatrix, fov, W / H, 0.1, 280.0);
         gl.uniformMatrix4fv(uProjection, false, pMatrix);
 
         // Dynamic Third-Person Chase Camera with Screen Shake & Banking
-        var shakeX = (Math.random() - 0.5) * screenShake * 0.05;
-        var shakeY = (Math.random() - 0.5) * screenShake * 0.05;
+        var shakeX = (Math.random() - 0.5) * screenShake * 0.04;
+        var shakeY = (Math.random() - 0.5) * screenShake * 0.04;
 
-        var camPos = [player.x * 0.75 + shakeX, Math.max(2.6, player.y + 2.4) + shakeY, player.z - 7.5];
-        var camTarget = [player.x * 0.5, Math.max(0, player.y), player.z + 10];
+        var camPos = [player.x * 0.6 + shakeX, Math.max(3.2, player.y + 3.4) + shakeY, player.z - 9.2];
+        var camTarget = [player.x * 0.4, Math.max(0.6, player.y + 0.6), player.z + 16.0];
         var upVec = [Math.sin(player.bankAngle), Math.cos(player.bankAngle), 0];
 
         mat4.lookAt(vMatrix, camPos, camTarget, upVec);

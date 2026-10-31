@@ -101,10 +101,10 @@
     }
     #canvas-wrap {
       position: relative;
-      background: #14532d;
-      border: 3px solid #283347;
+      background: #090e18;
+      border: 3px solid rgba(56, 189, 248, 0.35);
       border-radius: 16px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 24px rgba(56, 189, 248, 0.12);
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -635,48 +635,93 @@
           ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
         }
 
-        // Checkered Grass Arena
+        // Sleek High-Contrast Obsidian Arcade Board
         for (var r = 0; r < ROWS; r++) {
           for (var c = 0; c < COLS; c++) {
-            ctx.fillStyle = (r + c) % 2 === 0 ? '#15803d' : '#166534';
+            ctx.fillStyle = (r + c) % 2 === 0 ? '#0b111e' : '#070a13';
             ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
           }
         }
 
-        // Obstacles
-        ctx.fillStyle = '#475569';
-        for (var o = 0; o < obstacles.length; o++) {
-          var ob = obstacles[o];
+        // Subtle Grid Lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+        ctx.lineWidth = 1;
+        for (var c = 0; c <= COLS; c++) {
           ctx.beginPath();
-          ctx.roundRect(ob.x * CELL_SIZE + 1, ob.y * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2, 4);
-          ctx.fill();
+          ctx.moveTo(c * CELL_SIZE, 0);
+          ctx.lineTo(c * CELL_SIZE, ROWS * CELL_SIZE);
+          ctx.stroke();
+        }
+        for (var r = 0; r <= ROWS; r++) {
+          ctx.beginPath();
+          ctx.moveTo(0, r * CELL_SIZE);
+          ctx.lineTo(COLS * CELL_SIZE, r * CELL_SIZE);
+          ctx.stroke();
         }
 
-        // Food: 3D Apple
+        // Obstacles (Obsidian Hazard Blocks with Amber Glow)
+        for (var o = 0; o < obstacles.length; o++) {
+          var ob = obstacles[o];
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath();
+          ctx.roundRect(ob.x * CELL_SIZE + 2, ob.y * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4, 6);
+          ctx.fill();
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        // Food: 3D Glossy Apple / Golden Star
         var fx = food.x * CELL_SIZE + CELL_SIZE / 2;
         var fy = food.y * CELL_SIZE + CELL_SIZE / 2;
         var fr = (CELL_SIZE / 2) - 2;
 
-        ctx.fillStyle = food.gold ? '#facc15' : '#ef4444';
-        ctx.beginPath();
-        ctx.arc(fx, fy, fr, 0, Math.PI * 2);
-        ctx.fill();
+        if (food.gold) {
+          ctx.fillStyle = '#facc15';
+          ctx.shadowColor = '#facc15';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(fx - 2, fy - 2, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          var appleGrad = ctx.createRadialGradient(fx - 2, fy - 2, 2, fx, fy, fr);
+          appleGrad.addColorStop(0, '#f87171');
+          appleGrad.addColorStop(0.7, '#ef4444');
+          appleGrad.addColorStop(1, '#b91c1c');
+          ctx.fillStyle = appleGrad;
+          ctx.shadowColor = 'rgba(239, 68, 68, 0.4)';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
 
-        // Highlight
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.beginPath();
-        ctx.arc(fx - fr * 0.35, fy - fr * 0.35, fr * 0.35, 0, Math.PI * 2);
-        ctx.fill();
+          // Specular highlight
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.beginPath();
+          ctx.arc(fx - fr * 0.35, fy - fr * 0.35, fr * 0.3, 0, Math.PI * 2);
+          ctx.fill();
 
-        // Apple Stem
-        ctx.strokeStyle = '#78350f';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(fx, fy - fr);
-        ctx.lineTo(fx + 2, fy - fr - 4);
-        ctx.stroke();
+          // Apple Stem & Green Leaf
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(fx, fy - fr);
+          ctx.lineTo(fx + 2, fy - fr - 4);
+          ctx.stroke();
 
-        // Snake Body & Head
+          ctx.fillStyle = '#22c55e';
+          ctx.beginPath();
+          ctx.ellipse(fx + 4, fy - fr - 2, 3, 1.8, 0.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Snake Body & Head (Radiant Luminous Emerald with High Contrast against Obsidian Board)
         for (var i = snake.length - 1; i >= 0; i--) {
           var seg = snake[i];
           var sx = seg.x * CELL_SIZE + CELL_SIZE / 2;
@@ -684,42 +729,56 @@
           var sr = (CELL_SIZE / 2) - 1;
 
           if (i === 0) {
-            // Head
-            var headGrad = ctx.createRadialGradient(sx - 2, sy - 2, 2, sx, sy, sr);
-            headGrad.addColorStop(0, '#86efac');
-            headGrad.addColorStop(1, '#22c55e');
+            // Head: Luminous Emerald Glow
+            var headGrad = ctx.createRadialGradient(sx - 2, sy - 2, 2, sx, sy, sr + 2);
+            headGrad.addColorStop(0, '#a7f3d0');
+            headGrad.addColorStop(0.4, '#34d399');
+            headGrad.addColorStop(1, '#059669');
             ctx.fillStyle = headGrad;
+            ctx.shadowColor = 'rgba(52, 211, 153, 0.5)';
+            ctx.shadowBlur = 12;
             ctx.beginPath();
-            ctx.arc(sx, sy, sr + 1, 0, Math.PI * 2);
+            ctx.arc(sx, sy, sr + 1.5, 0, Math.PI * 2);
             ctx.fill();
+            ctx.shadowBlur = 0;
 
-            // Eyes
-            var eyeX1 = sx + (dir.y !== 0 ? -4 : dir.x * 4);
-            var eyeY1 = sy + (dir.x !== 0 ? -4 : dir.y * 4);
-            var eyeX2 = sx + (dir.y !== 0 ? 4 : dir.x * 4);
-            var eyeY2 = sy + (dir.x !== 0 ? 4 : dir.y * 4);
+            // Expressive Eyes pointing in movement direction
+            var eye1X = sx + (dir.x !== 0 ? dir.x * 4 : -4);
+            var eye1Y = sy + (dir.y !== 0 ? dir.y * 4 : -4);
+            var eye2X = sx + (dir.x !== 0 ? dir.x * 4 : 4);
+            var eye2Y = sy + (dir.y !== 0 ? dir.y * 4 : 4);
 
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(eyeX1, eyeY1, 2.5, 0, Math.PI * 2);
-            ctx.arc(eyeX2, eyeY2, 2.5, 0, Math.PI * 2);
+            ctx.arc(eye1X, eye1Y, 3, 0, Math.PI * 2);
+            ctx.arc(eye2X, eye2Y, 3, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = '#0f172a';
+            // Pupils
+            ctx.fillStyle = '#064e3b';
+            var pupilX1 = eye1X + dir.x * 1.2;
+            var pupilY1 = eye1Y + dir.y * 1.2;
+            var pupilX2 = eye2X + dir.x * 1.2;
+            var pupilY2 = eye2Y + dir.y * 1.2;
             ctx.beginPath();
-            ctx.arc(eyeX1, eyeY1, 1.2, 0, Math.PI * 2);
-            ctx.arc(eyeX2, eyeY2, 1.2, 0, Math.PI * 2);
+            ctx.arc(pupilX1, pupilY1, 1.5, 0, Math.PI * 2);
+            ctx.arc(pupilX2, pupilY2, 1.5, 0, Math.PI * 2);
             ctx.fill();
           } else {
-            // Body segment
-            var bodyGrad = ctx.createRadialGradient(sx, sy, 1, sx, sy, sr);
-            bodyGrad.addColorStop(0, '#4ade80');
-            bodyGrad.addColorStop(0.7, '#16a34a');
-            bodyGrad.addColorStop(1, '#15803d');
+            // Body segments - smooth radiant gradient with scale-like ring borders
+            var pct = 1 - (i / snake.length) * 0.45;
+            var bodyGrad = ctx.createRadialGradient(sx - 1, sy - 1, 1, sx, sy, sr);
+            bodyGrad.addColorStop(0, '#6ee7b7');
+            bodyGrad.addColorStop(0.5, '#10b981');
+            bodyGrad.addColorStop(1, '#047857');
             ctx.fillStyle = bodyGrad;
             ctx.beginPath();
-            ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+            ctx.arc(sx, sy, sr * pct + 1, 0, Math.PI * 2);
             ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
           }
         }
 

@@ -35,9 +35,22 @@
     .scores-wrap {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 20px;
       font-weight: 800;
     }
+    .rally-chip {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #facc15;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
     .side-tag {
       font-size: 11px;
       text-transform: uppercase;
@@ -168,6 +181,7 @@
         <div class="side-tag">Cyber AI</div>
         <div id="ai-score" class="score-box ai">0</div>
       </div>
+      <span id="rally-badge" class="rally-chip" style="display:none;">RALLY 0</span>
     </div>
 
     <div class="diff-selector" role="radiogroup" aria-label="AI Difficulty">
@@ -219,6 +233,7 @@
 
       function sfxPaddle() { playTone(480, 'square', 0.08, 0.1); }
       function sfxAIPaddle() { playTone(360, 'sawtooth', 0.08, 0.08); }
+      function sfxSmash() { playTone(640, 'triangle', 0.14, 0.2, 320); }
       function sfxWall() { playTone(240, 'triangle', 0.06, 0.08); }
       function sfxScore() {
         playTone(523.25, 'sine', 0.15, 0.15);
@@ -264,11 +279,32 @@
       var isRunning = false;
       var isPaused = false;
       var currentDiff = 'novice';
+      var rallyCount = 0;
+      var screenShake = 0;
+      var aiErrorOffset = 0;
 
       var diffConfig = {
-        novice: { aiSpeed: 4.8, aiError: 25, reactionLag: 0.08 },
-        pro:    { aiSpeed: 7.2, aiError: 10, reactionLag: 0.14 },
-        beast:  { aiSpeed: 10.0, aiError: 2, reactionLag: 0.24 }
+        novice: {
+          aiSpeed: 3.8,
+          reactX: 0.48,          // AI only reacts when ball is past half court
+          predictBounce: false,  // Does NOT predict wall bounces (natural human mistake)
+          errorRange: 38,        // Significant error margin allowing corner winners
+          name: 'Novice'
+        },
+        pro: {
+          aiSpeed: 5.8,
+          reactX: 0.30,
+          predictBounce: true,
+          errorRange: 16,
+          name: 'Pro'
+        },
+        beast: {
+          aiSpeed: 8.6,
+          reactX: 0.08,
+          predictBounce: true,
+          errorRange: 3,
+          name: 'Beast'
+        }
       };
 
       // Paddle config
@@ -299,15 +335,18 @@
         r: 8,
         vx: 5,
         vy: 3,
+        spin: 0,
         baseSpeed: 7,
         trail: []
       };
 
       var particles = [];
+      var rallyBadge = document.getElementById('rally-badge');
 
-      function spawnHitParticles(x, y, color) {
-        for (var i = 0; i < 16; i++) {
-          var angle = (Math.PI * 2 * i) / 16 + (Math.random() - 0.5);
+      function spawnHitParticles(x, y, color, count) {
+        var num = count || 16;
+        for (var i = 0; i < num; i++) {
+          var angle = (Math.PI * 2 * i) / num + (Math.random() - 0.5);
           var speed = Math.random() * 5 + 2;
           particles.push({
             x: x,
@@ -325,7 +364,11 @@
       function resetBall(servingPlayer) {
         ball.x = W / 2;
         ball.y = H / 2;
+        ball.spin = 0;
         ball.trail = [];
+        rallyCount = 0;
+        if (rallyBadge) rallyBadge.style.display = 'none';
+        aiErrorOffset = (Math.random() - 0.5) * diffConfig[currentDiff].errorRange * 2;
         var dir = servingPlayer === 'player' ? -1 : 1;
         var angle = (Math.random() * 0.8 - 0.4);
         var speed = ball.baseSpeed;
@@ -389,27 +432,30 @@
         // Smooth player paddle easing
         player.targetY = Math.max(10, Math.min(H - player.h - 10, player.targetY));
         var prevPy = player.y;
-        player.y += (player.targetY - player.y) * 0.35;
+        player.y += (player.targetY - player.y) * 0.38;
         player.vy = player.y - prevPy;
 
-        // AI tracking
+        // Dynamic AI tracking with clear difficulty distinction
         var cfg = diffConfig[currentDiff];
-        var aiCenter = ai.y + ai.h / 2;
-        var targetAiY = ball.y - ai.h / 2;
+        var targetAiY = H / 2 - ai.h / 2;
 
-        // Prediction & error offset
-        if (ball.vx > 0) {
-          var dist = ai.x - ball.x;
-          var time = dist / ball.vx;
-          var predictedY = ball.y + ball.vy * time;
-          // Bounce prediction
-          if (predictedY < 0 || predictedY > H) {
-            predictedY = Math.abs(predictedY % (H * 2));
-            if (predictedY > H) predictedY = H * 2 - predictedY;
+        if (ball.vx > 0 && ball.x > W * cfg.reactX) {
+          if (!cfg.predictBounce) {
+            // Novice: simple, human-like reaction tracking ball Y with error
+            targetAiY = ball.y - ai.h / 2 + aiErrorOffset;
+          } else {
+            // Pro & Beast: Trajectory prediction
+            var dist = ai.x - ball.x;
+            var time = dist / ball.vx;
+            var predictedY = ball.y + ball.vy * time;
+            if (predictedY < 0 || predictedY > H) {
+              predictedY = Math.abs(predictedY % (H * 2));
+              if (predictedY > H) predictedY = H * 2 - predictedY;
+            }
+            targetAiY = predictedY - ai.h / 2 + aiErrorOffset;
           }
-          targetAiY = predictedY - ai.h / 2;
         } else {
-          // Reset towards center when ball is traveling away
+          // Guard center court
           targetAiY = H / 2 - ai.h / 2;
         }
 
@@ -418,13 +464,19 @@
         ai.y += moveStep;
         ai.y = Math.max(10, Math.min(H - ai.h - 10, ai.y));
 
+        // Ball curve spin physics
+        if (ball.spin && Math.abs(ball.spin) > 0.05) {
+          ball.vy += ball.spin * 0.07;
+          ball.spin *= 0.985;
+        }
+
         // Ball movement
         ball.x += ball.vx;
         ball.y += ball.vy;
 
         // Ball trail
         ball.trail.push({ x: ball.x, y: ball.y });
-        if (ball.trail.length > 8) ball.trail.shift();
+        if (ball.trail.length > 10) ball.trail.shift();
 
         // Wall collisions
         if (ball.y - ball.r <= 0) {
@@ -447,12 +499,35 @@
         ) {
           ball.x = player.x + player.w + ball.r;
           var hitOffset = (ball.y - (player.y + player.h / 2)) / (player.h / 2); // -1 to 1
-          var speed = Math.min(Math.hypot(ball.vx, ball.vy) * 1.05, 16);
+
+          // Player spin slice
+          ball.spin = player.vy * 0.45;
+
+          // Power smash detection
+          var isSmash = Math.abs(player.vy) > 3.2 || Math.abs(hitOffset) > 0.72;
+          var baseSpeed = Math.hypot(ball.vx, ball.vy) * (isSmash ? 1.15 : 1.05);
+          var speed = Math.max(8.2, Math.min(baseSpeed, 18.5));
+
           var returnAngle = hitOffset * (Math.PI / 3); // Max 60 deg
           ball.vx = Math.abs(speed * Math.cos(returnAngle));
-          ball.vy = speed * Math.sin(returnAngle) + (player.vy * 0.2);
-          sfxPaddle();
-          spawnHitParticles(ball.x, ball.y, '#38bdf8');
+          ball.vy = speed * Math.sin(returnAngle) + (player.vy * 0.25);
+
+          rallyCount++;
+          if (rallyBadge) {
+            rallyBadge.style.display = 'inline-block';
+            rallyBadge.textContent = 'RALLY ' + rallyCount + (isSmash ? ' ⚡ SMASH!' : '');
+          }
+
+          if (isSmash) {
+            sfxSmash();
+            spawnHitParticles(ball.x, ball.y, '#f59e0b', 22);
+          } else {
+            sfxPaddle();
+            spawnHitParticles(ball.x, ball.y, '#38bdf8', 16);
+          }
+
+          // Randomize AI error offset on this shot
+          aiErrorOffset = (Math.random() - 0.5) * cfg.errorRange * 2;
         }
 
         // Paddle Collision: AI
@@ -465,12 +540,20 @@
         ) {
           ball.x = ai.x - ball.r;
           var aiHitOffset = (ball.y - (ai.y + ai.h / 2)) / (ai.h / 2);
-          var aiSpeed = Math.min(Math.hypot(ball.vx, ball.vy) * 1.05, 16);
-          var aiReturnAngle = aiHitOffset * (Math.PI / 3);
+          var aiSpeed = Math.min(Math.hypot(ball.vx, ball.vy) * 1.04, 17.5);
+          var aiReturnAngle = aiHitOffset * (Math.PI / 3.2);
           ball.vx = -Math.abs(aiSpeed * Math.cos(aiReturnAngle));
           ball.vy = aiSpeed * Math.sin(aiReturnAngle);
+          ball.spin = 0;
+
+          rallyCount++;
+          if (rallyBadge) {
+            rallyBadge.style.display = 'inline-block';
+            rallyBadge.textContent = 'RALLY ' + rallyCount;
+          }
+
           sfxAIPaddle();
-          spawnHitParticles(ball.x, ball.y, '#f43f5e');
+          spawnHitParticles(ball.x, ball.y, '#f43f5e', 16);
         }
 
         // Scoring
