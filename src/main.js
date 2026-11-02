@@ -941,119 +941,57 @@ function renderContactPage() {
 
   return `
     <main class="page-shell contact-page">
-      <!-- Hero Header -->
-      <header class="contact-hero">
-        <div class="eyebrow">GET IN TOUCH</div>
-        <h1>Contact & Developer Support</h1>
-        <p>Whether you have bug reports, gameplay suggestions, developer submissions, or general inquiries, our team is here to assist you.</p>
-      </header>
+      <div class="contact-container">
+        <!-- Hero Header -->
+        <header class="contact-hero">
+          <div class="eyebrow">GET IN TOUCH</div>
+          <h1>Contact & Support</h1>
+          <p>Have a question, feedback, or a bug report? Reach out directly or compose a quick message below.</p>
+        </header>
 
-      <!-- 3 Pillar Channels Grid -->
-      <div class="contact-channels-grid">
-        <div class="contact-channel-card">
-          <div class="channel-icon-wrap icon-bug">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect width="8" height="14" x="8" y="6" rx="4"/><path d="m19 7-3 2"/><path d="m5 7 3 2"/><path d="m19 19-3-2"/><path d="m5 19 3-2"/><path d="M20 13h-4"/><path d="M4 13h4"/><path d="m10 4 1 2"/><path d="m14 4-1 2"/>
-            </svg>
-          </div>
-          <h3>Bug & Glitch Reports</h3>
-          <p>Spotted an unexpected control lag, visual rendering glitch, or audio desync? Send us the details and we'll patch it quickly.</p>
-          <span class="channel-badge badge-priority">Priority Response</span>
-        </div>
-
-        <div class="contact-channel-card">
-          <div class="channel-icon-wrap icon-dev">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-          </div>
-          <h3>Game Submissions</h3>
-          <p>Are you an indie developer with an original HTML5 or Canvas browser game? We collaborate to feature high-speed, zero-tracker web games.</p>
-          <span class="channel-badge badge-creators">Creators Welcome</span>
-        </div>
-
-        <div class="contact-channel-card">
-          <div class="channel-icon-wrap icon-idea">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>
-            </svg>
-          </div>
-          <h3>Game Ideas & Feedback</h3>
-          <p>Have an arcade classic or unique puzzle mechanic proposal you'd love to play on DevKitra? Share your gameplay thoughts with us.</p>
-          <span class="channel-badge badge-community">Community Driven</span>
-        </div>
-      </div>
-
-      <!-- Main Hub Split Layout -->
-      <div class="contact-hub-grid">
-        <!-- Direct Channel Panel -->
-        <div class="contact-direct-card">
-          <div class="direct-card-head">
-            <div class="direct-icon-chip">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <!-- Direct Email Card -->
+        <div class="contact-email-card">
+          <div class="email-card-info">
+            <div class="email-icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
               </svg>
             </div>
             <div>
-              <h2>Direct Email Support</h2>
-              <span class="direct-sub">Primary communication channel</span>
+              <div class="email-card-meta">
+                <span class="meta-label">DIRECT EMAIL</span>
+                <span class="meta-status"><span class="status-dot"></span>Replies within 24h</span>
+              </div>
+              <a href="mailto:${SITE_EMAIL}" class="email-card-link" id="contact-email-val">${SITE_EMAIL}</a>
             </div>
           </div>
-
-          <div class="email-display-box">
-            <div class="email-address" id="contact-email-val">${SITE_EMAIL}</div>
-            <div class="email-actions">
-              <button type="button" class="btn btn-secondary btn-sm" id="btn-copy-email" title="Copy email address to clipboard">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                </svg>
-                <span id="copy-email-text">Copy Email</span>
-              </button>
-              <a href="mailto:${SITE_EMAIL}" class="btn btn-primary btn-sm" id="btn-direct-mailto">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-                <span>Send Email</span>
-              </a>
-            </div>
-          </div>
-
-          <div class="contact-perks-list">
-            <div class="perk-item">
-              <span class="perk-icon">⚡</span>
-              <div>
-                <strong>Prompt Response SLA</strong>
-                <p>Our engineering and editorial team typically responds within 24–48 hours.</p>
-              </div>
-            </div>
-            <div class="perk-item">
-              <span class="perk-icon">🛡️</span>
-              <div>
-                <strong>100% Privacy Guarantee</strong>
-                <p>Your email and correspondence are strictly private. No marketing, profiling, or sharing.</p>
-              </div>
-            </div>
-            <div class="perk-item">
-              <span class="perk-icon">🌐</span>
-              <div>
-                <strong>Independent Web Gaming</strong>
-                <p>DevKitra is dedicated to accessible browser gaming with zero mandatory accounts or paywalls.</p>
-              </div>
-            </div>
+          <div class="email-card-actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-copy-email" title="Copy email address to clipboard">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              </svg>
+              <span id="copy-email-text">Copy Email</span>
+            </button>
+            <a href="mailto:${SITE_EMAIL}" class="btn btn-primary btn-sm" id="btn-direct-mailto">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+              <span>Send Email</span>
+            </a>
           </div>
         </div>
 
-        <!-- Quick Message Composer Panel -->
+        <!-- Quick Message Composer -->
         <div class="contact-composer-card">
           <div class="composer-header">
             <h2>Quick Message Composer</h2>
-            <p>Prepare your message with automated system diagnostics for swift resolution.</p>
+            <p>Prepares a structured draft for your email client with optional device specs.</p>
           </div>
 
           <form id="contact-composer-form" class="composer-form" onsubmit="return false;">
             <div class="form-row">
               <div class="form-group flex-1">
-                <label for="contact-name" class="form-label">Your Name / Handle <span class="label-optional">(optional)</span></label>
+                <label for="contact-name" class="form-label">Your Name <span class="label-optional">(optional)</span></label>
                 <input type="text" id="contact-name" class="form-input" placeholder="e.g. Alex" autocomplete="name" />
               </div>
               <div class="form-group flex-1">
@@ -1062,14 +1000,14 @@ function renderContactPage() {
                   <option value="Bug Report / Glitch">Bug Report / Glitch</option>
                   <option value="Game Suggestion">Game Suggestion</option>
                   <option value="Developer Game Submission">Developer Game Submission</option>
-                  <option value="Performance Feedback">Performance or Audio Feedback</option>
-                  <option value="General Inquiry">General Inquiry / Partnership</option>
+                  <option value="Performance Feedback">Performance / Audio Issue</option>
+                  <option value="General Inquiry">General Inquiry / Other</option>
                 </select>
               </div>
             </div>
 
             <div class="form-group">
-              <label for="contact-game" class="form-label">Related Game <span class="label-optional">(if applicable)</span></label>
+              <label for="contact-game" class="form-label">Related Game <span class="label-optional">(optional)</span></label>
               <select id="contact-game" class="form-select">
                 <option value="General Platform">General Platform (No specific game)</option>
                 ${gameOptions}
@@ -1078,7 +1016,7 @@ function renderContactPage() {
 
             <div class="form-group">
               <label for="contact-message" class="form-label">Message Details <span class="label-required">*</span></label>
-              <textarea id="contact-message" class="form-textarea" rows="4" placeholder="Describe the issue, game idea, or submission overview..."></textarea>
+              <textarea id="contact-message" class="form-textarea" rows="4" placeholder="Describe your question, bug report, or game proposal..."></textarea>
             </div>
 
             <div class="form-group checkbox-group">
@@ -1105,28 +1043,6 @@ function renderContactPage() {
           </form>
         </div>
       </div>
-
-      <!-- FAQ Section -->
-      <section class="contact-faq-section">
-        <div class="section-header-centered">
-          <div class="eyebrow">COMMON QUESTIONS</div>
-          <h2>Frequently Asked Questions</h2>
-        </div>
-        <div class="faq-cards-grid">
-          <div class="faq-card">
-            <h4>How do I file an effective bug report?</h4>
-            <p>Please specify the game name, your device (PC/Mac/tablet/phone), browser (Chrome/Safari/Firefox), and clear steps to reproduce the issue. Diagnostic details help us ship fixes rapidly.</p>
-          </div>
-          <div class="faq-card">
-            <h4>Can I submit an original HTML5 game?</h4>
-            <p>Yes! DevKitra welcomes original, high-performance 2D Canvas or WebGL games with self-contained assets and zero trackers. Send us a demo link or GitHub repository.</p>
-          </div>
-          <div class="faq-card">
-            <h4>Are there any fees or account requirements?</h4>
-            <p>None. DevKitra is completely free for both players and creators. All gameplay, unlocks, and high scores are preserved locally in browser memory.</p>
-          </div>
-        </div>
-      </section>
     </main>
   `;
 }

@@ -724,211 +724,139 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
 }
 .contact-email:hover { text-decoration: underline; }
 
-/* ---------- Enhanced Contact Page ---------- */
+/* ---------- Minimalist & Professional Contact Page ---------- */
 .contact-page {
-  width: min(1040px, calc(100% - var(--dk-gutter) * 2));
-  margin: 0 auto;
   padding: 1.5rem 0 4.5rem;
+}
+
+.contact-container {
+  width: min(680px, calc(100% - var(--dk-gutter) * 2));
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .contact-hero {
   text-align: center;
-  max-width: 680px;
-  margin: 0 auto 2.5rem;
+  margin-bottom: 0.5rem;
 }
 .contact-hero h1 {
-  font-size: clamp(2rem, 3.8vw, 2.6rem);
+  font-size: clamp(2rem, 3.8vw, 2.5rem);
   font-weight: 900;
   letter-spacing: -0.03em;
-  margin: 0.4rem 0 0.85rem;
+  margin: 0.35rem 0 0.65rem;
 }
 .contact-hero p {
   color: var(--dk-ink-soft);
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   line-height: 1.6;
+  max-width: 520px;
+  margin: 0 auto;
 }
 
-.contact-channels-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
-}
-.contact-channel-card {
+/* Direct Email Banner Card */
+.contact-email-card {
   background: var(--dk-surface);
   border: 1px solid var(--dk-line);
   border-radius: var(--dk-radius-lg);
-  padding: 1.6rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  transition: transform var(--dk-transition), border-color var(--dk-transition), box-shadow var(--dk-transition);
-}
-.contact-channel-card:hover {
-  border-color: var(--dk-line-light);
-  transform: translateY(-3px);
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   box-shadow: var(--dk-shadow-sm);
+  transition: border-color var(--dk-transition);
 }
-.channel-icon-wrap {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+.contact-email-card:hover {
+  border-color: var(--dk-line-light);
+}
+.email-card-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+.email-icon-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--dk-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
+  flex-shrink: 0;
 }
-.channel-icon-wrap.icon-bug {
-  background: rgba(244, 63, 94, 0.12);
-  color: var(--dk-rose);
+.email-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.2rem;
 }
-.channel-icon-wrap.icon-dev {
-  background: rgba(37, 99, 235, 0.12);
-  color: var(--dk-primary);
-}
-.channel-icon-wrap.icon-idea {
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--dk-amber);
-}
-.contact-channel-card h3 {
-  font-size: 1.15rem;
-  font-weight: 800;
-  margin-bottom: 0.4rem;
-  color: var(--dk-ink);
-}
-.contact-channel-card p {
-  font-size: 0.88rem;
-  color: var(--dk-ink-soft);
-  line-height: 1.5;
-  margin-bottom: 1.1rem;
-  flex: 1;
-}
-.channel-badge {
+.meta-label {
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.5px;
+  color: var(--dk-quiet);
   text-transform: uppercase;
-  padding: 0.25rem 0.65rem;
-  border-radius: var(--dk-radius-full);
 }
-.badge-priority {
-  background: rgba(244, 63, 94, 0.12);
-  color: var(--dk-rose);
-  border: 1px solid rgba(244, 63, 94, 0.25);
+.meta-status {
+  font-size: 0.75rem;
+  color: var(--dk-green);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
-.badge-creators {
-  background: rgba(37, 99, 235, 0.12);
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dk-green);
+  box-shadow: 0 0 8px var(--dk-green);
+  display: inline-block;
+}
+.email-card-link {
+  font-family: var(--dk-font-mono);
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--dk-ink);
+  transition: color var(--dk-transition);
+  word-break: break-all;
+}
+.email-card-link:hover {
   color: var(--dk-primary);
-  border: 1px solid rgba(37, 99, 235, 0.25);
 }
-.badge-community {
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--dk-amber);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+.email-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
 }
 
-.contact-hub-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.35fr;
-  gap: 1.75rem;
-  margin-bottom: 3.5rem;
-}
-.contact-direct-card, .contact-composer-card {
+/* Quick Message Composer Card */
+.contact-composer-card {
   background: var(--dk-surface);
   border: 1px solid var(--dk-line);
   border-radius: var(--dk-radius-lg);
   padding: 2rem;
   box-shadow: var(--dk-shadow-sm);
 }
-.direct-card-head {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.composer-header {
   margin-bottom: 1.5rem;
 }
-.direct-icon-chip {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(2, 132, 199, 0.12);
-  color: var(--dk-cyan);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.direct-card-head h2 {
-  font-size: 1.3rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-.direct-sub {
-  font-size: 0.82rem;
-  color: var(--dk-ink-soft);
-}
-.email-display-box {
-  background: var(--dk-surface-raised);
-  border: 1px solid var(--dk-line);
-  border-radius: var(--dk-radius);
-  padding: 1.25rem;
-  margin-bottom: 1.75rem;
-}
-.email-address {
-  font-family: var(--dk-font-mono);
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--dk-cyan);
-  letter-spacing: -0.01em;
-  margin-bottom: 0.85rem;
-  word-break: break-all;
-}
-.email-actions {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-.contact-perks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.15rem;
-}
-.perk-item {
-  display: flex;
-  gap: 0.85rem;
-  align-items: flex-start;
-}
-.perk-icon {
-  font-size: 1.25rem;
-  line-height: 1;
-  padding-top: 0.15rem;
-}
-.perk-item strong {
-  display: block;
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: var(--dk-ink);
-  margin-bottom: 0.15rem;
-}
-.perk-item p {
-  font-size: 0.82rem;
-  color: var(--dk-ink-soft);
-  line-height: 1.45;
-  margin: 0;
-}
-
-.composer-header {
-  margin-bottom: 1.25rem;
-}
 .composer-header h2 {
-  font-size: 1.3rem;
-  font-weight: 900;
+  font-size: 1.25rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
   margin-bottom: 0.35rem;
+  color: var(--dk-ink);
 }
 .composer-header p {
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   color: var(--dk-ink-soft);
+  line-height: 1.5;
   margin: 0;
 }
 .form-row {
@@ -936,10 +864,11 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
   gap: 1rem;
 }
 .form-group {
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.15rem;
 }
 .flex-1 {
   flex: 1;
+  min-width: 0;
 }
 .form-label {
   display: block;
@@ -951,7 +880,7 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
 .label-optional {
   font-weight: 400;
   color: var(--dk-quiet);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 .label-required {
   color: var(--dk-rose);
@@ -973,12 +902,13 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
 }
 .form-textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 110px;
   font-family: inherit;
   line-height: 1.5;
 }
 .checkbox-group {
   margin-top: 0.25rem;
+  margin-bottom: 1.4rem;
 }
 .form-checkbox-label {
   display: inline-flex;
@@ -999,54 +929,14 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-top: 1.25rem;
 }
 
-.contact-faq-section {
-  margin-top: 2rem;
-}
-.section-header-centered {
-  text-align: center;
-  margin-bottom: 1.75rem;
-}
-.section-header-centered h2 {
-  font-size: 1.6rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  margin-top: 0.35rem;
-}
-.faq-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-}
-.faq-card {
-  background: var(--dk-surface);
-  border: 1px solid var(--dk-line);
-  border-radius: var(--dk-radius);
-  padding: 1.4rem;
-}
-.faq-card h4 {
-  font-size: 0.98rem;
-  font-weight: 800;
-  color: var(--dk-ink);
-  margin-bottom: 0.5rem;
-}
-.faq-card p {
-  font-size: 0.85rem;
-  color: var(--dk-ink-soft);
-  line-height: 1.55;
-  margin: 0;
-}
-
-@media (max-width: 860px) {
-  .contact-hub-grid { grid-template-columns: 1fr; }
-  .contact-channels-grid { grid-template-columns: 1fr; }
-  .faq-cards-grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 600px) {
+@media (max-width: 640px) {
+  .email-card-info { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .contact-email-card { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .email-card-actions { justify-content: flex-start; }
   .form-row { flex-direction: column; gap: 0; }
-  .contact-direct-card, .contact-composer-card { padding: 1.5rem; }
+  .contact-composer-card { padding: 1.5rem; }
 }
 
 /* ---------- 404 ---------- */
