@@ -987,6 +987,70 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
   margin-top: 0.5rem;
 }
 
+/* Badge Strip */
+.about-badge-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+.about-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--dk-ink-soft);
+  background: var(--dk-surface);
+  border: 1px solid var(--dk-line);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+}
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dk-green);
+  display: inline-block;
+}
+
+/* Stats / Metrics Bar */
+.about-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  background: var(--dk-surface);
+  border: 1px solid var(--dk-line);
+  border-radius: var(--dk-radius-lg);
+  padding: 1.5rem 1rem;
+  box-shadow: var(--dk-shadow-sm);
+  text-align: center;
+}
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+.stat-cell:not(:last-child) {
+  border-right: 1px solid var(--dk-line);
+}
+.stat-number {
+  font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--dk-primary);
+  line-height: 1.1;
+}
+.stat-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--dk-ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* About Sections */
 .about-section {
   display: flex;
@@ -1200,6 +1264,9 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
 @media (max-width: 640px) {
   .about-container { gap: 2.5rem; }
   .about-hero h1 { font-size: 1.85rem; }
+  .about-stats-bar { grid-template-columns: repeat(2, 1fr); gap: 1.25rem 0.75rem; }
+  .stat-cell:not(:last-child) { border-right: none; }
+  .stat-cell:nth-child(odd) { border-right: 1px solid var(--dk-line); }
   .about-story-card { padding: 1.5rem; }
   .about-faq-grid { grid-template-columns: 1fr; }
   .about-hero-actions { width: 100%; flex-direction: column; }

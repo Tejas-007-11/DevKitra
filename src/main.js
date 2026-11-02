@@ -905,10 +905,10 @@ function renderAboutPage() {
       <div class="about-container">
         <!-- Hero Section -->
         <header class="about-hero">
-          <div class="eyebrow">ABOUT DEVKITRA</div>
-          <h1>Free Instant Online Games — Play Instantly in Your Browser</h1>
+          <div class="eyebrow">ABOUT DEVKITRA GAMING</div>
+          <h1>Free Instant Browser Games — Zero Downloads, Infinite Play</h1>
           <p class="about-lead">
-            Welcome to DevKitra Games, your home for fast, fun, and lightweight browser games. We build premium, original games you can play directly on any screen with <strong>zero downloads</strong>, <strong>no account sign-ups</strong>, and <strong>no paywalls</strong>.
+            Welcome to DevKitra Games, your premier destination for fast, fun, and lightweight online gaming. We build original, high-performance web games designed to run instantly on any device with <strong>zero downloads</strong>, <strong>no account sign-ups</strong>, and <strong>no paywalls</strong>.
           </p>
           <div class="about-hero-actions">
             <a href="/explore" class="btn btn-primary btn-lg" data-nav>
@@ -916,54 +916,82 @@ function renderAboutPage() {
               Explore All Games
             </a>
             <a href="/genre/arcade" class="btn btn-secondary btn-lg" data-nav>
-              Arcade & Action
+              Play Arcade Hits
             </a>
           </div>
+          
+          <!-- Key Badges Strip -->
+          <div class="about-badge-strip">
+            <span class="about-pill"><span class="pill-dot"></span> 100% Free Forever</span>
+            <span class="about-pill"><span class="pill-dot"></span> Zero Downloads</span>
+            <span class="about-pill"><span class="pill-dot"></span> Touch & Keyboard Ready</span>
+            <span class="about-pill"><span class="pill-dot"></span> Privacy-Focused</span>
+          </div>
         </header>
+
+        <!-- Stats / Impact Counter -->
+        <section class="about-stats-bar">
+          <div class="stat-cell">
+            <span class="stat-number">15+</span>
+            <span class="stat-label">Handcrafted Games</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-number">0 MB</span>
+            <span class="stat-label">Downloads Needed</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-number">60 FPS</span>
+            <span class="stat-label">Hardware Performance</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-number">100%</span>
+            <span class="stat-label">Free & Unrestricted</span>
+          </div>
+        </section>
 
         <!-- Why Players Love DevKitra (Core Player Benefits) -->
         <section class="about-section">
           <div class="about-section-header">
             <span class="eyebrow">THE DEVKITRA ADVANTAGE</span>
             <h2>Gaming The Way It Should Be</h2>
-            <p>No waiting. No massive downloads. Pure, responsive fun on any screen.</p>
+            <p>No waiting. No massive 50GB downloads. Pure, instant entertainment for everyone.</p>
           </div>
           
           <div class="about-features-grid">
             <div class="about-feature-card">
               <div class="feature-icon" aria-hidden="true">⚡</div>
               <h3>Instant Play in Seconds</h3>
-              <p>Forget 50GB downloads, painful installations, and slow loading bars. Click any game and jump right into the action within seconds in Chrome, Safari, Edge, or Firefox.</p>
+              <p>Forget painful installations, app store approvals, and endless loading bars. Click any game and jump into the action in under a second directly in Chrome, Safari, Edge, or Firefox.</p>
             </div>
 
             <div class="about-feature-card">
               <div class="feature-icon" aria-hidden="true">🎮</div>
-              <h3>100% Free Forever</h3>
-              <p>Every single game on DevKitra is completely free. No subscription fees, no locked levels, and no predatory pay-to-win mechanics. Just pure gameplay.</p>
+              <h3>100% Free to Play</h3>
+              <p>Every single game on DevKitra is completely free. No subscription fees, no locked game modes, and no aggressive pay-to-win microtransactions. Just pure gameplay.</p>
             </div>
 
             <div class="about-feature-card">
               <div class="feature-icon" aria-hidden="true">🛡️</div>
-              <h3>No Accounts or Sign-Ups</h3>
-              <p>We respect your time and privacy. There are no passwords to remember, no mandatory emails, and zero marketing spam. Simply visit the site and play.</p>
+              <h3>No Accounts or Passwords</h3>
+              <p>We respect your privacy. There are no passwords to remember, no mandatory emails, and zero marketing spam. Simply visit DevKitra and start playing immediately.</p>
             </div>
 
             <div class="about-feature-card">
               <div class="feature-icon" aria-hidden="true">📱</div>
-              <h3>Any Device, Anywhere</h3>
-              <p>Play effortlessly on mobile phones, tablets, Chromebooks, laptops, and desktop PCs. Every title includes responsive touch controls and precision keyboard support.</p>
+              <h3>Any Screen, Anywhere</h3>
+              <p>Play effortlessly on smartphones, tablets, Chromebooks, laptops, and desktop workstations. Every title includes responsive touch controls and precision keyboard support.</p>
             </div>
 
             <div class="about-feature-card">
               <div class="feature-icon" aria-hidden="true">🏆</div>
               <h3>Automatic High Scores</h3>
-              <p>Your high scores, best wave records, and personal preferences are safely remembered on your device, allowing you to challenge your records whenever you return.</p>
+              <p>Your records, highest waves, and personal settings are automatically saved right in your browser's local memory so you can return and beat your personal best anytime.</p>
             </div>
 
             <div class="about-feature-card">
               <div class="feature-icon" aria-hidden="true">☕</div>
-              <h3>Perfect for Quick Breaks</h3>
-              <p>Whether you have 3 minutes between classes, a coffee break at work, or an hour to unwind at home, our bite-sized arcade and puzzle challenges fit your day.</p>
+              <h3>Ideal for Quick Breaks</h3>
+              <p>Whether you have 3 minutes between study sessions, a coffee break at work, or an hour to unwind in the evening, our bite-sized challenges fit into any schedule.</p>
             </div>
           </div>
         </section>
@@ -971,9 +999,9 @@ function renderAboutPage() {
         <!-- Curated Categories (SEO rich internal linking) -->
         <section class="about-section">
           <div class="about-section-header">
-            <span class="eyebrow">BROWSE POPULAR GENRES</span>
-            <h2>Find Your Next Favorite Game</h2>
-            <p>From adrenaline-pumping survival action to relaxing brain puzzles, we have games for every mood.</p>
+            <span class="eyebrow">CURATED COLLECTION</span>
+            <h2>Explore Popular Game Categories</h2>
+            <p>From adrenaline-pumping survival action to relaxing brain teasers, find games tailored to your mood.</p>
           </div>
 
           <div class="about-genres-grid">
@@ -981,17 +1009,17 @@ function renderAboutPage() {
               <div class="genre-badge-icon" aria-hidden="true">🚀</div>
               <div class="genre-details">
                 <h3>Arcade & Survival</h3>
-                <p>High-energy survival shooters, arena defense, and cosmic combat games designed to test your reflexes.</p>
-                <span class="genre-link-text">Play Arcade Games &rarr;</span>
+                <p>High-energy survival shooters, circular arena defense, and cosmic combat games built to test your reflexes.</p>
+                <span class="genre-link-text">Browse Arcade Games &rarr;</span>
               </div>
             </a>
 
             <a href="/genre/puzzle" class="about-genre-card" data-nav>
               <div class="genre-badge-icon" aria-hidden="true">🧩</div>
               <div class="genre-details">
-                <h3>Brain Teasers & Puzzles</h3>
+                <h3>Brain & Logic Puzzles</h3>
                 <p>Smart, satisfying number match games like 2048, spatial logic challenges, and strategic grid puzzles.</p>
-                <span class="genre-link-text">Play Puzzle Games &rarr;</span>
+                <span class="genre-link-text">Browse Puzzle Games &rarr;</span>
               </div>
             </a>
 
@@ -999,8 +1027,8 @@ function renderAboutPage() {
               <div class="genre-badge-icon" aria-hidden="true">⚡</div>
               <div class="genre-details">
                 <h3>Reflex & Gravity Runners</h3>
-                <p>One-touch gravity switching, rhythm courses, and precision obstacle runs where every millisecond counts.</p>
-                <span class="genre-link-text">Play Reflex Games &rarr;</span>
+                <p>One-touch gravity flipping, rhythm courses, reaction benchmarks, and precision obstacle runs.</p>
+                <span class="genre-link-text">Browse Reflex Games &rarr;</span>
               </div>
             </a>
 
@@ -1009,7 +1037,25 @@ function renderAboutPage() {
               <div class="genre-details">
                 <h3>Retro & Timeless Classics</h3>
                 <p>Modernized homages to golden-era arcade legends: classic snake, paddle tennis, brick breakers, and minesweeper.</p>
-                <span class="genre-link-text">Play Classic Games &rarr;</span>
+                <span class="genre-link-text">Browse Classic Games &rarr;</span>
+              </div>
+            </a>
+
+            <a href="/genre/casual" class="about-genre-card" data-nav>
+              <div class="genre-badge-icon" aria-hidden="true">🎯</div>
+              <div class="genre-details">
+                <h3>Casual & Pick-up-and-Play</h3>
+                <p>Relaxing loop connection puzzles, color matching, and soothing physics challenges designed for quick stress relief.</p>
+                <span class="genre-link-text">Browse Casual Games &rarr;</span>
+              </div>
+            </a>
+
+            <a href="/genre/sports" class="about-genre-card" data-nav>
+              <div class="genre-badge-icon" aria-hidden="true">🏓</div>
+              <div class="genre-details">
+                <h3>Sports & Competitive Duels</h3>
+                <p>Fast-paced table tennis action, smart AI opponents, and competitive arcade physics showdowns.</p>
+                <span class="genre-link-text">Browse Sports Games &rarr;</span>
               </div>
             </a>
           </div>
@@ -1018,12 +1064,12 @@ function renderAboutPage() {
         <!-- Mission & Player-First Philosophy Card -->
         <section class="about-story-card">
           <div class="eyebrow">OUR MISSION</div>
-          <h2>Bringing Back the Pure Fun of Web Gaming</h2>
+          <h2>Bringing Back the Pure Joy of Web Gaming</h2>
           <p>
-            Remember when online games were simple, instant, and fun? You opened a webpage, clicked play, and lost yourself in pure entertainment without installing 100MB apps, consenting to dozens of ad tracking cookies, or dodging paywalls.
+            Remember when online games were simple, instant, and fun? You opened a webpage, clicked play, and lost yourself in pure entertainment without installing 100MB apps, consenting to dozens of tracking cookies, or dodging paywalls.
           </p>
           <p>
-            At <strong>DevKitra</strong>, we are dedicated to revitalizing that golden era of web gaming with modern web technology. Every game is handcrafted with crisp 60 FPS graphics, silky-smooth physics, and responsive controls — all packaged into ultralight pages that load in the blink of an eye.
+            At <strong>DevKitra</strong>, we are committed to revitalizing that golden era of web gaming using modern web standards. Every game is handcrafted with crisp 60 FPS graphics, silky-smooth physics, and responsive controls — all packaged into ultralight pages that load in the blink of an eye.
           </p>
           <p>
             Whether you are a casual player looking to pass time, a student taking a break between assignments, or a retro enthusiast hunting for high scores, DevKitra is built for you.
@@ -1033,40 +1079,40 @@ function renderAboutPage() {
         <!-- Frequently Asked Questions (SEO Supportive FAQ) -->
         <section class="about-section">
           <div class="about-section-header">
-            <span class="eyebrow">COMMON QUESTIONS</span>
+            <span class="eyebrow">HELP & INFORMATION</span>
             <h2>Frequently Asked Questions</h2>
             <p>Everything you need to know about playing free online games on DevKitra.</p>
           </div>
 
           <div class="about-faq-grid">
             <div class="faq-item">
-              <h3>Are games on DevKitra really free?</h3>
-              <p>Yes, 100%! All games on DevKitra are completely free to play. There are no subscriptions, no locked paid levels, and no in-app purchases.</p>
+              <h3>Are games on DevKitra really 100% free?</h3>
+              <p>Yes! Every game in the DevKitra catalog is completely free to play. There are no subscriptions, no locked paid levels, and no microtransactions.</p>
             </div>
 
             <div class="faq-item">
               <h3>Do I need to download or install anything?</h3>
-              <p>Never. All games run directly inside your web browser (Chrome, Edge, Safari, Firefox) on both desktop and mobile devices. Just tap or click to play.</p>
+              <p>Never. All games run directly inside your web browser (Chrome, Edge, Safari, Firefox) on both desktop and mobile devices. Just click or tap to play.</p>
             </div>
 
             <div class="faq-item">
-              <h3>Can I play on my mobile phone or tablet?</h3>
-              <p>Yes. DevKitra games are fully responsive and touch-optimized. They work smoothly on iPhones, iPads, Android phones, tablets, and Chromebooks.</p>
+              <h3>Can I play on school Chromebooks, phones, and tablets?</h3>
+              <p>Yes! DevKitra games are fully responsive and touch-optimized. They run smoothly on iPhones, iPads, Android phones, tablets, and Chromebooks without special permissions.</p>
             </div>
 
             <div class="faq-item">
               <h3>Are my high scores and settings saved?</h3>
-              <p>Yes! Your personal high scores, best wave records, and sound preferences are automatically saved in your browser's local memory so your achievements remain intact.</p>
+              <p>Yes. Your personal high scores, best wave records, and sound preferences are automatically remembered on your device so your progress remains intact.</p>
             </div>
 
             <div class="faq-item">
-              <h3>Is DevKitra safe for kids and school/work breaks?</h3>
-              <p>DevKitra is a family-safe, clean web gaming hub. We don't distribute executable files, spam downloads, or harmful links, making it ideal for quick, harmless fun.</p>
+              <h3>Is DevKitra safe for kids and family friendly?</h3>
+              <p>DevKitra is a family-safe, clean web gaming platform. We do not distribute executable files, spam downloads, or harmful popups, making it safe for all ages.</p>
             </div>
 
             <div class="faq-item">
               <h3>How can I suggest a game or report an issue?</h3>
-              <p>We'd love to hear your feedback! You can reach us anytime through our <a href="/contact" data-nav>Contact Page</a> or by emailing us directly at <a href="mailto:orynvero@gmail.com">orynvero@gmail.com</a>.</p>
+              <p>We welcome community feedback! You can reach us anytime through our <a href="/contact" data-nav>Contact Page</a> or by emailing us directly at <a href="mailto:orynvero@gmail.com">orynvero@gmail.com</a>.</p>
             </div>
           </div>
         </section>
