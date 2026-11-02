@@ -163,7 +163,7 @@ function updatePageMetadata(route) {
   const pages = {
     '/': { title: `${SITE_NAME} — Free Instant Browser Games`, description: 'Play instant arcade, puzzle, classic, and reflex games right in your browser. Zero installs, no accounts needed.' },
     '/explore': { title: `All Games | ${SITE_NAME}`, description: 'Browse and search our complete collection of free instant browser games.' },
-    '/about': { title: `About | ${SITE_NAME}`, description: 'DevKitra Gaming is a standalone, lightweight client-side browser gaming destination.' },
+    '/about': { title: `About DevKitra — Free Instant Online Games & Arcade Platform`, description: 'Discover DevKitra: The free instant browser gaming platform. Play original arcade, puzzle, reflex, and retro games with zero downloads, no accounts, and no paywalls.' },
     '/privacy': { title: `Privacy Policy | ${SITE_NAME}`, description: 'Games run 100% locally in your browser. No trackers, no cookies.' },
     '/contact': { title: `Contact & Feedback | ${SITE_NAME}`, description: 'Send feedback and bug reports to DevKitra Gaming.' },
   };
@@ -901,18 +901,184 @@ window.addEventListener('message', (event) => {
 
 function renderAboutPage() {
   return `
-    <main class="page-shell static-page">
-      <div class="static-card">
-        <div class="eyebrow">ABOUT DEVKITRA</div>
-        <h1>Free Instant Browser Gaming</h1>
-        <p>DevKitra Gaming is built for players who want instant, lightweight, and responsive casual games without heavy downloads, invasive ads, or registration walls.</p>
-        <p>Every game is compiled as a self-contained module running locally on your device with hardware acceleration.</p>
-        <h2>Our Principles</h2>
-        <ul>
-          <li><strong>Instant Access:</strong> Click any game and start playing in under a second.</li>
-          <li><strong>Zero Tracking:</strong> High scores and preferences are saved locally on your device using localStorage. We do not track or profile you.</li>
-          <li><strong>Cross-Platform:</strong> Works smoothly across desktop computers, laptops, Chromebooks, iPads, and mobile phones.</li>
-        </ul>
+    <main class="page-shell about-page">
+      <div class="about-container">
+        <!-- Hero Section -->
+        <header class="about-hero">
+          <div class="eyebrow">ABOUT DEVKITRA</div>
+          <h1>Free Instant Online Games — Play Instantly in Your Browser</h1>
+          <p class="about-lead">
+            Welcome to DevKitra Games, your home for fast, fun, and lightweight browser games. We build premium, original games you can play directly on any screen with <strong>zero downloads</strong>, <strong>no account sign-ups</strong>, and <strong>no paywalls</strong>.
+          </p>
+          <div class="about-hero-actions">
+            <a href="/explore" class="btn btn-primary btn-lg" data-nav>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Explore All Games
+            </a>
+            <a href="/genre/arcade" class="btn btn-secondary btn-lg" data-nav>
+              Arcade & Action
+            </a>
+          </div>
+        </header>
+
+        <!-- Why Players Love DevKitra (Core Player Benefits) -->
+        <section class="about-section">
+          <div class="about-section-header">
+            <span class="eyebrow">THE DEVKITRA ADVANTAGE</span>
+            <h2>Gaming The Way It Should Be</h2>
+            <p>No waiting. No massive downloads. Pure, responsive fun on any screen.</p>
+          </div>
+          
+          <div class="about-features-grid">
+            <div class="about-feature-card">
+              <div class="feature-icon" aria-hidden="true">⚡</div>
+              <h3>Instant Play in Seconds</h3>
+              <p>Forget 50GB downloads, painful installations, and slow loading bars. Click any game and jump right into the action within seconds in Chrome, Safari, Edge, or Firefox.</p>
+            </div>
+
+            <div class="about-feature-card">
+              <div class="feature-icon" aria-hidden="true">🎮</div>
+              <h3>100% Free Forever</h3>
+              <p>Every single game on DevKitra is completely free. No subscription fees, no locked levels, and no predatory pay-to-win mechanics. Just pure gameplay.</p>
+            </div>
+
+            <div class="about-feature-card">
+              <div class="feature-icon" aria-hidden="true">🛡️</div>
+              <h3>No Accounts or Sign-Ups</h3>
+              <p>We respect your time and privacy. There are no passwords to remember, no mandatory emails, and zero marketing spam. Simply visit the site and play.</p>
+            </div>
+
+            <div class="about-feature-card">
+              <div class="feature-icon" aria-hidden="true">📱</div>
+              <h3>Any Device, Anywhere</h3>
+              <p>Play effortlessly on mobile phones, tablets, Chromebooks, laptops, and desktop PCs. Every title includes responsive touch controls and precision keyboard support.</p>
+            </div>
+
+            <div class="about-feature-card">
+              <div class="feature-icon" aria-hidden="true">🏆</div>
+              <h3>Automatic High Scores</h3>
+              <p>Your high scores, best wave records, and personal preferences are safely remembered on your device, allowing you to challenge your records whenever you return.</p>
+            </div>
+
+            <div class="about-feature-card">
+              <div class="feature-icon" aria-hidden="true">☕</div>
+              <h3>Perfect for Quick Breaks</h3>
+              <p>Whether you have 3 minutes between classes, a coffee break at work, or an hour to unwind at home, our bite-sized arcade and puzzle challenges fit your day.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Curated Categories (SEO rich internal linking) -->
+        <section class="about-section">
+          <div class="about-section-header">
+            <span class="eyebrow">BROWSE POPULAR GENRES</span>
+            <h2>Find Your Next Favorite Game</h2>
+            <p>From adrenaline-pumping survival action to relaxing brain puzzles, we have games for every mood.</p>
+          </div>
+
+          <div class="about-genres-grid">
+            <a href="/genre/arcade" class="about-genre-card" data-nav>
+              <div class="genre-badge-icon" aria-hidden="true">🚀</div>
+              <div class="genre-details">
+                <h3>Arcade & Survival</h3>
+                <p>High-energy survival shooters, arena defense, and cosmic combat games designed to test your reflexes.</p>
+                <span class="genre-link-text">Play Arcade Games &rarr;</span>
+              </div>
+            </a>
+
+            <a href="/genre/puzzle" class="about-genre-card" data-nav>
+              <div class="genre-badge-icon" aria-hidden="true">🧩</div>
+              <div class="genre-details">
+                <h3>Brain Teasers & Puzzles</h3>
+                <p>Smart, satisfying number match games like 2048, spatial logic challenges, and strategic grid puzzles.</p>
+                <span class="genre-link-text">Play Puzzle Games &rarr;</span>
+              </div>
+            </a>
+
+            <a href="/genre/reflex" class="about-genre-card" data-nav>
+              <div class="genre-badge-icon" aria-hidden="true">⚡</div>
+              <div class="genre-details">
+                <h3>Reflex & Gravity Runners</h3>
+                <p>One-touch gravity switching, rhythm courses, and precision obstacle runs where every millisecond counts.</p>
+                <span class="genre-link-text">Play Reflex Games &rarr;</span>
+              </div>
+            </a>
+
+            <a href="/genre/classic" class="about-genre-card" data-nav>
+              <div class="genre-badge-icon" aria-hidden="true">👾</div>
+              <div class="genre-details">
+                <h3>Retro & Timeless Classics</h3>
+                <p>Modernized homages to golden-era arcade legends: classic snake, paddle tennis, brick breakers, and minesweeper.</p>
+                <span class="genre-link-text">Play Classic Games &rarr;</span>
+              </div>
+            </a>
+          </div>
+        </section>
+
+        <!-- Mission & Player-First Philosophy Card -->
+        <section class="about-story-card">
+          <div class="eyebrow">OUR MISSION</div>
+          <h2>Bringing Back the Pure Fun of Web Gaming</h2>
+          <p>
+            Remember when online games were simple, instant, and fun? You opened a webpage, clicked play, and lost yourself in pure entertainment without installing 100MB apps, consenting to dozens of ad tracking cookies, or dodging paywalls.
+          </p>
+          <p>
+            At <strong>DevKitra</strong>, we are dedicated to revitalizing that golden era of web gaming with modern web technology. Every game is handcrafted with crisp 60 FPS graphics, silky-smooth physics, and responsive controls — all packaged into ultralight pages that load in the blink of an eye.
+          </p>
+          <p>
+            Whether you are a casual player looking to pass time, a student taking a break between assignments, or a retro enthusiast hunting for high scores, DevKitra is built for you.
+          </p>
+        </section>
+
+        <!-- Frequently Asked Questions (SEO Supportive FAQ) -->
+        <section class="about-section">
+          <div class="about-section-header">
+            <span class="eyebrow">COMMON QUESTIONS</span>
+            <h2>Frequently Asked Questions</h2>
+            <p>Everything you need to know about playing free online games on DevKitra.</p>
+          </div>
+
+          <div class="about-faq-grid">
+            <div class="faq-item">
+              <h3>Are games on DevKitra really free?</h3>
+              <p>Yes, 100%! All games on DevKitra are completely free to play. There are no subscriptions, no locked paid levels, and no in-app purchases.</p>
+            </div>
+
+            <div class="faq-item">
+              <h3>Do I need to download or install anything?</h3>
+              <p>Never. All games run directly inside your web browser (Chrome, Edge, Safari, Firefox) on both desktop and mobile devices. Just tap or click to play.</p>
+            </div>
+
+            <div class="faq-item">
+              <h3>Can I play on my mobile phone or tablet?</h3>
+              <p>Yes. DevKitra games are fully responsive and touch-optimized. They work smoothly on iPhones, iPads, Android phones, tablets, and Chromebooks.</p>
+            </div>
+
+            <div class="faq-item">
+              <h3>Are my high scores and settings saved?</h3>
+              <p>Yes! Your personal high scores, best wave records, and sound preferences are automatically saved in your browser's local memory so your achievements remain intact.</p>
+            </div>
+
+            <div class="faq-item">
+              <h3>Is DevKitra safe for kids and school/work breaks?</h3>
+              <p>DevKitra is a family-safe, clean web gaming hub. We don't distribute executable files, spam downloads, or harmful links, making it ideal for quick, harmless fun.</p>
+            </div>
+
+            <div class="faq-item">
+              <h3>How can I suggest a game or report an issue?</h3>
+              <p>We'd love to hear your feedback! You can reach us anytime through our <a href="/contact" data-nav>Contact Page</a> or by emailing us directly at <a href="mailto:orynvero@gmail.com">orynvero@gmail.com</a>.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Bottom Call To Action Banner -->
+        <section class="about-cta-banner">
+          <h2>Ready to Jump Into the Action?</h2>
+          <p>Pick a game, beat your high score, and have fun — no downloads required.</p>
+          <a href="/explore" class="btn btn-primary btn-lg" data-nav>
+            Explore All Free Games
+          </a>
+        </section>
       </div>
     </main>
   `;

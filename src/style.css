@@ -336,6 +336,7 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
   background: var(--dk-surface-raised); border-color: var(--dk-line-light);
 }
 .btn-sm { padding: 0.4rem 0.85rem; font-size: 0.8rem; }
+.btn-lg { padding: 0.75rem 1.6rem; font-size: 0.95rem; }
 
 /* ---------- Category Dock ---------- */
 .category-dock {
@@ -937,6 +938,272 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
   .email-card-actions { justify-content: flex-start; }
   .form-row { flex-direction: column; gap: 0; }
   .contact-composer-card { padding: 1.5rem; }
+}
+
+/* ---------- Enhanced Consumer & SEO About Page ---------- */
+.about-page {
+  padding: 1.5rem 0 4.5rem;
+}
+
+.about-container {
+  width: min(880px, calc(100% - var(--dk-gutter) * 2));
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+}
+
+/* About Hero */
+.about-hero {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+.about-hero h1 {
+  font-size: clamp(2rem, 3.8vw, 2.75rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--dk-ink);
+  max-width: 720px;
+}
+.about-lead {
+  font-size: 1.05rem;
+  color: var(--dk-ink-soft);
+  line-height: 1.65;
+  max-width: 680px;
+}
+.about-lead strong {
+  color: var(--dk-ink);
+}
+.about-hero-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+/* About Sections */
+.about-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+.about-section-header {
+  text-align: center;
+  max-width: 580px;
+  margin: 0 auto;
+}
+.about-section-header h2 {
+  font-size: clamp(1.5rem, 2.5vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0.25rem 0 0.5rem;
+  color: var(--dk-ink);
+}
+.about-section-header p {
+  color: var(--dk-ink-soft);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+/* Feature Cards Grid */
+.about-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+.about-feature-card {
+  background: var(--dk-surface);
+  border: 1px solid var(--dk-line);
+  border-radius: var(--dk-radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  box-shadow: var(--dk-shadow-sm);
+  transition: transform var(--dk-transition), border-color var(--dk-transition);
+}
+.about-feature-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--dk-line-light);
+}
+.about-feature-card .feature-icon {
+  font-size: 1.65rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dk-surface-raised);
+  border-radius: var(--dk-radius-md);
+  margin-bottom: 0.25rem;
+}
+.about-feature-card h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--dk-ink);
+  letter-spacing: -0.01em;
+}
+.about-feature-card p {
+  font-size: 0.88rem;
+  color: var(--dk-ink-soft);
+  line-height: 1.55;
+}
+
+/* Genres Grid */
+.about-genres-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+.about-genre-card {
+  background: var(--dk-surface);
+  border: 1px solid var(--dk-line);
+  border-radius: var(--dk-radius-lg);
+  padding: 1.35rem 1.4rem;
+  display: flex;
+  gap: 1.15rem;
+  align-items: flex-start;
+  transition: all var(--dk-transition);
+  box-shadow: var(--dk-shadow-sm);
+}
+.about-genre-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--dk-primary);
+  background: var(--dk-card-hover);
+}
+.about-genre-card .genre-badge-icon {
+  font-size: 1.75rem;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dk-surface-raised);
+  border-radius: var(--dk-radius-md);
+}
+.about-genre-card .genre-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.about-genre-card h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--dk-ink);
+}
+.about-genre-card p {
+  font-size: 0.86rem;
+  color: var(--dk-ink-soft);
+  line-height: 1.5;
+}
+.about-genre-card .genre-link-text {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--dk-primary);
+  margin-top: 0.25rem;
+}
+
+/* Mission & Story Card */
+.about-story-card {
+  background: var(--dk-surface);
+  border: 1px solid var(--dk-line);
+  border-radius: var(--dk-radius-lg);
+  padding: 2.25rem 2.5rem;
+  box-shadow: var(--dk-shadow-sm);
+}
+.about-story-card h2 {
+  font-size: clamp(1.4rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0.35rem 0 1rem;
+  color: var(--dk-ink);
+}
+.about-story-card p {
+  font-size: 0.95rem;
+  color: var(--dk-ink-soft);
+  line-height: 1.65;
+  margin-bottom: 0.85rem;
+}
+.about-story-card p:last-child {
+  margin-bottom: 0;
+}
+.about-story-card strong {
+  color: var(--dk-ink);
+}
+
+/* FAQ Grid */
+.about-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+.faq-item {
+  background: var(--dk-surface);
+  border: 1px solid var(--dk-line);
+  border-radius: var(--dk-radius-md);
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.faq-item h3 {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--dk-ink);
+  letter-spacing: -0.01em;
+}
+.faq-item p {
+  font-size: 0.88rem;
+  color: var(--dk-ink-soft);
+  line-height: 1.55;
+}
+.faq-item a {
+  color: var(--dk-primary);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+/* Bottom CTA Banner */
+.about-cta-banner {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(2, 132, 199, 0.08) 100%), var(--dk-surface);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: var(--dk-radius-lg);
+  padding: 2.75rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: var(--dk-shadow-sm);
+}
+.about-cta-banner h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--dk-ink);
+}
+.about-cta-banner p {
+  color: var(--dk-ink-soft);
+  font-size: 0.98rem;
+  max-width: 480px;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .about-container { gap: 2.5rem; }
+  .about-hero h1 { font-size: 1.85rem; }
+  .about-story-card { padding: 1.5rem; }
+  .about-faq-grid { grid-template-columns: 1fr; }
+  .about-hero-actions { width: 100%; flex-direction: column; }
+  .about-hero-actions .btn { width: 100%; }
 }
 
 /* ---------- 404 ---------- */
