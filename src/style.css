@@ -35,7 +35,7 @@ ul, ol { list-style: none; }
   /* Clean Typography */
   --dk-ink: #f8fafc;
   --dk-ink-soft: #94a3b8;
-  --dk-quiet: #64748b;
+  --dk-quiet: #8fa0b8;
 
   /* Balanced Brand Accents */
   --dk-primary: #2563eb;
@@ -76,7 +76,7 @@ html.light {
   --dk-line-light: #cbd5e1;
   --dk-ink: #0f172a;
   --dk-ink-soft: #475569;
-  --dk-quiet: #94a3b8;
+  --dk-quiet: #64748b;
   --dk-primary: #2563eb;
   --dk-primary-hover: #1d4ed8;
   --dk-primary-soft: rgba(37, 99, 235, 0.08);
@@ -263,7 +263,9 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
 .spotlight-genre {
   font-size: 0.75rem; font-weight: 700; color: var(--dk-quiet);
 }
-.spotlight-content h1 {
+.spotlight-content h1,
+.spotlight-content h2,
+#spotlight-title {
   font-size: clamp(2rem, 3.5vw, 2.75rem);
   font-weight: 950; letter-spacing: -0.03em; line-height: 1.1;
   color: var(--dk-ink);
@@ -424,6 +426,43 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
   color: #ffffff;
   font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em;
   padding: 0.15rem 0.5rem; border-radius: 4px;
+}
+
+.card-fav-btn {
+  position: absolute; top: 0.55rem; right: 0.55rem;
+  width: 28px; height: 28px;
+  border-radius: var(--dk-radius-full);
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--dk-ink-soft);
+  font-size: 0.95rem;
+  display: grid; place-items: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: all var(--dk-transition);
+}
+.card-fav-btn:hover {
+  transform: scale(1.15);
+  color: var(--dk-amber);
+  border-color: var(--dk-amber);
+}
+.card-fav-btn.active {
+  color: var(--dk-amber);
+  background: rgba(245, 158, 11, 0.2);
+  border-color: var(--dk-amber);
+}
+
+.card-score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--dk-amber);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
 }
 
 .game-card-play {
@@ -601,6 +640,7 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
   display: flex;
   align-items: center;
   justify-content: center;
+  overscroll-behavior: contain;
 }
 
 .game-player-card.theater-mode .game-viewport-wrap {
@@ -1356,8 +1396,52 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
     background: var(--dk-surface-raised); border-bottom: 1px solid var(--dk-line);
   }
   .header-search.open input { width: 100%; }
-  .game-viewport-wrap { min-height: 320px; }
-  .player-toolbar { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .game-viewport-wrap {
+    height: clamp(340px, 58vh, 500px);
+    min-height: 300px;
+    overscroll-behavior: contain;
+  }
+  .player-toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.6rem 0.85rem;
+  }
+  .toolbar-game-title { font-size: 0.95rem; }
+  .game-tool-btn { padding: 0.32rem 0.6rem; font-size: 0.74rem; }
+}
+
+/* ---------- AdSense Compliant Slot Placeholders ---------- */
+.ad-slot-wrapper {
+  margin: 1.75rem auto 1rem;
+  width: min(100%, 728px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.ad-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dk-quiet);
+  margin-bottom: 0.35rem;
+  user-select: none;
+}
+.ad-slot {
+  width: 100%;
+  min-height: 90px;
+  background: var(--dk-surface);
+  border: 1px dashed var(--dk-line);
+  border-radius: var(--dk-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dk-quiet);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -33,6 +33,83 @@ const GAME_TAGS = {
   'reaction-test': 'BENCHMARK',
 };
 
+const GAME_SCORE_KEYS = {
+  'neon-bastion': 'dk:neon-bastion-best',
+  'road-hopper': 'dk:hopper-best',
+  'loopbreak': 'dk:loopbreak-best-standard',
+  'beltbound': 'dk:beltbound-unlocked',
+  'flipshift': 'dk:flipshift-best-endless',
+  'tetris': 'dk:tetris-best',
+  'sky-jump': 'dk:skyjump-best',
+  'snake': 'dk:snake-best',
+  '2048': 'dk:2048-best',
+  'breakout': 'dk:breakout-best',
+  'tower-stack': 'dk:stack-best',
+  'cyber-flap': 'dk:flap-best',
+  'memory-match': 'dk:memory-best',
+  'reaction-test': 'dk:reaction-best',
+};
+
+function getGameBestScore(gameId) {
+  try {
+    const key = GAME_SCORE_KEYS[gameId];
+    if (!key) return null;
+    const val = localStorage.getItem(key);
+    if (!val) return null;
+    const num = parseInt(val, 10);
+    return isNaN(num) || num <= 0 ? null : num;
+  } catch (_) {
+    return null;
+  }
+}
+
+function updateGameBestScore(gameId, newScore) {
+  try {
+    const key = GAME_SCORE_KEYS[gameId];
+    if (!key) return;
+    const cur = parseInt(localStorage.getItem(key) || '0', 10);
+    if (newScore > cur) {
+      localStorage.setItem(key, String(newScore));
+      showToast(`🎉 New Personal Best: ${newScore.toLocaleString()}!`, 'success');
+    }
+  } catch (_) {}
+}
+
+function getFavorites() {
+  try {
+    const favs = JSON.parse(localStorage.getItem('dk:favorites') || '[]');
+    return Array.isArray(favs) ? favs : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function isGameFavorited(gameId) {
+  return getFavorites().includes(gameId);
+}
+
+function toggleFavorite(gameId) {
+  const favs = getFavorites();
+  const next = favs.includes(gameId) ? favs.filter((id) => id !== gameId) : [...favs, gameId];
+  try { localStorage.setItem('dk:favorites', JSON.stringify(next)); } catch (_) {}
+  return next.includes(gameId);
+}
+
+function getRecentGames() {
+  try {
+    const recents = JSON.parse(localStorage.getItem('dk:recent-games') || '[]');
+    return Array.isArray(recents) ? recents : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function recordRecentGame(gameId) {
+  const recents = getRecentGames().filter((id) => id !== gameId);
+  const updated = [gameId, ...recents].slice(0, 6);
+  try { localStorage.setItem('dk:recent-games', JSON.stringify(updated)); } catch (_) {}
+}
+
 /* ------------------------------------------------------------------ */
 /* Web Audio API Sound Engine (Gentle, Decent & Tasteful)              */
 /* ------------------------------------------------------------------ */
@@ -120,6 +197,7 @@ function matchRoute(path) {
   if (path === '/explore') return { page: 'explore' };
   if (path === '/about') return { page: 'about' };
   if (path === '/privacy') return { page: 'privacy' };
+  if (path === '/terms') return { page: 'terms' };
   if (path === '/contact') return { page: 'contact' };
   const genreMatch = path.match(/^\/genre\/([^/]+)$/);
   if (genreMatch) return { page: 'genre', slug: genreMatch[1] };
@@ -130,6 +208,7 @@ function matchRoute(path) {
     if (slug === 'graviton') return { page: 'redirect', target: '/game/sky-jump' };
     if (slug === 'archery' || slug === 'void-strike') return { page: 'redirect', target: '/game/loopbreak' };
     if (slug === 'driftlab') return { page: 'redirect', target: '/game/beltbound' };
+    if (slug === 'polarity' || slug === 'velocity-3d') return { page: 'redirect', target: '/game/neon-bastion' };
     return { page: 'game', slug: slug };
   }
   return { page: 'not-found' };
@@ -164,7 +243,8 @@ function updatePageMetadata(route) {
     '/': { title: `${SITE_NAME} — Free Instant Browser Games`, description: 'Play instant arcade, puzzle, classic, and reflex games right in your browser. Zero installs, no accounts needed.' },
     '/explore': { title: `All Games | ${SITE_NAME}`, description: 'Browse and search our complete collection of free instant browser games.' },
     '/about': { title: `About DevKitra — Free Instant Online Games & Arcade Platform`, description: 'Discover DevKitra: The free instant browser gaming platform. Play original arcade, puzzle, reflex, and retro games with zero downloads, no accounts, and no paywalls.' },
-    '/privacy': { title: `Privacy Policy | ${SITE_NAME}`, description: 'Games run 100% locally in your browser. No trackers, no cookies.' },
+    '/privacy': { title: `Privacy Policy | ${SITE_NAME}`, description: 'Learn how DevKitra Gaming respects player privacy, data safety, and third-party advertising transparency.' },
+    '/terms': { title: `Terms of Service | ${SITE_NAME}`, description: 'Terms of service and usage guidelines for playing free browser games on DevKitra.' },
     '/contact': { title: `Contact & Feedback | ${SITE_NAME}`, description: 'Send feedback and bug reports to DevKitra Gaming.' },
   };
 
@@ -189,7 +269,34 @@ function updatePageMetadata(route) {
   const ogDesc = document.querySelector('meta[property="og:description"]');
   if (ogDesc) ogDesc.setAttribute('content', page.description);
 
-  const base = siteUrl();
+  const base = siteUrl() || window.location.origin;
+  let imageUrl = `${base}/favicon.svg`;
+  if (route.page === 'game' && gameByRoute(route.path)) {
+    const g = gameByRoute(route.path);
+    if (g.thumbnail) imageUrl = new URL(g.thumbnail, base).href;
+  }
+
+  let ogImg = document.querySelector('meta[property="og:image"]');
+  if (!ogImg) {
+    ogImg = document.createElement('meta');
+    ogImg.setAttribute('property', 'og:image');
+    document.head.append(ogImg);
+  }
+  ogImg.content = imageUrl;
+
+  let twImg = document.querySelector('meta[name="twitter:image"]');
+  if (!twImg) {
+    twImg = document.createElement('meta');
+    twImg.setAttribute('name', 'twitter:image');
+    document.head.append(twImg);
+  }
+  twImg.content = imageUrl;
+
+  let twTitle = document.querySelector('meta[name="twitter:title"]');
+  if (twTitle) twTitle.content = page.title;
+  let twDesc = document.querySelector('meta[name="twitter:description"]');
+  if (twDesc) twDesc.content = page.description;
+
   let canonical = document.querySelector('link[rel="canonical"]');
   if (!base) {
     canonical?.remove();
@@ -198,7 +305,7 @@ function updatePageMetadata(route) {
   }
   try {
     const parsed = new URL(base);
-    if (parsed.protocol !== 'https:') throw new Error('VITE_SITE_URL must use HTTPS.');
+    if (parsed.protocol !== 'https:' && window.location.protocol === 'https:') throw new Error('VITE_SITE_URL must use HTTPS.');
     if (!canonical) {
       canonical = document.createElement('link');
       canonical.rel = 'canonical';
@@ -212,6 +319,73 @@ function updatePageMetadata(route) {
       document.head.append(ogUrl);
     }
     ogUrl.content = canonical.href;
+
+    // Structured Data (JSON-LD)
+    let schemaScript = document.getElementById('dk-schema');
+    if (!schemaScript) {
+      schemaScript = document.createElement('script');
+      schemaScript.type = 'application/ld+json';
+      schemaScript.id = 'dk-schema';
+      document.head.append(schemaScript);
+    }
+
+    if (route.page === 'game' && gameByRoute(route.path)) {
+      const g = gameByRoute(route.path);
+      const gameUrl = canonical.href;
+      schemaScript.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': ['VideoGame', 'WebApplication'],
+            '@id': `${gameUrl}#game`,
+            'name': g.title,
+            'description': g.description,
+            'url': gameUrl,
+            'image': imageUrl,
+            'inLanguage': 'en',
+            'operatingSystem': 'Any',
+            'applicationCategory': 'Game',
+            'genre': g.genres.map((s) => genre(s)?.label).filter(Boolean),
+            'offers': {
+              '@type': 'Offer',
+              'price': '0',
+              'priceCurrency': 'USD',
+              'availability': 'https://schema.org/InStock',
+            },
+          },
+          {
+            '@type': 'BreadcrumbList',
+            '@id': `${gameUrl}#breadcrumbs`,
+            'itemListElement': [
+              { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${parsed.origin}/` },
+              { '@type': 'ListItem', 'position': 2, 'name': genre(g.genres[0])?.label || 'Games', 'item': `${parsed.origin}/genre/${g.genres[0]}` },
+              { '@type': 'ListItem', 'position': 3, 'name': g.title, 'item': gameUrl },
+            ],
+          },
+        ],
+      });
+    } else if (route.page === 'home') {
+      schemaScript.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        'name': SITE_NAME,
+        'url': `${parsed.origin}/`,
+        'description': pages['/'].description,
+        'potentialAction': {
+          '@type': 'SearchAction',
+          'target': `${parsed.origin}/explore?q={search_term_string}`,
+          'query-input': 'required name=search_term_string',
+        },
+      });
+    } else {
+      schemaScript.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        'name': page.title,
+        'description': page.description,
+        'url': canonical.href,
+      });
+    }
   } catch (error) {
     canonical?.remove();
     document.querySelector('meta[property="og:url"]')?.remove();
@@ -340,6 +514,7 @@ function renderFooter() {
           <a href="/about" data-nav>About Platform</a>
           <a href="/contact" data-nav>Contact & Submissions</a>
           <a href="/privacy" data-nav>Privacy Policy</a>
+          <a href="/terms" data-nav>Terms of Service</a>
         </div>
       </div>
       <div class="footer-copy">© ${new Date().getFullYear()} DevKitra Gaming. All games execute 100% client-side in browser memory with zero tracking cookies and zero downloads.</div>
@@ -358,26 +533,35 @@ function gameCard(game) {
   const thumb = game.thumbnail
     ? `<img src="${game.thumbnail}" alt="${escapeHtml(game.title)} cover" loading="lazy" />`
     : `<div class="card-fallback">${escapeHtml(game.title[0])}</div>`;
+  const bestScore = getGameBestScore(game.id);
+  const scoreBadge = bestScore !== null ? `<span class="card-score-badge" title="Your Personal Best Score">🏆 ${bestScore.toLocaleString()}</span>` : '';
+  const isFav = isGameFavorited(game.id);
 
   return `
-    <a href="${game.route}" data-nav class="game-card" data-game-card="${game.id}">
+    <div class="game-card" data-game-card="${game.id}">
       <div class="game-card-thumb">
-        ${thumb}
-        ${badgeText ? `<div class="game-badge">${escapeHtml(badgeText)}</div>` : ''}
-        <div class="game-card-play" aria-hidden="true">
-          <span class="play-pill">Play Now ▶</span>
-        </div>
+        <a href="${game.route}" data-nav class="thumb-link" aria-label="Play ${escapeHtml(game.title)}">
+          ${thumb}
+          ${badgeText ? `<div class="game-badge">${escapeHtml(badgeText)}</div>` : ''}
+          <div class="game-card-play" aria-hidden="true">
+            <span class="play-pill">Play Now ▶</span>
+          </div>
+        </a>
+        <button type="button" class="card-fav-btn ${isFav ? 'active' : ''}" data-fav-id="${game.id}" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}" aria-label="${isFav ? 'Remove from favorites' : 'Add to favorites'}">
+          ${isFav ? '★' : '☆'}
+        </button>
       </div>
       <div class="game-card-body">
         <span class="game-card-genre">${genreLabels}</span>
-        <h3 class="game-card-title">${escapeHtml(game.title)}</h3>
+        <h3 class="game-card-title"><a href="${game.route}" data-nav>${escapeHtml(game.title)}</a></h3>
         <p class="game-card-desc">${escapeHtml(game.description)}</p>
       </div>
       <div class="game-card-foot">
         <span>${game.inputs.map((inp) => inp === 'keyboard' ? 'Keyboard' : inp === 'touch' ? 'Touch' : 'Mouse').join(' · ')}</span>
-        <span class="game-card-cta">Play →</span>
+        ${scoreBadge}
+        <a href="${game.route}" data-nav class="game-card-cta">Play →</a>
       </div>
-    </a>
+    </div>
   `;
 }
 
@@ -390,12 +574,17 @@ function renderHomePage() {
   const featured = featuredGames();
   const populatedGenres = genres.filter((g) => genreGameCount(g.slug) > 0);
   const spotlightGame = all.find((g) => g.id === 'neon-bastion') || all[0];
+  const recentIds = getRecentGames();
+  const recentGames = recentIds.map((id) => all.find((g) => g.id === id)).filter(Boolean);
+  const favCount = getFavorites().length;
 
   const reflexPicks = all.filter((g) => ['neon-bastion', 'road-hopper', 'sky-jump', 'snake', 'breakout'].includes(g.id));
   const puzzlePicks = all.filter((g) => ['tetris', '2048', 'memory-match', 'tower-stack'].includes(g.id));
 
   return `
     <main class="page-shell home-page">
+      <h1 class="sr-only">DevKitra Games — Free Instant Online Games & Arcade Platform</h1>
+
       <!-- Clean Spotlight Hero Banner -->
       <section class="hero-spotlight">
         <div class="spotlight-card">
@@ -404,7 +593,7 @@ function renderHomePage() {
               <span class="spotlight-tag">FEATURED GAME</span>
               <span class="spotlight-genre">${spotlightGame.genres.map((g) => genre(g)?.label).filter(Boolean).join(' · ')}</span>
             </div>
-            <h1 id="spotlight-title">${escapeHtml(spotlightGame.title)}</h1>
+            <h2 id="spotlight-title">${escapeHtml(spotlightGame.title)}</h2>
             <p id="spotlight-desc" class="spotlight-desc">${escapeHtml(spotlightGame.description)}</p>
             <div class="spotlight-actions">
               <a href="${spotlightGame.route}" data-nav class="btn btn-primary" id="spotlight-play-btn">Play Now ▶</a>
@@ -437,11 +626,26 @@ function renderHomePage() {
       <section class="section" style="margin-top: 2rem;">
         <div class="category-dock">
           <a href="/explore" data-nav class="cat-pill active">All Games (${all.length})</a>
+          ${favCount > 0 ? `<a href="/explore?genre=favorites" data-nav class="cat-pill">★ Favorites (${favCount})</a>` : ''}
           ${populatedGenres.map((g) => `
             <a href="/genre/${g.slug}" data-nav class="cat-pill">${escapeHtml(g.label)} (${genreGameCount(g.slug)})</a>
           `).join('')}
         </div>
       </section>
+
+      ${recentGames.length > 0 ? `
+        <!-- Shelf: Continue Playing (Recent Games) -->
+        <section class="section">
+          <div class="section-header">
+            <div class="copy">
+              <div class="eyebrow">PICK UP WHERE YOU LEFT OFF</div>
+              <h2>Continue Playing</h2>
+              <p>Jump back into your recently played games with saved scores and progress.</p>
+            </div>
+          </div>
+          <div class="game-grid">${recentGames.map((g) => gameCard(g)).join('')}</div>
+        </section>
+      ` : ''}
 
       <!-- Shelf 1: Top Rated / Popular Hits -->
       <section class="section">
@@ -485,7 +689,7 @@ function renderHomePage() {
         <div class="section-header">
           <div class="copy">
             <div class="eyebrow">FULL CATALOGUE</div>
-            <h2>All 10 Games</h2>
+            <h2>All ${all.length} Games</h2>
             <p>Every game is 100% free, runs instantly in your browser, and requires no downloads.</p>
           </div>
           <button type="button" class="btn btn-primary btn-sm" id="section-random-btn">${diceSvg()} Random Game</button>
@@ -561,6 +765,7 @@ function renderExplorePage() {
       </div>
       <div id="explore-genre-filters" class="chip-list explore-filters">
         <button type="button" class="genre-chip active" data-genre="all" aria-pressed="true">All Genres (${all.length})</button>
+        <button type="button" class="genre-chip" data-genre="favorites" aria-pressed="false">★ Favorites (${getFavorites().length})</button>
         ${populatedGenres.map((g) => `<button type="button" class="genre-chip" data-genre="${g.slug}" aria-pressed="false">${escapeHtml(g.label)} (${genreGameCount(g.slug)})</button>`).join('')}
       </div>
       <p id="explore-count" class="directory-count">${all.length} games available</p>
@@ -590,9 +795,23 @@ function setupExplore() {
   let q = '';
   const all = publishedGames();
 
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('genre') === 'favorites') {
+    genreSel = 'favorites';
+    chips.forEach((c) => {
+      const isFavChip = c.dataset.genre === 'favorites';
+      c.classList.toggle('active', isFavChip);
+      c.setAttribute('aria-pressed', String(isFavChip));
+    });
+  }
+
   const apply = () => {
     const filtered = all.filter((g) => {
-      const genreMatch = genreSel === 'all' || g.genres.includes(genreSel);
+      const genreMatch = genreSel === 'all'
+        ? true
+        : genreSel === 'favorites'
+          ? isGameFavorited(g.id)
+          : g.genres.includes(genreSel);
       const searchText = `${g.title} ${g.description} ${g.tags.join(' ')} ${g.genres.map((ge) => genre(ge)?.label).join(' ')}`.toLowerCase();
       const textMatch = !q || searchText.includes(q);
       return genreMatch && textMatch;
@@ -604,7 +823,13 @@ function setupExplore() {
     });
 
     results.innerHTML = sorted.map((g) => gameCard(g)).join('');
+    setupCardFavorites();
     empty.classList.toggle('hidden', sorted.length > 0);
+    if (genreSel === 'favorites' && sorted.length === 0) {
+      empty.innerHTML = '<h2>No favorites saved yet.</h2><p>Click the ★ star on any game card to bookmark your favorites here!</p>';
+    } else {
+      empty.innerHTML = '<h2>No games found.</h2><p>Try searching for "tetris", "snake", "jump", or "puzzle".</p>';
+    }
     count.textContent = `${sorted.length} ${sorted.length === 1 ? 'game available' : 'games available'}`;
   };
 
@@ -675,6 +900,8 @@ function renderGamePage(slug) {
     : '';
 
   const genreLabels = game.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ');
+  const bestScore = getGameBestScore(game.id);
+  const isFav = isGameFavorited(game.id);
 
   return `
     <main class="page-shell game-page">
@@ -691,9 +918,10 @@ function renderGamePage(slug) {
         <div class="player-toolbar">
           <div class="toolbar-title-wrap">
             <span class="game-badge-chip">${escapeHtml(genreLabels)}</span>
-            <span class="toolbar-game-title">${escapeHtml(game.title)}</span>
+            <h1 class="toolbar-game-title">${escapeHtml(game.title)}</h1>
           </div>
           <div class="toolbar-tools">
+            <button type="button" class="game-tool-btn ${isFav ? 'active' : ''}" data-action="favorite" id="game-fav-btn" title="Add to Favorites">${isFav ? '★ Favorited' : '☆ Favorite'}</button>
             ${pauseMarkup}
             <button type="button" class="game-tool-btn" data-action="restart" title="Restart [R]">↺ Restart</button>
             <button type="button" class="game-tool-btn" data-action="theater" id="theater-toggle" title="Toggle Theater View (Expands to screen width)">🗖 Theater</button>
@@ -706,6 +934,14 @@ function renderGamePage(slug) {
         </div>
       </div>
 
+      <!-- AdSense Compliant Slot Placeholder -->
+      <div class="ad-slot-wrapper">
+        <span class="ad-label">Advertisement</span>
+        <div class="ad-slot">
+          <span>Play Free Games on DevKitra — Clean, Instant, Zero Downloads</span>
+        </div>
+      </div>
+
       <!-- Instructions & Details -->
       <div class="game-info-grid">
         <div class="info-card">
@@ -715,6 +951,7 @@ function renderGamePage(slug) {
             ${game.inputs.map((input) => `<span class="kbd">${escapeHtml(input)}</span>`).join('')}
           </div>
           <p class="controls-detail">${escapeHtml(game.controls)}</p>
+          ${bestScore !== null ? `<p class="save-status">🏆 Your Personal Best: <strong>${bestScore.toLocaleString()}</strong></p>` : ''}
           ${game.save ? '<p class="save-status">✓ Highscores & progress save automatically in your browser.</p>' : ''}
           <div class="hotkey-helpers">
             <span class="hotkey-pill"><kbd>R</kbd> Restart</span>
@@ -746,6 +983,8 @@ function setupGamePage(slug) {
   const game = gameByRoute(`/game/${slug}`);
   if (!game) return;
 
+  recordRecentGame(game.id);
+
   const viewport = document.getElementById('game-viewport');
   const playerCard = document.getElementById('game-player-card');
   const frame = document.getElementById('active-game-frame');
@@ -753,8 +992,19 @@ function setupGamePage(slug) {
   const pauseBtn = document.querySelector('[data-action="pause"]');
   const theaterBtn = document.getElementById('theater-toggle');
   const fsBtn = document.getElementById('fs-toggle');
+  const favBtn = document.getElementById('game-fav-btn');
   const randomBtn = document.getElementById('game-random-btn');
   const origin = window.location.origin;
+
+  if (favBtn) {
+    favBtn.addEventListener('click', () => {
+      playUiSound('click');
+      const isNowFav = toggleFavorite(game.id);
+      favBtn.textContent = isNowFav ? '★ Favorited' : '☆ Favorite';
+      favBtn.classList.toggle('active', isNowFav);
+      showToast(isNowFav ? 'Saved to your Favorites!' : 'Removed from Favorites', 'info');
+    });
+  }
 
   if (randomBtn) {
     randomBtn.addEventListener('click', () => launchRandomGame(game.id));
@@ -895,7 +1145,11 @@ window.addEventListener('message', (event) => {
   if (event.origin !== origin) return;
   const { type, score } = event.data || {};
   if (type === 'dk:gameover' && score !== undefined && document.querySelector('.game-viewport-frame')) {
-    showToast(`Game Over · Score: ${score}`, 'info');
+    const slugMatch = window.location.pathname.match(/^\/game\/([^/]+)$/);
+    if (slugMatch) {
+      updateGameBestScore(slugMatch[1], score);
+    }
+    showToast(`Game Over · Score: ${Number(score).toLocaleString()}`, 'info');
   }
 });
 
@@ -1134,14 +1388,74 @@ function renderPrivacyPage() {
   return `
     <main class="page-shell static-page">
       <div class="static-card">
-        <div class="eyebrow">PRIVACY</div>
-        <h1>Privacy Guarantee</h1>
+        <div class="eyebrow">PRIVACY POLICY</div>
+        <h1>Privacy Policy & Player Data Transparency</h1>
+        <p><em>Last Updated: November 4, 2026</em></p>
+        <p>Welcome to DevKitra Gaming (<a href="/" data-nav>devkitra.in</a>). We are committed to protecting your privacy and ensuring complete transparency about how information is handled when you play games on our platform.</p>
+        
+        <h2>1. Zero Account & Registration Collection</h2>
+        <p>DevKitra is an instant browser gaming hub that requires <strong>no account creation</strong>, no passwords, no email registrations, and no telephone numbers. We do not maintain user databases, profile records, or personal tracking identities.</p>
+        
+        <h2>2. Local Storage & Device Preferences</h2>
+        <p>To provide a seamless gaming experience, we utilize standard HTML5 <code>localStorage</code> on your device to store:</p>
         <ul>
-          <li><strong>100% Client-Side:</strong> Games execute locally in your browser memory.</li>
-          <li><strong>No User Accounts:</strong> No email addresses, phone numbers, or passwords collected.</li>
-          <li><strong>Local Progress:</strong> Scores and settings reside exclusively on your computer/phone.</li>
-          <li><strong>No Paywalls:</strong> Completely free to play for everyone.</li>
+          <li><strong>Sound & Theme Preferences:</strong> Remembering whether sound FX or dark/light mode is enabled.</li>
+          <li><strong>Gameplay Progress & High Scores:</strong> Storing your personal records, stars, and unlocked levels so you can continue playing where you left off.</li>
+          <li><strong>Favorited Games:</strong> Keeping track of titles you bookmark with the star icon.</li>
         </ul>
+        <p>This data resides solely within your browser's local sandbox memory on your computer or phone. It is never transmitted to, sold to, or shared with external servers, and you can clear it anytime via your browser settings.</p>
+
+        <h2>3. Third-Party Advertising & Cookies (Google AdSense)</h2>
+        <p>To keep all games 100% free for players worldwide, DevKitra works with third-party advertising partners, including <strong>Google AdSense</strong>, to display advertisements.</p>
+        <ul>
+          <li>Third-party vendors, including Google, use cookies, web beacons, and similar tracking technologies to serve ads based on your prior visits to DevKitra or other websites on the internet.</li>
+          <li>Google's use of advertising cookies enables it and its partners to serve ads based on your visits to our site and/or other sites across the World Wide Web.</li>
+          <li>You may opt out of personalized advertising at any time by visiting <a href="https://adssettings.google.com/" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>.</li>
+          <li>You can also opt out of third-party vendor cookies for personalized advertising by visiting <a href="https://www.aboutads.info/" target="_blank" rel="noopener noreferrer">www.aboutads.info</a> or <a href="https://www.youronlinechoices.eu/" target="_blank" rel="noopener noreferrer">youronlinechoices.eu</a>.</li>
+        </ul>
+
+        <h2>4. Log Files & Server Security</h2>
+        <p>Like virtually all web applications, our global edge network (Cloudflare) may automatically collect standard diagnostic technical logs (such as IP addresses, browser user-agent strings, referral pages, and timestamps) strictly for DDoS mitigation, bot protection, and server availability.</p>
+
+        <h2>5. Children's Privacy (COPPA Compliance)</h2>
+        <p>DevKitra is a family-safe platform featuring clean geometric arcade, reflex, and puzzle challenges. We do not knowingly solicit or collect personally identifiable information from children under the age of 13.</p>
+
+        <h2>6. Contact & Inquiries</h2>
+        <p>If you have any questions or feedback regarding our privacy practices, please contact us directly at <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a> or visit our <a href="/contact" data-nav>Contact Page</a>.</p>
+      </div>
+    </main>
+  `;
+}
+
+function renderTermsPage() {
+  return `
+    <main class="page-shell static-page">
+      <div class="static-card">
+        <div class="eyebrow">TERMS OF SERVICE</div>
+        <h1>Terms of Service</h1>
+        <p><em>Last Updated: November 4, 2026</em></p>
+        <p>By accessing or using DevKitra Gaming (<a href="/" data-nav>devkitra.in</a>), you agree to comply with and be bound by the following Terms of Service. If you do not agree to these terms, please do not use the website.</p>
+        
+        <h2>1. Free Personal Use License</h2>
+        <p>DevKitra grants you a personal, non-exclusive, non-transferable, and revocable license to access and play our browser games strictly for non-commercial entertainment. You agree not to copy, reverse-engineer, frame, scrape, or redistribute any game code, audio assets, or proprietary materials without prior written consent.</p>
+        
+        <h2>2. Acceptable Conduct</h2>
+        <p>When playing or interacting with DevKitra, you agree not to attempt to disrupt server infrastructure, inject malicious scripts, or circumvent platform security measures.</p>
+
+        <h2>3. Intellectual Property Rights</h2>
+        <p>All games, logos, user interface designs, visual styling, sound synthesis algorithms, and documentation on DevKitra are protected by applicable intellectual property and copyright laws.</p>
+
+        <h2>4. Third-Party Advertisements & Links</h2>
+        <p>DevKitra displays third-party advertisements (such as Google AdSense) and may provide external resource links. We are not responsible for the content, privacy practices, or goods offered by third-party advertisers or external websites.</p>
+
+        <h2>5. Disclaimer of Warranties & Limitation of Liability</h2>
+        <p>DevKitra is provided on an "as-is" and "as-available" basis without warranties of any kind, whether express or implied. DevKitra shall not be held liable for any direct, indirect, incidental, or consequential damages resulting from your use of or inability to use the platform.</p>
+
+        <h2>6. Modifications to Service & Terms</h2>
+        <p>We reserve the right to add, update, or discontinue games or modify these Terms at any time. Continued use of the platform constitutes acceptance of updated Terms.</p>
+
+        <h2>7. Contact</h2>
+        <p>For inquiries regarding these Terms of Service, please reach out to us at <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a>.</p>
       </div>
     </main>
   `;
@@ -1577,6 +1891,26 @@ function setupCardHoverSounds() {
   });
 }
 
+function setupCardFavorites() {
+  document.querySelectorAll('.card-fav-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      playUiSound('click');
+      const gameId = btn.dataset.favId;
+      if (!gameId) return;
+      const isNowFav = toggleFavorite(gameId);
+      btn.classList.toggle('active', isNowFav);
+      btn.textContent = isNowFav ? '★' : '☆';
+      btn.setAttribute('aria-label', isNowFav ? 'Remove from favorites' : 'Add to favorites');
+      btn.setAttribute('title', isNowFav ? 'Remove from favorites' : 'Add to favorites');
+      showToast(isNowFav ? 'Game added to your Favorites!' : 'Game removed from Favorites', 'info');
+      const countEl = document.getElementById('fav-count');
+      if (countEl) countEl.textContent = getFavorites().length;
+    });
+  });
+}
+
 function renderCurrentPage() {
   pageCleanups.forEach((fn) => fn());
   pageCleanups = [];
@@ -1599,6 +1933,7 @@ function renderCurrentPage() {
       case 'game': return renderGamePage(route.slug);
       case 'about': return renderAboutPage();
       case 'privacy': return renderPrivacyPage();
+      case 'terms': return renderTermsPage();
       case 'contact': return renderContactPage();
       default: return renderNotFoundPage();
     }
@@ -1615,6 +1950,7 @@ function renderCurrentPage() {
   setupNavigationToggle();
   setupSearchToggle();
   setupCardHoverSounds();
+  setupCardFavorites();
 
   if (route.page === 'home') setupHeroShowcase();
   if (route.page === 'explore') setupExplore();

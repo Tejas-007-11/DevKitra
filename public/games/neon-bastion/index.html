@@ -609,7 +609,7 @@
   let audioCtx = null;
   let soundEnabled = true;
   try {
-    const saved = localStorage.getItem('dk:sound');
+    const saved = localStorage.getItem('dk:neon-bastion-sound') ?? localStorage.getItem('dk:sound');
     if (saved !== null) soundEnabled = saved === 'true';
   } catch(e) {}
 
@@ -1715,7 +1715,7 @@
   document.getElementById('btn-hud-pause').addEventListener('click', togglePause);
   document.getElementById('btn-hud-sound').addEventListener('click', () => {
     soundEnabled = !soundEnabled;
-    try { localStorage.setItem('dk:sound', String(soundEnabled)); } catch(e) {}
+    try { localStorage.setItem('dk:neon-bastion-sound', String(soundEnabled)); } catch(e) {}
     document.getElementById('btn-hud-sound').textContent = soundEnabled ? '🔊' : '🔇';
   });
   document.getElementById('btn-hud-sound').textContent = soundEnabled ? '🔊' : '🔇';
