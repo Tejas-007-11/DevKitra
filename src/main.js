@@ -240,21 +240,28 @@ function siteUrl() {
 
 function updatePageMetadata(route) {
   const pages = {
-    '/': { title: `${SITE_NAME} — Free Instant Browser Games`, description: 'Play instant arcade, puzzle, classic, and reflex games right in your browser. Zero installs, no accounts needed.' },
-    '/explore': { title: `All Games | ${SITE_NAME}`, description: 'Browse and search our complete collection of free instant browser games.' },
+    '/': { title: `${SITE_NAME} — Free Online Games | Play Instant Browser Games No Download`, description: 'Play 15 free instant browser games online on DevKitra. Enjoy original arcade, puzzle, retro, action, and reflex games with zero downloads, no accounts, and no paywalls.' },
+    '/explore': { title: `All Free Online Games | Play in Browser | ${SITE_NAME}`, description: 'Explore the complete library of free online browser games on DevKitra. Play instant arcade, puzzle, runner, and reflex titles on desktop and mobile.' },
     '/about': { title: `About DevKitra — Free Instant Online Games & Arcade Platform`, description: 'Discover DevKitra: The free instant browser gaming platform. Play original arcade, puzzle, reflex, and retro games with zero downloads, no accounts, and no paywalls.' },
     '/privacy': { title: `Privacy Policy | ${SITE_NAME}`, description: 'Learn how DevKitra Gaming respects player privacy, data safety, and third-party advertising transparency.' },
     '/terms': { title: `Terms of Service | ${SITE_NAME}`, description: 'Terms of service and usage guidelines for playing free browser games on DevKitra.' },
-    '/contact': { title: `Contact & Feedback | ${SITE_NAME}`, description: 'Send feedback and bug reports to DevKitra Gaming.' },
+    '/contact': { title: `Contact & Feedback | ${SITE_NAME}`, description: 'Send feedback, game suggestions, and bug reports to DevKitra Gaming.' },
   };
 
   let page;
   if (route.page === 'game' && gameByRoute(route.path)) {
     const g = gameByRoute(route.path);
-    page = { title: `${g.title} — Play Free Online | ${SITE_NAME}`, description: g.description };
+    const primaryGenre = genre(g.genres[0])?.label || 'Arcade';
+    page = {
+      title: `Play ${g.title} Free Online — ${primaryGenre} Game | ${SITE_NAME}`,
+      description: `Play ${g.title} online for free in your browser. ${g.description} ${g.objective ? g.objective + ' ' : ''}No downloads or accounts needed.`,
+    };
   } else if (route.page === 'genre' && genre(route.slug)) {
     const g = genre(route.slug);
-    page = { title: `${g.label} Games | ${SITE_NAME}`, description: `Play top ${g.label.toLowerCase()} games online for free.` };
+    page = {
+      title: `Free ${g.label} Games Online | Play Instant in Browser | ${SITE_NAME}`,
+      description: `Play top free ${g.label.toLowerCase()} games online in your browser on DevKitra. ${g.description} Instant play, no install required.`,
+    };
   } else if (pages[route.path]) {
     page = pages[route.path];
   } else {
@@ -339,7 +346,7 @@ function updatePageMetadata(route) {
             '@type': ['VideoGame', 'WebApplication'],
             '@id': `${gameUrl}#game`,
             'name': g.title,
-            'description': g.description,
+            'description': `${g.description} ${g.objective || ''}`.trim(),
             'url': gameUrl,
             'image': imageUrl,
             'inLanguage': 'en',
@@ -367,23 +374,77 @@ function updatePageMetadata(route) {
     } else if (route.page === 'home') {
       schemaScript.textContent = JSON.stringify({
         '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        'name': SITE_NAME,
-        'url': `${parsed.origin}/`,
-        'description': pages['/'].description,
-        'potentialAction': {
-          '@type': 'SearchAction',
-          'target': `${parsed.origin}/explore?q={search_term_string}`,
-          'query-input': 'required name=search_term_string',
-        },
+        '@graph': [
+          {
+            '@type': 'WebSite',
+            '@id': `${parsed.origin}/#website`,
+            'name': SITE_NAME,
+            'url': `${parsed.origin}/`,
+            'description': pages['/'].description,
+            'potentialAction': {
+              '@type': 'SearchAction',
+              'target': `${parsed.origin}/explore?q={search_term_string}`,
+              'query-input': 'required name=search_term_string',
+            },
+            'publisher': {
+              '@id': `${parsed.origin}/#organization`,
+            },
+          },
+          {
+            '@type': 'Organization',
+            '@id': `${parsed.origin}/#organization`,
+            'name': SITE_NAME,
+            'url': `${parsed.origin}/`,
+            'logo': `${parsed.origin}/favicon.svg`,
+            'description': 'DevKitra is an independent web gaming platform offering free, lightweight, instant browser games.',
+            'sameAs': [
+              'https://github.com/devkitra'
+            ],
+          },
+        ],
+      });
+    } else if (route.page === 'genre' && genre(route.slug)) {
+      const gen = genre(route.slug);
+      schemaScript.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'CollectionPage',
+            '@id': `${canonical.href}#webpage`,
+            'name': page.title,
+            'description': page.description,
+            'url': canonical.href,
+          },
+          {
+            '@type': 'BreadcrumbList',
+            '@id': `${canonical.href}#breadcrumbs`,
+            'itemListElement': [
+              { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${parsed.origin}/` },
+              { '@type': 'ListItem', 'position': 2, 'name': `${gen.label} Games`, 'item': canonical.href },
+            ],
+          },
+        ],
       });
     } else {
       schemaScript.textContent = JSON.stringify({
         '@context': 'https://schema.org',
-        '@type': 'WebPage',
-        'name': page.title,
-        'description': page.description,
-        'url': canonical.href,
+        '@graph': [
+          {
+            '@type': 'WebPage',
+            '@id': `${canonical.href}#webpage`,
+            'name': page.title,
+            'description': page.description,
+            'url': canonical.href,
+          },
+          {
+            '@type': 'BreadcrumbList',
+            '@id': `${canonical.href}#breadcrumbs`,
+            'itemListElement': [
+              { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${parsed.origin}/` },
+              { '@type': 'ListItem', 'position': 2, 'name': page.title.split(' | ')[0], 'item': canonical.href },
+            ],
+          },
+        ],
       });
     }
   } catch (error) {
@@ -945,14 +1006,38 @@ function renderGamePage(slug) {
       <!-- Instructions & Details -->
       <div class="game-info-grid">
         <div class="info-card">
-          <h2>How to Play & Controls</h2>
+          <h2>About ${escapeHtml(game.title)} & How to Play</h2>
           <p class="game-desc-p">${escapeHtml(game.description)}</p>
-          <div class="controls-keys-row">
-            ${game.inputs.map((input) => `<span class="kbd">${escapeHtml(input)}</span>`).join('')}
+
+          ${game.objective ? `
+          <div class="game-meta-block">
+            <h3 class="game-subhead">🎯 Objective</h3>
+            <p class="game-objective-text">${escapeHtml(game.objective)}</p>
           </div>
-          <p class="controls-detail">${escapeHtml(game.controls)}</p>
-          ${bestScore !== null ? `<p class="save-status">🏆 Your Personal Best: <strong>${bestScore.toLocaleString()}</strong></p>` : ''}
-          ${game.save ? '<p class="save-status">✓ Highscores & progress save automatically in your browser.</p>' : ''}
+          ` : ''}
+
+          <div class="game-meta-block">
+            <h3 class="game-subhead">🎮 Controls & Keybindings</h3>
+            <div class="controls-keys-row">
+              ${game.inputs.map((input) => `<span class="kbd">${escapeHtml(input)}</span>`).join('')}
+            </div>
+            <p class="controls-detail">${escapeHtml(game.controls)}</p>
+          </div>
+
+          ${game.tips && game.tips.length ? `
+          <div class="game-meta-block">
+            <h3 class="game-subhead">💡 High Score Tips & Strategy</h3>
+            <ul class="game-tips-list">
+              ${game.tips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join('')}
+            </ul>
+          </div>
+          ` : ''}
+
+          <div class="game-status-block">
+            ${bestScore !== null ? `<p class="save-status">🏆 Your Personal Best: <strong>${bestScore.toLocaleString()}</strong></p>` : ''}
+            ${game.save ? '<p class="save-status">✓ Highscores & progress save automatically in your browser.</p>' : ''}
+          </div>
+
           <div class="hotkey-helpers">
             <span class="hotkey-pill"><kbd>R</kbd> Restart</span>
             ${game.pause ? '<span class="hotkey-pill"><kbd>P</kbd> Pause</span>' : ''}
@@ -963,6 +1048,13 @@ function renderGamePage(slug) {
         <!-- Related Games -->
         <div class="info-card">
           <h2>More Games You'll Enjoy</h2>
+          <div class="game-genre-chips">
+            <span class="chips-label">Browse Genres:</span>
+            ${game.genres.map((ge) => {
+              const gen = genre(ge);
+              return gen ? `<a href="/genre/${ge}" data-nav class="genre-tag-link">${escapeHtml(gen.label)}</a>` : '';
+            }).filter(Boolean).join('')}
+          </div>
           <div class="related-list">${related.map((r) => `
             <a href="${r.route}" data-nav class="related-item">
               ${r.thumbnail ? `<img class="related-thumb" src="${r.thumbnail}" alt="" loading="lazy" />` : ''}

@@ -708,6 +708,81 @@ html.light .nav-link.active { color: var(--dk-primary); background: var(--dk-pri
   padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.7rem; color: var(--dk-ink);
 }
 
+.game-meta-block {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--dk-line);
+}
+.game-subhead {
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--dk-ink);
+  margin-bottom: 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.game-objective-text {
+  font-size: 0.88rem;
+  color: var(--dk-ink-soft);
+  line-height: 1.55;
+  background: var(--dk-surface-raised);
+  border: 1px solid var(--dk-line);
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--dk-radius-sm);
+  margin: 0;
+}
+.game-tips-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.game-tips-list li {
+  font-size: 0.86rem;
+  color: var(--dk-ink-soft);
+  line-height: 1.5;
+}
+.game-status-block {
+  margin-top: 0.85rem;
+}
+.game-genre-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--dk-line);
+}
+.chips-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dk-quiet);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.genre-tag-link {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  background: var(--dk-surface-raised);
+  border: 1px solid var(--dk-line);
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--dk-ink-soft);
+  text-decoration: none;
+  transition: all var(--dk-transition);
+}
+.genre-tag-link:hover {
+  color: var(--dk-accent);
+  border-color: var(--dk-accent);
+  background: var(--dk-surface-raised);
+}
+
 /* Related List */
 .related-list {
   display: flex; flex-direction: column; gap: 0.6rem;
