@@ -618,9 +618,9 @@ function gameCard(game) {
         <p class="game-card-desc">${escapeHtml(game.description)}</p>
       </div>
       <div class="game-card-foot">
-        <span>${game.inputs.map((inp) => inp === 'keyboard' ? 'Keyboard' : inp === 'touch' ? 'Touch' : 'Mouse').join(' · ')}</span>
+        <span class="card-inputs" title="Supported inputs">${game.inputs.map((inp) => inp === 'keyboard' ? '⌨️ Key' : inp === 'touch' ? '📱 Touch' : '🖱️ Mouse').join(' · ')}</span>
         ${scoreBadge}
-        <a href="${game.route}" data-nav class="game-card-cta">Play →</a>
+        <a href="${game.route}" data-nav class="game-card-cta" aria-label="Play ${escapeHtml(game.title)}">Play ▶</a>
       </div>
     </div>
   `;
@@ -644,7 +644,28 @@ function renderHomePage() {
 
   return `
     <main class="page-shell home-page">
-      <h1 class="sr-only">DevKitra Games — Free Instant Online Games & Arcade Platform</h1>
+      <!-- Visible Hero Header: Clear Purpose & Value Proposition -->
+      <section class="hero-intro-banner">
+        <div class="hero-intro-content">
+          <div class="hero-pill-badge">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span>Free 2D Instant Browser Games</span>
+            <span class="badge-separator">·</span>
+            <span class="badge-highlight">Zero Installs</span>
+          </div>
+          <h1 class="hero-main-title">Play Instant Games in Your Browser. <span class="highlight-text">No Installs.</span></h1>
+          <p class="hero-main-lead">Jump directly into 15 original arcade, puzzle, retro, and reflex games. 100% free, lightweight, instant loading on mobile and desktop, with high scores saved automatically.</p>
+          <div class="hero-highlights-row">
+            <a href="#catalogue-section" class="btn btn-primary" id="hero-explore-cta">Browse 15 Games ↓</a>
+            <button type="button" class="btn btn-secondary" id="hero-quick-random-btn">${diceSvg()} Surprise Me</button>
+            <div class="hero-trust-pills">
+              <span class="trust-pill">⚡ Instant Play</span>
+              <span class="trust-pill">🎮 15 Free Games</span>
+              <span class="trust-pill">🏆 Score Saving</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- Clean Spotlight Hero Banner -->
       <section class="hero-spotlight">
@@ -658,7 +679,7 @@ function renderHomePage() {
             <p id="spotlight-desc" class="spotlight-desc">${escapeHtml(spotlightGame.description)}</p>
             <div class="spotlight-actions">
               <a href="${spotlightGame.route}" data-nav class="btn btn-primary" id="spotlight-play-btn">Play Now ▶</a>
-              <a href="/explore" data-nav class="btn btn-secondary">Explore All Games</a>
+              <a href="#catalogue-section" class="btn btn-secondary" id="spotlight-browse-btn">Explore All 15 Games</a>
               <button type="button" class="btn btn-secondary" id="hero-random-btn">${diceSvg()} Surprise Me</button>
             </div>
           </div>
@@ -683,30 +704,78 @@ function renderHomePage() {
         </div>
       </section>
 
-      <!-- Category Navigation Dock -->
-      <section class="section" style="margin-top: 2rem;">
-        <div class="category-dock">
-          <a href="/explore" data-nav class="cat-pill active">All Games (${all.length})</a>
-          ${favCount > 0 ? `<a href="/explore?genre=favorites" data-nav class="cat-pill">★ Favorites (${favCount})</a>` : ''}
-          ${populatedGenres.map((g) => `
-            <a href="/genre/${g.slug}" data-nav class="cat-pill">${escapeHtml(g.label)} (${genreGameCount(g.slug)})</a>
-          `).join('')}
-        </div>
-      </section>
-
       ${recentGames.length > 0 ? `
         <!-- Shelf: Continue Playing (Recent Games) -->
-        <section class="section">
+        <section class="section section-recents" id="recents-section">
           <div class="section-header">
             <div class="copy">
               <div class="eyebrow">PICK UP WHERE YOU LEFT OFF</div>
               <h2>Continue Playing</h2>
               <p>Jump back into your recently played games with saved scores and progress.</p>
             </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-recents" title="Clear recently played history">Clear History</button>
           </div>
           <div class="game-grid">${recentGames.map((g) => gameCard(g)).join('')}</div>
         </section>
-      ` : ''}
+      ` : `
+        <!-- Quick Start Picks for New Visitors -->
+        <section class="section section-quickstart">
+          <div class="section-header">
+            <div class="copy">
+              <div class="eyebrow">QUICK START</div>
+              <h2>Instant Play Picks</h2>
+              <p>Jump straight in — our top original arcade and puzzle games ready to play in 1 click.</p>
+            </div>
+          </div>
+          <div class="game-grid">${all.filter((g) => ['neon-bastion', 'tetris', 'road-hopper', 'snake'].includes(g.id)).map((g) => gameCard(g)).join('')}</div>
+        </section>
+      `}
+
+      <!-- Interactive Game Discovery & Complete Catalogue -->
+      <section class="section section-catalogue" id="catalogue-section">
+        <div class="section-header">
+          <div class="copy">
+            <div class="eyebrow">DISCOVER GAMES</div>
+            <h2>All Games (${all.length})</h2>
+            <p>Filter by genre, sort by popularity or release date, or search by game name in real time.</p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="section-random-btn">${diceSvg()} Random Game</button>
+        </div>
+
+        <!-- Interactive Discovery Toolbar -->
+        <div class="catalogue-toolbar">
+          <div class="search-shell home-search-shell">
+            <input id="home-game-search" type="search" placeholder="Search by game name, genre, or tag…" aria-label="Search all games" autocomplete="off" />
+            ${searchSvg()}
+          </div>
+          <div class="select-shell">
+            <select id="home-sort" aria-label="Sort games">
+              <option value="popular">Most Popular</option>
+              <option value="added">Newest Added</option>
+              <option value="title">Alphabetical (A–Z)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Genre Filter Chips -->
+        <div id="home-genre-chips" class="chip-list catalogue-chips">
+          <button type="button" class="genre-chip active" data-genre="all" aria-pressed="true">All Games (${all.length})</button>
+          ${favCount > 0 ? `<button type="button" class="genre-chip" data-genre="favorites" aria-pressed="false">★ Favorites (${favCount})</button>` : ''}
+          ${populatedGenres.map((g) => `<button type="button" class="genre-chip" data-genre="${g.slug}" aria-pressed="false">${escapeHtml(g.label)} (${genreGameCount(g.slug)})</button>`).join('')}
+        </div>
+
+        <div class="catalogue-meta-row">
+          <span id="home-games-count" class="directory-count">${all.length} games available</span>
+        </div>
+
+        <div id="home-games-grid" class="game-grid">${all.map((g) => gameCard(g)).join('')}</div>
+
+        <div id="home-games-empty" class="empty-state hidden">
+          <h2>No games found.</h2>
+          <p id="home-empty-msg">No games match your query. Try searching for "tetris", "snake", or "neon".</p>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-home-filter" style="margin-top: 0.75rem;">Reset Filters</button>
+        </div>
+      </section>
 
       <!-- Shelf 1: Top Rated / Popular Hits -->
       <section class="section">
@@ -744,19 +813,6 @@ function renderHomePage() {
         </div>
         <div class="game-grid">${puzzlePicks.map((g) => gameCard(g)).join('')}</div>
       </section>
-
-      <!-- Shelf 4: Complete Catalogue -->
-      <section class="section">
-        <div class="section-header">
-          <div class="copy">
-            <div class="eyebrow">FULL CATALOGUE</div>
-            <h2>All ${all.length} Games</h2>
-            <p>Every game is 100% free, runs instantly in your browser, and requires no downloads.</p>
-          </div>
-          <button type="button" class="btn btn-primary btn-sm" id="section-random-btn">${diceSvg()} Random Game</button>
-        </div>
-        <div class="game-grid">${all.map((g) => gameCard(g)).join('')}</div>
-      </section>
     </main>
   `;
 }
@@ -769,12 +825,28 @@ function setupHeroShowcase() {
   const playBtn = document.getElementById('spotlight-play-btn');
   const randomHeroBtn = document.getElementById('hero-random-btn');
   const randomSecBtn = document.getElementById('section-random-btn');
+  const quickRandomBtn = document.getElementById('hero-quick-random-btn');
+  const spotlightBrowseBtn = document.getElementById('spotlight-browse-btn');
 
   if (randomHeroBtn) {
     randomHeroBtn.addEventListener('click', () => launchRandomGame());
   }
   if (randomSecBtn) {
     randomSecBtn.addEventListener('click', () => launchRandomGame());
+  }
+  if (quickRandomBtn) {
+    quickRandomBtn.addEventListener('click', () => launchRandomGame());
+  }
+  if (spotlightBrowseBtn) {
+    spotlightBrowseBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.getElementById('catalogue-section');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+        const searchInput = document.getElementById('home-game-search');
+        if (searchInput) searchInput.focus();
+      }
+    });
   }
 
   if (!tabs.length) return;
@@ -798,6 +870,138 @@ function setupHeroShowcase() {
   });
 }
 
+function setupHomePageDiscovery() {
+  const searchInput = document.getElementById('home-game-search');
+  const sortSelect = document.getElementById('home-sort');
+  const chips = [...document.querySelectorAll('#home-genre-chips .genre-chip')];
+  const grid = document.getElementById('home-games-grid');
+  const countEl = document.getElementById('home-games-count');
+  const emptyEl = document.getElementById('home-games-empty');
+  const emptyMsg = document.getElementById('home-empty-msg');
+  const resetBtn = document.getElementById('btn-reset-home-filter');
+  const clearRecentsBtn = document.getElementById('btn-clear-recents');
+  const recentsSection = document.getElementById('recents-section');
+  const heroExploreCta = document.getElementById('hero-explore-cta');
+
+  if (heroExploreCta) {
+    heroExploreCta.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.getElementById('catalogue-section');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+        if (searchInput) searchInput.focus();
+      }
+    });
+  }
+
+  if (clearRecentsBtn && recentsSection) {
+    clearRecentsBtn.addEventListener('click', () => {
+      playUiSound('click');
+      try { localStorage.removeItem('dk:recent-games'); } catch (_) {}
+      recentsSection.style.transition = 'opacity 0.25s ease';
+      recentsSection.style.opacity = '0';
+      setTimeout(() => {
+        recentsSection.remove();
+      }, 250);
+      showToast('Recently played history cleared', 'info');
+    });
+  }
+
+  if (!grid || !chips.length) return;
+
+  const all = publishedGames();
+  let genreSel = 'all';
+  let query = '';
+
+  const applyFilters = () => {
+    const filtered = all.filter((g) => {
+      const genreMatch = genreSel === 'all'
+        ? true
+        : genreSel === 'favorites'
+          ? isGameFavorited(g.id)
+          : g.genres.includes(genreSel);
+      const text = `${g.title} ${g.description} ${g.tags.join(' ')} ${g.genres.map((ge) => genre(ge)?.label).join(' ')}`.toLowerCase();
+      const textMatch = !query || text.includes(query);
+      return genreMatch && textMatch;
+    });
+
+    const sortVal = sortSelect?.value || 'popular';
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortVal === 'popular') {
+        if (Boolean(b.featured) !== Boolean(a.featured)) {
+          return b.featured ? 1 : -1;
+        }
+        return a.title.localeCompare(b.title);
+      }
+      if (sortVal === 'title') return a.title.localeCompare(b.title);
+      return (b.added || '').localeCompare(a.added || '');
+    });
+
+    grid.innerHTML = sorted.map((g) => gameCard(g)).join('');
+    setupCardFavorites();
+    setupCardHoverSounds();
+
+    if (countEl) {
+      countEl.textContent = `Showing ${sorted.length} ${sorted.length === 1 ? 'game' : 'games'}${genreSel !== 'all' ? ` in ${genreSel === 'favorites' ? 'Favorites' : (genre(genreSel)?.label || genreSel)}` : ''}`;
+    }
+
+    if (emptyEl) {
+      emptyEl.classList.toggle('hidden', sorted.length > 0);
+      if (genreSel === 'favorites' && sorted.length === 0) {
+        const h2 = emptyEl.querySelector('h2');
+        if (h2) h2.textContent = 'No favorites saved yet.';
+        if (emptyMsg) emptyMsg.textContent = 'Click the ★ star on any game card to bookmark your favorites here!';
+      } else {
+        const h2 = emptyEl.querySelector('h2');
+        if (h2) h2.textContent = 'No games found.';
+        if (emptyMsg) emptyMsg.textContent = query ? `No games match "${escapeHtml(query)}". Try searching for "tetris", "snake", or "neon".` : 'No games match the selected filters.';
+      }
+    }
+  };
+
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      playUiSound('switch');
+      chips.forEach((c) => {
+        c.classList.toggle('active', c === chip);
+        c.setAttribute('aria-pressed', String(c === chip));
+      });
+      genreSel = chip.dataset.genre || 'all';
+      applyFilters();
+    });
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      query = e.target.value.trim().toLowerCase();
+      applyFilters();
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      playUiSound('switch');
+      applyFilters();
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      playUiSound('click');
+      query = '';
+      genreSel = 'all';
+      if (searchInput) searchInput.value = '';
+      if (sortSelect) sortSelect.value = 'popular';
+      chips.forEach((c) => {
+        const isAll = c.dataset.genre === 'all';
+        c.classList.toggle('active', isAll);
+        c.setAttribute('aria-pressed', String(isAll));
+      });
+      applyFilters();
+    });
+  }
+}
+
 function renderExplorePage() {
   const all = publishedGames();
   const populatedGenres = genres.filter((g) => genreGameCount(g.slug) > 0);
@@ -819,6 +1023,7 @@ function renderExplorePage() {
         </div>
         <div class="select-shell">
           <select id="explore-sort" aria-label="Sort games">
+            <option value="popular">Most Popular</option>
             <option value="added">Newest Added</option>
             <option value="title">Alphabetical (A–Z)</option>
           </select>
@@ -879,12 +1084,19 @@ function setupExplore() {
     });
 
     const sorted = [...filtered].sort((a, b) => {
+      if (sort.value === 'popular') {
+        if (Boolean(b.featured) !== Boolean(a.featured)) {
+          return b.featured ? 1 : -1;
+        }
+        return a.title.localeCompare(b.title);
+      }
       if (sort.value === 'title') return a.title.localeCompare(b.title);
       return (b.added || '').localeCompare(a.added || '');
     });
 
     results.innerHTML = sorted.map((g) => gameCard(g)).join('');
     setupCardFavorites();
+    setupCardHoverSounds();
     empty.classList.toggle('hidden', sorted.length > 0);
     if (genreSel === 'favorites' && sorted.length === 0) {
       empty.innerHTML = '<h2>No favorites saved yet.</h2><p>Click the ★ star on any game card to bookmark your favorites here!</p>';
@@ -968,8 +1180,17 @@ function renderGamePage(slug) {
     <main class="page-shell game-page">
       <!-- Breadcrumb navigation -->
       <div class="game-top-bar">
-        <a href="/explore" data-nav class="back-link">← Back to All Games</a>
+        <nav class="game-breadcrumb" aria-label="Breadcrumb navigation">
+          <a href="/" data-nav class="crumb-link">Home</a>
+          <span class="crumb-sep">/</span>
+          <a href="/explore" data-nav class="crumb-link">All Games</a>
+          <span class="crumb-sep">/</span>
+          <a href="/genre/${game.genres[0]}" data-nav class="crumb-link">${escapeHtml(genre(game.genres[0])?.label || 'Games')}</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current" aria-current="page">${escapeHtml(game.title)}</span>
+        </nav>
         <div class="game-top-actions">
+          <a href="/explore" data-nav class="btn btn-secondary btn-sm" title="Return to complete game catalogue">← Catalogue</a>
           <button type="button" class="btn btn-secondary btn-sm" id="game-random-btn">${diceSvg()} Next Game</button>
         </div>
       </div>
@@ -1898,6 +2119,7 @@ function setupNavigationToggle() {
   const header = document.querySelector('.site-header');
   const toggle = document.getElementById('nav-toggle');
   const navigation = document.getElementById('main-nav');
+  const searchShell = document.getElementById('header-search');
   if (!header || !toggle || !navigation) return;
 
   navigationController?.abort();
@@ -1909,6 +2131,9 @@ function setupNavigationToggle() {
     toggle.setAttribute('aria-expanded', String(open));
     toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
     toggle.innerHTML = menuSvg(open);
+    if (open && searchShell) {
+      searchShell.classList.remove('open');
+    }
   };
 
   toggle.addEventListener('click', () => {
@@ -1921,7 +2146,10 @@ function setupNavigationToggle() {
   }, { signal });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') setOpen(false);
+    if (event.key === 'Escape') {
+      setOpen(false);
+      searchShell?.classList.remove('open');
+    }
   }, { signal });
 }
 
@@ -1929,10 +2157,20 @@ function setupSearchToggle() {
   const searchToggle = document.getElementById('search-toggle');
   const searchShell = document.getElementById('header-search');
   const input = document.getElementById('global-search');
+  const header = document.querySelector('.site-header');
+  const navToggle = document.getElementById('nav-toggle');
   if (!searchToggle || !searchShell) return;
 
   searchToggle.addEventListener('click', () => {
     playUiSound('click');
+    if (header && header.classList.contains('nav-open')) {
+      header.classList.remove('nav-open');
+      if (navToggle) {
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.setAttribute('aria-label', 'Open navigation');
+        navToggle.innerHTML = menuSvg(false);
+      }
+    }
     const isOpen = searchShell.classList.toggle('open');
     if (isOpen && input) {
       input.focus();
@@ -2044,7 +2282,10 @@ function renderCurrentPage() {
   setupCardHoverSounds();
   setupCardFavorites();
 
-  if (route.page === 'home') setupHeroShowcase();
+  if (route.page === 'home') {
+    setupHeroShowcase();
+    setupHomePageDiscovery();
+  }
   if (route.page === 'explore') setupExplore();
   if (route.page === 'game') setupGamePage(route.slug);
   if (route.page === 'contact') setupContactPage();
