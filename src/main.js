@@ -11,7 +11,7 @@ import {
 
 const app = document.querySelector('#app');
 const SITE_NAME = 'DevKitra Gaming';
-const SITE_EMAIL = 'orynvero@gmail.com';
+const SITE_EMAIL = 'devkitragaming@gmail.com';
 
 const NAV = [
   { label: 'Home', href: '/' },
@@ -1458,7 +1458,7 @@ function renderAboutPage() {
 
             <div class="faq-item">
               <h3>How can I suggest a game or report an issue?</h3>
-              <p>We welcome community feedback! You can reach us anytime through our <a href="/contact" data-nav>Contact Page</a> or by emailing us directly at <a href="mailto:orynvero@gmail.com">orynvero@gmail.com</a>.</p>
+              <p>We welcome community feedback! You can reach us anytime through our <a href="/contact" data-nav>Contact Page</a> or by emailing us directly at <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a>.</p>
             </div>
           </div>
         </section>
