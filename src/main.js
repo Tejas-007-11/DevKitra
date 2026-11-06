@@ -391,7 +391,7 @@ function updatePageMetadata(route) {
   if (ogDesc) ogDesc.setAttribute('content', page.description);
 
   const base = siteUrl() || window.location.origin;
-  let imageUrl = `${base}/favicon.svg`;
+  let imageUrl = `${base}/favicon.png`;
   if (route.page === 'game' && gameByRoute(route.path)) {
     const g = gameByRoute(route.path);
     if (g.thumbnail) imageUrl = new URL(g.thumbnail, base).href;
@@ -509,7 +509,7 @@ function updatePageMetadata(route) {
             '@id': `${parsed.origin}/#organization`,
             'name': SITE_NAME,
             'url': `${parsed.origin}/`,
-            'logo': `${parsed.origin}/favicon.svg`,
+            'logo': `${parsed.origin}/favicon.png`,
             'description': 'DevKitra is an independent web gaming platform offering free, lightweight, instant browser games.',
             'sameAs': [
               'https://github.com/devkitra'
