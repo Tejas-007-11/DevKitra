@@ -48,6 +48,7 @@ const GAME_SCORE_KEYS = {
   'cyber-flap': 'dk:flap-best',
   'memory-match': 'dk:memory-best',
   'reaction-test': 'dk:reaction-best',
+  'neon-pong': 'dk:neon-pong-best',
 };
 
 function getGameBestScore(gameId) {
@@ -63,16 +64,129 @@ function getGameBestScore(gameId) {
   }
 }
 
+function formatGameScore(gameId, score) {
+  if (score === null || score === undefined || isNaN(score) || score <= 0) return null;
+  if (gameId === 'reaction-test') return `${score} ms`;
+  if (gameId === 'memory-match') return `${score} moves`;
+  if (gameId === 'beltbound') return `Level ${score}`;
+  return `${score.toLocaleString()} pts`;
+}
+
+function isScoreBetter(gameId, newScore, prevBest) {
+  if (prevBest === null || prevBest === undefined || prevBest <= 0) return true;
+  if (gameId === 'reaction-test' || gameId === 'memory-match') {
+    return newScore < prevBest;
+  }
+  return newScore > prevBest;
+}
+
 function updateGameBestScore(gameId, newScore) {
   try {
     const key = GAME_SCORE_KEYS[gameId];
-    if (!key) return;
-    const cur = parseInt(localStorage.getItem(key) || '0', 10);
-    if (newScore > cur) {
+    if (!key || newScore <= 0 || isNaN(newScore)) return false;
+    const curVal = localStorage.getItem(key);
+    const cur = curVal ? parseInt(curVal, 10) : null;
+    if (isScoreBetter(gameId, newScore, cur)) {
       localStorage.setItem(key, String(newScore));
-      showToast(`🎉 New Personal Best: ${newScore.toLocaleString()}!`, 'success');
+      return true;
     }
+    return false;
+  } catch (_) {
+    return false;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Daily Challenge System (Deterministic, Date-Based, Pure Frontend)  */
+/* ------------------------------------------------------------------ */
+
+function getDailyChallengeDate() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatDateDisplay(dateStr) {
+  try {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch (_) {
+    return dateStr;
+  }
+}
+
+function getDailyChallenge() {
+  const dateStr = getDailyChallengeDate();
+  const all = publishedGames();
+  if (!all.length) return null;
+
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0;
+  }
+  const game = all[hash % all.length];
+
+  const goals = {
+    'neon-bastion': { target: 1200, label: 'Score 1,200+ points defending your bastion' },
+    'road-hopper': { target: 30, label: 'Cross 30+ roads and rivers safely' },
+    'loopbreak': { target: 600, label: 'Connect loops to score 600+ points' },
+    'beltbound': { target: 4, label: 'Complete puzzle stages through Level 4' },
+    'flipshift': { target: 250, label: 'Dodge obstacles for 250+ meters' },
+    'tetris': { target: 1000, label: 'Clear lines to reach 1,000+ points' },
+    'sky-jump': { target: 1500, label: 'Bounce to 1,500+ meters altitude' },
+    'snake': { target: 120, label: 'Guide the snake to score 120+ points' },
+    '2048': { target: 1024, label: 'Slide and merge tiles to reach 1,024+ score' },
+    'breakout': { target: 400, label: 'Break bricks to score 400+ points' },
+    'tower-stack': { target: 18, label: 'Stack 18+ blocks with steady timing' },
+    'neon-pong': { target: 5, label: 'Score 5 points against the paddle AI' },
+    'cyber-flap': { target: 12, label: 'Fly cleanly through 12+ energy gates' },
+    'memory-match': { target: 26, label: 'Clear the board in 26 moves or fewer', lowerIsBetter: true },
+    'reaction-test': { target: 320, label: 'Clock a reaction time under 320 ms', lowerIsBetter: true },
+  };
+
+  const goal = goals[game.id] || { target: 500, label: `Score 500+ points in ${game.title}` };
+  const completedKey = `dk:daily:${dateStr}:${game.id}`;
+  let isCompleted = false;
+  try {
+    isCompleted = localStorage.getItem(completedKey) === 'true';
   } catch (_) {}
+
+  return {
+    date: dateStr,
+    game,
+    goal,
+    completedKey,
+    isCompleted,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Web Share API & Clipboard Sharing Helper                           */
+/* ------------------------------------------------------------------ */
+
+function shareGameScore(gameId, currentScore = null) {
+  playUiSound('click');
+  const game = gameByRoute(`/game/${gameId}`);
+  if (!game) return;
+  const best = currentScore || getGameBestScore(gameId);
+  const origin = window.location.origin;
+  const shareUrl = `${origin}${game.route}`;
+
+  const scoreStr = best ? formatGameScore(gameId, best) : null;
+  const scoreText = scoreStr ? `I scored ${scoreStr}` : `Can you beat my score`;
+  const shareData = {
+    title: `${game.title} — DevKitra Games`,
+    text: `🎮 ${scoreText} in ${game.title} on DevKitra! Play free in your browser with zero installs:`,
+    url: shareUrl,
+  };
+
+  if (navigator.share) {
+    navigator.share(shareData).catch(() => {});
+  } else {
+    copyTextToClipboard(`${shareData.text} ${shareData.url}`, () => {
+      showToast('📋 Game link & score copied to clipboard!', 'success');
+    });
+  }
 }
 
 function getFavorites() {
@@ -595,7 +709,7 @@ function gameCard(game) {
     ? `<img src="${game.thumbnail}" alt="${escapeHtml(game.title)} cover" loading="lazy" />`
     : `<div class="card-fallback">${escapeHtml(game.title[0])}</div>`;
   const bestScore = getGameBestScore(game.id);
-  const scoreBadge = bestScore !== null ? `<span class="card-score-badge" title="Your Personal Best Score">🏆 ${bestScore.toLocaleString()}</span>` : '';
+  const scoreBadge = bestScore !== null ? `<span class="card-score-badge" title="Your Personal Best Score">🏆 ${escapeHtml(formatGameScore(game.id, bestScore))}</span>` : '';
   const isFav = isGameFavorited(game.id);
 
   return `
@@ -638,6 +752,7 @@ function renderHomePage() {
   const recentIds = getRecentGames();
   const recentGames = recentIds.map((id) => all.find((g) => g.id === id)).filter(Boolean);
   const favCount = getFavorites().length;
+  const daily = getDailyChallenge();
 
   const reflexPicks = all.filter((g) => ['neon-bastion', 'road-hopper', 'sky-jump', 'snake', 'breakout'].includes(g.id));
   const puzzlePicks = all.filter((g) => ['tetris', '2048', 'memory-match', 'tower-stack'].includes(g.id));
@@ -703,6 +818,52 @@ function renderHomePage() {
           `).join('')}
         </div>
       </section>
+
+      ${daily ? `
+      <!-- Daily Challenge Feature Shelf -->
+      <section class="section section-daily" id="daily-challenge-section">
+        <div class="daily-challenge-card ${daily.isCompleted ? 'is-complete' : ''}">
+          <div class="daily-card-header">
+            <div class="daily-card-badge-row">
+              <span class="daily-tag">📅 DAILY CHALLENGE</span>
+              <span class="daily-date">${formatDateDisplay(daily.date)}</span>
+              ${daily.isCompleted ? '<span class="daily-pill-status complete">✓ Completed</span>' : '<span class="daily-pill-status active">Active Mission</span>'}
+            </div>
+            <span class="daily-reset-clock">Resets daily at midnight</span>
+          </div>
+
+          <div class="daily-card-content">
+            <div class="daily-thumb-box">
+              <a href="${daily.game.route}" data-nav class="daily-thumb-link" aria-label="Play ${escapeHtml(daily.game.title)}">
+                <img src="${daily.game.thumbnail}" alt="${escapeHtml(daily.game.title)}" class="daily-thumb-img" />
+                <div class="daily-thumb-overlay" aria-hidden="true">
+                  <span class="play-pill">Play ▶</span>
+                </div>
+              </a>
+            </div>
+            <div class="daily-details">
+              <span class="daily-game-genre">${daily.game.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ')}</span>
+              <h3 class="daily-title"><a href="${daily.game.route}" data-nav>${escapeHtml(daily.game.title)}</a></h3>
+              <div class="daily-goal-box">
+                <span class="goal-icon">🎯</span>
+                <span class="goal-text"><strong>Mission:</strong> ${escapeHtml(daily.goal.label)}</span>
+              </div>
+              <p class="daily-desc">${escapeHtml(daily.game.description)}</p>
+            </div>
+            <div class="daily-cta-wrap">
+              <a href="${daily.game.route}" data-nav class="btn btn-primary daily-cta-btn">
+                ${daily.isCompleted ? 'Replay Challenge ▶' : 'Accept Challenge ▶'}
+              </a>
+              ${daily.isCompleted ? `
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-share-daily" title="Share your daily challenge victory">
+                  Share Victory 🏆
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </section>
+      ` : ''}
 
       ${recentGames.length > 0 ? `
         <!-- Shelf: Continue Playing (Recent Games) -->
@@ -891,6 +1052,14 @@ function setupHomePageDiscovery() {
         target.scrollIntoView({ behavior: 'smooth' });
         if (searchInput) searchInput.focus();
       }
+    });
+  }
+
+  const daily = getDailyChallenge();
+  const shareDailyBtn = document.getElementById('btn-share-daily');
+  if (shareDailyBtn && daily) {
+    shareDailyBtn.addEventListener('click', () => {
+      shareGameScore(daily.game.id);
     });
   }
 
@@ -1175,6 +1344,8 @@ function renderGamePage(slug) {
   const genreLabels = game.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ');
   const bestScore = getGameBestScore(game.id);
   const isFav = isGameFavorited(game.id);
+  const daily = getDailyChallenge();
+  const isDaily = daily && daily.game.id === game.id;
 
   return `
     <main class="page-shell game-page">
@@ -1201,18 +1372,48 @@ function renderGamePage(slug) {
           <div class="toolbar-title-wrap">
             <span class="game-badge-chip">${escapeHtml(genreLabels)}</span>
             <h1 class="toolbar-game-title">${escapeHtml(game.title)}</h1>
+            <span class="toolbar-best-chip ${bestScore !== null ? '' : 'hidden'}" id="toolbar-best-score" title="Your saved personal best score">🏆 Best: <strong>${escapeHtml(formatGameScore(game.id, bestScore) || '')}</strong></span>
           </div>
           <div class="toolbar-tools">
             <button type="button" class="game-tool-btn ${isFav ? 'active' : ''}" data-action="favorite" id="game-fav-btn" title="Add to Favorites">${isFav ? '★ Favorited' : '☆ Favorite'}</button>
             ${pauseMarkup}
             <button type="button" class="game-tool-btn" data-action="restart" title="Restart [R]">↺ Restart</button>
+            <button type="button" class="game-tool-btn" data-action="share" id="game-share-btn" title="Share score and game link">Share 🔗</button>
             <button type="button" class="game-tool-btn" data-action="theater" id="theater-toggle" title="Toggle Theater View (Expands to screen width)">🗖 Theater</button>
             <button type="button" class="game-tool-btn game-tool-btn-primary" data-action="fullscreen" id="fs-toggle" title="Full Screen [F]">⛶ Fullscreen</button>
           </div>
         </div>
 
+        ${isDaily ? `
+          <div class="game-daily-banner ${daily.isCompleted ? 'completed' : ''}">
+            <span class="daily-banner-tag">📅 TODAY'S DAILY CHALLENGE</span>
+            <span class="daily-banner-goal">🎯 <strong>Mission:</strong> ${escapeHtml(daily.goal.label)}</span>
+            ${daily.isCompleted ? '<span class="daily-done-pill">✓ Conquered!</span>' : '<span class="daily-pending-pill">Active Goal</span>'}
+          </div>
+        ` : ''}
+
         <div class="game-viewport-wrap" id="game-viewport">
           <iframe class="game-viewport-frame" id="active-game-frame" src="${game.standalone}${game.pause ? '?embed=1' : ''}" title="${escapeHtml(game.title)}" allowfullscreen allow="autoplay"></iframe>
+        </div>
+
+        <!-- Post-Round Completion & Score Feedback Card -->
+        <div class="game-round-feedback hidden" id="game-round-feedback" aria-live="polite">
+          <div class="feedback-inner">
+            <div class="feedback-copy">
+              <span class="feedback-eyebrow">ROUND FINISHED</span>
+              <div class="feedback-score-row">
+                <span class="feedback-score-num" id="feedback-score-val">0 pts</span>
+                <span class="feedback-badge-pill hidden" id="feedback-best-badge">🎉 New Personal Best!</span>
+                <span class="feedback-badge-pill daily-pass hidden" id="feedback-daily-badge">🏆 Daily Challenge Conquered!</span>
+              </div>
+              <p class="feedback-note">Saved in your browser · Zero tracking</p>
+            </div>
+            <div class="feedback-actions">
+              <button type="button" class="btn btn-primary btn-sm" id="feedback-replay-btn">↺ Play Again</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="feedback-share-btn">Share Score 🔗</button>
+              <a href="/explore" data-nav class="btn btn-secondary btn-sm">← More Games</a>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1331,6 +1532,11 @@ function setupGamePage(slug) {
 
   let paused = false;
 
+  function dismissFeedback() {
+    const feedbackCard = document.getElementById('game-round-feedback');
+    if (feedbackCard) feedbackCard.classList.add('hidden');
+  }
+
   if (restart) {
     restart.addEventListener('click', () => {
       playUiSound('click');
@@ -1339,8 +1545,33 @@ function setupGamePage(slug) {
         pauseBtn.textContent = '⏸ Pause';
         pauseBtn.setAttribute('aria-pressed', 'false');
       }
+      dismissFeedback();
       postToGame({ type: 'dk:restart' });
       frame.focus();
+    });
+  }
+
+  const feedbackReplayBtn = document.getElementById('feedback-replay-btn');
+  if (feedbackReplayBtn) {
+    feedbackReplayBtn.addEventListener('click', () => {
+      playUiSound('click');
+      dismissFeedback();
+      postToGame({ type: 'dk:restart' });
+      frame.focus();
+    });
+  }
+
+  const feedbackShareBtn = document.getElementById('feedback-share-btn');
+  if (feedbackShareBtn) {
+    feedbackShareBtn.addEventListener('click', () => {
+      shareGameScore(game.id);
+    });
+  }
+
+  const gameShareBtn = document.getElementById('game-share-btn');
+  if (gameShareBtn) {
+    gameShareBtn.addEventListener('click', () => {
+      shareGameScore(game.id);
     });
   }
 
@@ -1453,16 +1684,66 @@ function setupGamePage(slug) {
   });
 }
 
+function handleGameOverEvent(gameId, score) {
+  const isNewBest = updateGameBestScore(gameId, score);
+  const daily = getDailyChallenge();
+  let dailyCompletedNow = false;
+
+  if (daily && daily.game.id === gameId && !daily.isCompleted) {
+    const goal = daily.goal;
+    const isSuccess = goal.lowerIsBetter
+      ? (score > 0 && score <= goal.target)
+      : (score >= goal.target);
+
+    if (isSuccess) {
+      try {
+        localStorage.setItem(daily.completedKey, 'true');
+        dailyCompletedNow = true;
+      } catch (_) {}
+    }
+  }
+
+  // Update toolbar personal best score live
+  const bestScore = getGameBestScore(gameId);
+  const toolbarBestEl = document.getElementById('toolbar-best-score');
+  if (toolbarBestEl && bestScore) {
+    toolbarBestEl.classList.remove('hidden');
+    toolbarBestEl.innerHTML = `🏆 Best: <strong>${escapeHtml(formatGameScore(gameId, bestScore))}</strong>`;
+  }
+
+  // Show feedback banner under game player
+  const feedbackCard = document.getElementById('game-round-feedback');
+  const scoreValEl = document.getElementById('feedback-score-val');
+  const bestBadge = document.getElementById('feedback-best-badge');
+  const dailyBadge = document.getElementById('feedback-daily-badge');
+
+  if (feedbackCard && scoreValEl) {
+    scoreValEl.textContent = formatGameScore(gameId, score) || `${score} pts`;
+    if (bestBadge) bestBadge.classList.toggle('hidden', !isNewBest);
+    if (dailyBadge) dailyBadge.classList.toggle('hidden', !dailyCompletedNow);
+    feedbackCard.classList.remove('hidden');
+    try {
+      feedbackCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (_) {}
+  }
+
+  if (dailyCompletedNow) {
+    showToast('🎉 Daily Challenge Completed! Amazing job!', 'success');
+  } else if (isNewBest) {
+    showToast(`🎉 New Personal Best: ${formatGameScore(gameId, score)}!`, 'success');
+  } else {
+    showToast(`Round Finished · ${formatGameScore(gameId, score)}`, 'info');
+  }
+}
+
 window.addEventListener('message', (event) => {
-  const origin = siteUrl() || window.location.origin;
-  if (event.origin !== origin) return;
+  if (event.origin !== window.location.origin) return;
   const { type, score } = event.data || {};
   if (type === 'dk:gameover' && score !== undefined && document.querySelector('.game-viewport-frame')) {
     const slugMatch = window.location.pathname.match(/^\/game\/([^/]+)$/);
     if (slugMatch) {
-      updateGameBestScore(slugMatch[1], score);
+      handleGameOverEvent(slugMatch[1], Number(score));
     }
-    showToast(`Game Over · Score: ${Number(score).toLocaleString()}`, 'info');
   }
 });
 
