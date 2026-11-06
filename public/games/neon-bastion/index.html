@@ -1729,6 +1729,14 @@
       if (isPaused && isPlaying) togglePause();
     } else if (e.data.type === 'dk:restart') {
       restartGame();
+    } else if (e.data.type === 'dk:resize') {
+      resizeCanvas();
+    }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && !isPaused && isPlaying) {
+      togglePause();
     }
   });
 

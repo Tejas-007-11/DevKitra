@@ -83,6 +83,7 @@
     }
     #tetrisCanvas {
       display: block;
+      touch-action: none;
     }
     .overlay {
       position: absolute;
@@ -179,6 +180,7 @@
       justify-content: center;
       gap: 8px;
       z-index: 15;
+      touch-action: manipulation;
     }
     @media (pointer: coarse), (max-width: 640px) {
       .mobile-pad { display: flex; }
@@ -780,6 +782,17 @@
           else if (['ArrowDown', 'KeyS'].includes(data.code)) softDrop();
           else if (data.code === 'Space') hardDrop();
           else if (['KeyC', 'ShiftLeft', 'ShiftRight'].includes(data.code)) holdCurrentPiece();
+        }
+      });
+
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden && isRunning && !isPaused) {
+          isPaused = true;
+          overlayHeading.textContent = 'PAUSED';
+          overlayDesc.textContent = 'Game paused while tab was in background.';
+          statsSummary.style.display = 'none';
+          startBtn.textContent = 'RESUME';
+          overlay.classList.remove('hidden');
         }
       });
 

@@ -1200,6 +1200,19 @@
     }
   }
 
+  // Responsive canvas resizing (eliminates per-frame layout thrashing)
+  function resizeCanvas() {
+    var cw = canvas.clientWidth || 800;
+    var ch = canvas.clientHeight || 450;
+    if (canvas.width !== cw || canvas.height !== ch) {
+      canvas.width = cw;
+      canvas.height = ch;
+      corridor.ceilingY = 65;
+      corridor.floorY = canvas.height - 65;
+      corridor.height = corridor.floorY - corridor.ceilingY;
+    }
+  }
+
   // ---------------- CANVAS RENDERING ----------------
   function render(now) {
     requestAnimationFrame(render);
@@ -1209,15 +1222,6 @@
     if (dt > 0.1) dt = 0.1;
 
     updateGame(dt);
-
-    // Canvas size
-    if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
-      corridor.ceilingY = 65;
-      corridor.floorY = canvas.height - 65;
-      corridor.height = corridor.floorY - corridor.ceilingY;
-    }
 
     var W = canvas.width;
     var H = canvas.height;
@@ -1644,6 +1648,15 @@
       copyDailyShareSummary();
     });
 
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', resizeCanvas);
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden && !isPaused && isPlaying) {
+        isPaused = true;
+        overlayPause.classList.remove('hidden');
+      }
+    });
+
     // DevKitra postMessage protocol
     window.addEventListener('message', function(e) {
       if (!e.data || typeof e.data !== 'object') return;
@@ -1653,13 +1666,17 @@
       } else if (e.data.type === 'dk:resume') {
         isPaused = false;
         overlayPause.classList.add('hidden');
+        lastFrameTime = performance.now();
       } else if (e.data.type === 'dk:restart') {
         startGame(currentMode);
+      } else if (e.data.type === 'dk:resize') {
+        resizeCanvas();
       }
     });
   }
 
   // ---------------- INITIAL STARTUP ----------------
+  resizeCanvas();
   initListeners();
   refreshMenuBadges();
   requestAnimationFrame(render);

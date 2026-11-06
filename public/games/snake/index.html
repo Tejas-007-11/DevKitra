@@ -112,6 +112,7 @@
     }
     canvas {
       display: block;
+      touch-action: none;
     }
     .overlay {
       position: absolute;
@@ -207,6 +208,7 @@
       justify-content: center;
       gap: 12px;
       z-index: 15;
+      touch-action: manipulation;
     }
     @media (pointer: coarse), (max-width: 640px) {
       .touch-pad { display: flex; }
@@ -504,6 +506,17 @@
         else if (data.type === 'dk:pause') isPaused = true;
         else if (data.type === 'dk:resume') isPaused = false;
         else if (data.type === 'dk:resize') resize();
+      });
+
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden && isRunning && !isPaused) {
+          isPaused = true;
+          overlayHeading.textContent = 'PAUSED';
+          overlayDesc.textContent = 'Game paused while tab was in background.';
+          statsSummary.style.display = 'none';
+          startBtn.textContent = 'RESUME';
+          overlay.classList.remove('hidden');
+        }
       });
 
       // Update

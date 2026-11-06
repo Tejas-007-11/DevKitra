@@ -706,7 +706,7 @@ function gameCard(game) {
   const badgeText = GAME_TAGS[game.id] || (game.featured ? 'POPULAR' : '');
   const genreLabels = game.genres.map((g) => genre(g)?.label).filter(Boolean).join(' · ') || 'Game';
   const thumb = game.thumbnail
-    ? `<img src="${game.thumbnail}" alt="${escapeHtml(game.title)} cover" loading="lazy" />`
+    ? `<img src="${game.thumbnail}" alt="${escapeHtml(game.title)} cover" loading="lazy" width="400" height="250" decoding="async" />`
     : `<div class="card-fallback">${escapeHtml(game.title[0])}</div>`;
   const bestScore = getGameBestScore(game.id);
   const scoreBadge = bestScore !== null ? `<span class="card-score-badge" title="Your Personal Best Score">🏆 ${escapeHtml(formatGameScore(game.id, bestScore))}</span>` : '';
@@ -799,7 +799,7 @@ function renderHomePage() {
             </div>
           </div>
           <div class="spotlight-media">
-            <img src="${spotlightGame.thumbnail}" alt="${escapeHtml(spotlightGame.title)}" id="spotlight-img" />
+            <img src="${spotlightGame.thumbnail}" alt="${escapeHtml(spotlightGame.title)}" id="spotlight-img" width="480" height="300" decoding="async" fetchpriority="high" />
           </div>
         </div>
 
@@ -835,7 +835,7 @@ function renderHomePage() {
           <div class="daily-card-content">
             <div class="daily-thumb-box">
               <a href="${daily.game.route}" data-nav class="daily-thumb-link" aria-label="Play ${escapeHtml(daily.game.title)}">
-                <img src="${daily.game.thumbnail}" alt="${escapeHtml(daily.game.title)}" class="daily-thumb-img" />
+                <img src="${daily.game.thumbnail}" alt="${escapeHtml(daily.game.title)}" class="daily-thumb-img" width="160" height="100" loading="lazy" decoding="async" />
                 <div class="daily-thumb-overlay" aria-hidden="true">
                   <span class="play-pill">Play ▶</span>
                 </div>
@@ -1479,7 +1479,7 @@ function renderGamePage(slug) {
           </div>
           <div class="related-list">${related.map((r) => `
             <a href="${r.route}" data-nav class="related-item">
-              ${r.thumbnail ? `<img class="related-thumb" src="${r.thumbnail}" alt="" loading="lazy" />` : ''}
+              ${r.thumbnail ? `<img class="related-thumb" src="${r.thumbnail}" alt="" loading="lazy" width="80" height="50" decoding="async" />` : ''}
               <div class="related-text">
                 <span class="related-title">${escapeHtml(r.title)}</span>
                 <span class="related-genre">${r.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ')}</span>
@@ -1631,9 +1631,29 @@ function setupGamePage(slug) {
     document.removeEventListener('webkitfullscreenchange', handleFsChange);
   });
 
+  const onGameVisibilityChange = () => {
+    if (document.hidden) {
+      if (pauseBtn && pauseBtn.getAttribute('aria-pressed') !== 'true') {
+        pauseBtn.textContent = '▶ Resume';
+        pauseBtn.setAttribute('aria-pressed', 'true');
+      }
+      postToGame({ type: 'dk:pause' });
+    }
+  };
+  document.addEventListener('visibilitychange', onGameVisibilityChange);
+  pageCleanups.push(() => {
+    document.removeEventListener('visibilitychange', onGameVisibilityChange);
+  });
+
   if (frame) {
     frame.addEventListener('load', () => {
       try { frame.focus(); } catch (_) {}
+    });
+    pageCleanups.push(() => {
+      try {
+        postToGame({ type: 'dk:pause' });
+        frame.src = 'about:blank';
+      } catch (_) {}
     });
   }
 
@@ -2312,7 +2332,7 @@ function setupGlobalSearch() {
     list.classList.remove('hidden');
     list.innerHTML = matches.slice(0, 8).map((g) =>
       `<button type="button" role="option" class="search-item" data-search-link="${g.route}">
-        ${g.thumbnail ? `<img src="${g.thumbnail}" alt="" class="search-item-thumb" />` : ''}
+        ${g.thumbnail ? `<img src="${g.thumbnail}" alt="" class="search-item-thumb" width="40" height="25" loading="lazy" decoding="async" />` : ''}
         <div class="search-item-text">
           <span class="search-item-title">${escapeHtml(g.title)}</span>
           <span class="search-item-genre">${g.genres.map((ge) => genre(ge)?.label).filter(Boolean).join(' · ') || 'Game'}</span>
