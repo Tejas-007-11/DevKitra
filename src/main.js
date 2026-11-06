@@ -677,22 +677,70 @@ function renderHeader(path) {
 }
 
 function renderFooter() {
+  const currentYear = new Date().getFullYear();
   return `
     <footer class="site-footer">
       <div class="footer-inner">
-        <div>
-          <div class="footer-brand">${SITE_NAME}</div>
-          <div class="footer-sub">Free Instant Browser Gaming Platform</div>
+        <div class="footer-grid">
+          <div class="footer-col footer-col-brand">
+            <div class="footer-brand">${SITE_NAME}</div>
+            <p class="footer-desc">
+              DevKitra is an independent browser gaming platform delivering fast, original, 100% free 2D games with zero downloads, no account registrations, and offline score saving.
+            </p>
+            <div class="footer-contact-badge">
+              <span class="footer-contact-label">Official Inquiries:</span>
+              <a href="mailto:${SITE_EMAIL}" class="footer-email-link">${SITE_EMAIL}</a>
+            </div>
+          </div>
+
+          <div class="footer-col">
+            <h4>Game Catalogue</h4>
+            <ul>
+              <li><a href="/explore" data-nav>All 15 Free Games</a></li>
+              <li><a href="/genre/arcade" data-nav>Arcade & Survival</a></li>
+              <li><a href="/genre/puzzle" data-nav>Brain & Logic Puzzles</a></li>
+              <li><a href="/genre/reflex" data-nav>Reflex & Reaction</a></li>
+              <li><a href="/genre/classic" data-nav>Retro Classics</a></li>
+              <li><a href="/genre/casual" data-nav>Casual & Quick Play</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Platform & Trust</h4>
+            <ul>
+              <li><a href="/about" data-nav>About DevKitra</a></li>
+              <li><a href="/contact" data-nav>Contact & Bug Reports</a></li>
+              <li><a href="/about#faq" data-nav>Frequently Asked Questions</a></li>
+              <li><a href="/contact" data-nav>Developer Submissions</a></li>
+              <li><a href="/explore" data-nav>Daily Challenges</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Legal & Policies</h4>
+            <ul>
+              <li><a href="/privacy" data-nav>Privacy Policy</a></li>
+              <li><a href="/terms" data-nav>Terms of Service</a></li>
+              <li><a href="/privacy#advertising" data-nav>Cookie & Ad Choices</a></li>
+              <li><a href="/terms#dmca" data-nav>DMCA & Copyright Notice</a></li>
+              <li><a href="/privacy#localstorage" data-nav>Data & Local Storage</a></li>
+            </ul>
+          </div>
         </div>
-        <div class="footer-links">
-          <a href="/explore" data-nav>All Games</a>
-          <a href="/about" data-nav>About Platform</a>
-          <a href="/contact" data-nav>Contact & Submissions</a>
-          <a href="/privacy" data-nav>Privacy Policy</a>
-          <a href="/terms" data-nav>Terms of Service</a>
+
+        <div class="footer-bottom">
+          <div class="footer-copy">
+            © ${currentYear} DevKitra Gaming. All original games run 100% client-side in modern web browsers with zero installation and privacy-focused local storage.
+          </div>
+          <div class="footer-bottom-links">
+            <a href="/privacy" data-nav>Privacy</a>
+            <span class="footer-sep">·</span>
+            <a href="/terms" data-nav>Terms</a>
+            <span class="footer-sep">·</span>
+            <a href="/contact" data-nav>Support</a>
+          </div>
         </div>
       </div>
-      <div class="footer-copy">© ${new Date().getFullYear()} DevKitra Gaming. All games execute 100% client-side in browser memory with zero tracking cookies and zero downloads.</div>
     </footer>
     </div></div>
   `;
@@ -891,6 +939,14 @@ function renderHomePage() {
           <div class="game-grid">${all.filter((g) => ['neon-bastion', 'tetris', 'road-hopper', 'snake'].includes(g.id)).map((g) => gameCard(g)).join('')}</div>
         </section>
       `}
+
+      <!-- Policy-Compliant Advertisement Placement Candidate (Non-intrusive Billboard) -->
+      <div class="ad-slot-wrapper ad-billboard" aria-label="Advertisement container">
+        <span class="ad-label">ADVERTISEMENT</span>
+        <div class="ad-slot">
+          <span class="ad-slot-placeholder-text">Reserved Billboard Placement · DevKitra Gaming · Non-Intrusive Layout</span>
+        </div>
+      </div>
 
       <!-- Interactive Game Discovery & Complete Catalogue -->
       <section class="section section-catalogue" id="catalogue-section">
@@ -1209,6 +1265,14 @@ function renderExplorePage() {
         <h2>No games found.</h2>
         <p>Try searching for "tetris", "snake", "jump", or "puzzle".</p>
       </div>
+
+      <!-- Policy-Compliant Advertisement Placement Candidate -->
+      <div class="ad-slot-wrapper" aria-label="Advertisement container">
+        <span class="ad-label">ADVERTISEMENT</span>
+        <div class="ad-slot">
+          <span class="ad-slot-placeholder-text">Reserved Leaderboard Placement · DevKitra Gaming · Non-Intrusive Layout</span>
+        </div>
+      </div>
     </main>
   `;
 }
@@ -1417,11 +1481,11 @@ function renderGamePage(slug) {
         </div>
       </div>
 
-      <!-- AdSense Compliant Slot Placeholder -->
-      <div class="ad-slot-wrapper">
-        <span class="ad-label">Advertisement</span>
+      <!-- Policy-Compliant Advertisement Placement Candidate (Non-intrusive, isolated from controls) -->
+      <div class="ad-slot-wrapper" aria-label="Advertisement container">
+        <span class="ad-label">ADVERTISEMENT</span>
         <div class="ad-slot">
-          <span>Play Free Games on DevKitra — Clean, Instant, Zero Downloads</span>
+          <span class="ad-slot-placeholder-text">Reserved Leaderboard Placement · DevKitra Gaming · Non-Intrusive Layout</span>
         </div>
       </div>
 
@@ -1433,7 +1497,7 @@ function renderGamePage(slug) {
 
           ${game.objective ? `
           <div class="game-meta-block">
-            <h3 class="game-subhead">🎯 Objective</h3>
+            <h3 class="game-subhead">🎯 Objective & Win Conditions</h3>
             <p class="game-objective-text">${escapeHtml(game.objective)}</p>
           </div>
           ` : ''}
@@ -1454,6 +1518,41 @@ function renderGamePage(slug) {
             </ul>
           </div>
           ` : ''}
+
+          <!-- Game Specifications & Technical Profile -->
+          <div class="game-meta-block">
+            <h3 class="game-subhead">⚙️ Technical Profile & Specifications</h3>
+            <div class="game-specs-grid">
+              <div class="spec-item">
+                <span class="spec-label">Engine & Format</span>
+                <span class="spec-value">HTML5 Canvas 2D</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Audio Synth</span>
+                <span class="spec-value">Web Audio API</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Performance</span>
+                <span class="spec-value">60 FPS Hardware-Accelerated</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Progress Saving</span>
+                <span class="spec-value">HTML5 Local Storage (Offline)</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Input Methods</span>
+                <span class="spec-value">${game.inputs.map((i) => i.charAt(0).toUpperCase() + i.slice(1)).join(', ')}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Publisher</span>
+                <span class="spec-value">DevKitra Gaming</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="legal-callout">
+            <strong>DevKitra Player Guarantee:</strong> This game runs 100% locally in your web browser. There are no executable files to download, no account credentials required, and your high scores save strictly inside your device's browser memory.
+          </div>
 
           <div class="game-status-block">
             ${bestScore !== null ? `<p class="save-status">🏆 Your Personal Best: <strong>${bestScore.toLocaleString()}</strong></p>` : ''}
@@ -1944,8 +2043,23 @@ function renderAboutPage() {
           </p>
         </section>
 
+        <!-- Editorial & Publishing Standards (Trust & Transparency for AdSense) -->
+        <section class="about-story-card">
+          <div class="eyebrow">EDITORIAL STANDARDS & PLATFORM INTEGRITY</div>
+          <h2>Our Commitment to Quality, Safety & Transparency</h2>
+          <p>
+            At <strong>DevKitra Gaming</strong>, we operate under strict principles of content originality, digital safety, and non-intrusive design:
+          </p>
+          <ul>
+            <li><strong>100% Original Game Code:</strong> Every title in our library is built and maintained by DevKitra with custom HTML5 Canvas rendering and procedural Web Audio synthesizers. We do not aggregate pirated flash conversions or scrape low-quality third-party clones.</li>
+            <li><strong>Zero Harmful Software:</strong> We never distribute <code>.exe</code> files, browser extensions, intrusive toolbars, or download managers. Every game runs purely within your browser's sandboxed environment.</li>
+            <li><strong>Monetization & Advertising Ethics:</strong> Advertisements on DevKitra are thoughtfully placed to support hosting infrastructure without ever intruding upon or obstructing game controls, buttons, or active canvas viewports.</li>
+            <li><strong>Direct Support & Developer Outreach:</strong> We provide transparent human support via <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a>, actively reviewing community suggestions, bug reports, and independent game submissions.</li>
+          </ul>
+        </section>
+
         <!-- Frequently Asked Questions (SEO Supportive FAQ) -->
-        <section class="about-section">
+        <section class="about-section" id="faq">
           <div class="about-section-header">
             <span class="eyebrow">HELP & INFORMATION</span>
             <h2>Frequently Asked Questions</h2>
@@ -2002,40 +2116,116 @@ function renderPrivacyPage() {
   return `
     <main class="page-shell static-page">
       <div class="static-card">
-        <div class="eyebrow">PRIVACY POLICY</div>
+        <div class="eyebrow">PRIVACY POLICY & DISCLOSURES</div>
         <h1>Privacy Policy & Player Data Transparency</h1>
-        <p><em>Last Updated: November 4, 2026</em></p>
-        <p>Welcome to DevKitra Gaming (<a href="/" data-nav>devkitra.in</a>). We are committed to protecting your privacy and ensuring complete transparency about how information is handled when you play games on our platform.</p>
+        <p><em>Effective Date: October 1, 2026 · Last Updated: November 6, 2026</em></p>
+        <p>Welcome to <strong>DevKitra Gaming</strong> (<a href="/" data-nav>https://devkitra.in</a>). We are dedicated to delivering fast, fun, and lightweight browser games while holding the highest standards of player privacy, data minimization, and regulatory transparency.</p>
         
-        <h2>1. Zero Account & Registration Collection</h2>
-        <p>DevKitra is an instant browser gaming hub that requires <strong>no account creation</strong>, no passwords, no email registrations, and no telephone numbers. We do not maintain user databases, profile records, or personal tracking identities.</p>
-        
-        <h2>2. Local Storage & Device Preferences</h2>
-        <p>To provide a seamless gaming experience, we utilize standard HTML5 <code>localStorage</code> on your device to store:</p>
-        <ul>
-          <li><strong>Sound & Theme Preferences:</strong> Remembering whether sound FX or dark/light mode is enabled.</li>
-          <li><strong>Gameplay Progress & High Scores:</strong> Storing your personal records, stars, and unlocked levels so you can continue playing where you left off.</li>
-          <li><strong>Favorited Games:</strong> Keeping track of titles you bookmark with the star icon.</li>
-        </ul>
-        <p>This data resides solely within your browser's local sandbox memory on your computer or phone. It is never transmitted to, sold to, or shared with external servers, and you can clear it anytime via your browser settings.</p>
+        <div class="legal-callout">
+          <strong>Privacy Summary:</strong> DevKitra requires <strong>zero account registration</strong>, zero passwords, and zero personal profiles. All game progress and settings are stored locally on your device via HTML5 Local Storage and never leave your web browser.
+        </div>
 
-        <h2>3. Third-Party Advertising & Cookies (Google AdSense)</h2>
-        <p>To keep all games 100% free for players worldwide, DevKitra works with third-party advertising partners, including <strong>Google AdSense</strong>, to display advertisements.</p>
+        <h2>1. Information We Do Not Collect</h2>
+        <p>Because DevKitra is designed as an instant, barrier-free browser gaming platform, we do not require or collect:</p>
         <ul>
-          <li>Third-party vendors, including Google, use cookies, web beacons, and similar tracking technologies to serve ads based on your prior visits to DevKitra or other websites on the internet.</li>
-          <li>Google's use of advertising cookies enables it and its partners to serve ads based on your visits to our site and/or other sites across the World Wide Web.</li>
-          <li>You may opt out of personalized advertising at any time by visiting <a href="https://adssettings.google.com/" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>.</li>
-          <li>You can also opt out of third-party vendor cookies for personalized advertising by visiting <a href="https://www.aboutads.info/" target="_blank" rel="noopener noreferrer">www.aboutads.info</a> or <a href="https://www.youronlinechoices.eu/" target="_blank" rel="noopener noreferrer">youronlinechoices.eu</a>.</li>
+          <li>User account registrations, usernames, or passwords.</li>
+          <li>Personal contact numbers, physical postal addresses, or financial/payment information.</li>
+          <li>Email addresses (unless you voluntarily contact our support desk via direct email).</li>
+          <li>User-generated social profiles or biometric data.</li>
         </ul>
 
-        <h2>4. Log Files & Server Security</h2>
-        <p>Like virtually all web applications, our global edge network (Cloudflare) may automatically collect standard diagnostic technical logs (such as IP addresses, browser user-agent strings, referral pages, and timestamps) strictly for DDoS mitigation, bot protection, and server availability.</p>
+        <h2 id="localstorage">2. HTML5 Local Storage & Device Preferences</h2>
+        <p>To enable returning players to resume game progress and maintain preferred audio settings without requiring a server database or login system, DevKitra utilizes standard HTML5 <code>localStorage</code> directly on your device. The following data keys are stored strictly within your browser's private sandbox:</p>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>Storage Key</th>
+              <th>Purpose & Data Stored</th>
+              <th>Scope & Persistence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>dk:theme</code></td>
+              <td>Stores your interface visual preference (<code>"dark"</code> or <code>"light"</code> mode).</td>
+              <td>Client-side only · Persistent until cleared</td>
+            </tr>
+            <tr>
+              <td><code>dk:sound-enabled</code></td>
+              <td>Stores your global audio toggle preference (<code>"true"</code> or <code>"false"</code>).</td>
+              <td>Client-side only · Persistent until cleared</td>
+            </tr>
+            <tr>
+              <td><code>dk:favorites</code></td>
+              <td>Array of bookmarked game IDs selected via the star icon.</td>
+              <td>Client-side only · Persistent until cleared</td>
+            </tr>
+            <tr>
+              <td><code>dk:recents</code></td>
+              <td>List of your recently opened games with local timestamps.</td>
+              <td>Client-side only · Persistent until cleared</td>
+            </tr>
+            <tr>
+              <td><code>dk:&lt;game-id&gt;-best</code></td>
+              <td>Your personal high score or deepest level record for each game.</td>
+              <td>Client-side only · Persistent until cleared</td>
+            </tr>
+            <tr>
+              <td><code>dk:daily-conquered:&lt;date&gt;</code></td>
+              <td>Deterministic local status indicating completion of today's Daily Challenge.</td>
+              <td>Client-side only · Persistent until cleared</td>
+            </tr>
+          </tbody>
+        </table>
 
-        <h2>5. Children's Privacy (COPPA Compliance)</h2>
-        <p>DevKitra is a family-safe platform featuring clean geometric arcade, reflex, and puzzle challenges. We do not knowingly solicit or collect personally identifiable information from children under the age of 13.</p>
+        <p><strong>Managing Local Storage:</strong> You maintain total control over this data. You can inspect, modify, or erase all local keys at any time through your browser's Developer Tools or by selecting "Clear Browsing Data / Cookies and Site Data" in your web browser settings.</p>
 
-        <h2>6. Contact & Inquiries</h2>
-        <p>If you have any questions or feedback regarding our privacy practices, please contact us directly at <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a> or visit our <a href="/contact" data-nav>Contact Page</a>.</p>
+        <h2 id="advertising">3. Third-Party Advertising & Cookies (Google AdSense Disclosures)</h2>
+        <p>To keep every game on DevKitra 100% free for players worldwide without paywalls or subscriptions, we work with third-party advertising partners, including <strong>Google AdSense</strong>, to serve advertisements on the platform.</p>
+        
+        <h3>Required Google Advertising Disclosures:</h3>
+        <ul>
+          <li>Third-party vendors, including Google, use cookies, web beacons, and mobile device identifiers to serve ads based on a user's prior visits to this website (<code>devkitra.in</code>) or other websites across the Internet.</li>
+          <li>Google's use of advertising cookies enables it and its partners to serve personalized or contextual advertisements to you based on your visits to DevKitra and/or other sites on the World Wide Web.</li>
+          <li>Users may opt out of personalized advertising by visiting Google's official settings page: <a href="https://adssettings.google.com/" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>.</li>
+          <li>Alternatively, you can opt out of a third-party vendor's use of cookies for personalized advertising by visiting the <a href="https://optout.aboutads.info/" target="_blank" rel="noopener noreferrer">Digital Advertising Alliance (DAA) Consumer Choice Page</a> or the <a href="https://optout.networkadvertising.org/" target="_blank" rel="noopener noreferrer">Network Advertising Initiative (NAI) Opt-Out Page</a>.</li>
+          <li>European and UK visitors may also manage advertising preferences and opt out of behavioral targeting through the <a href="https://www.youronlinechoices.eu/" target="_blank" rel="noopener noreferrer">Your Online Choices (EDAA) Portal</a>.</li>
+        </ul>
+
+        <h2>4. European Economic Area (EEA), UK & Swiss Users (GDPR & ePrivacy)</h2>
+        <p>If you are accessing DevKitra from the European Economic Area (EEA), the United Kingdom, or Switzerland:</p>
+        <ul>
+          <li><strong>Legal Basis for Processing:</strong> We rely on legitimate interests to provide our core website functionality and deliver secure, edge-cached web content. Where third-party advertising cookies or personalized identifiers are deployed, processing relies upon your explicit consent.</li>
+          <li><strong>Consent Management Platform (CMP):</strong> When advertising is active, DevKitra utilizes a Google-certified Consent Management Platform adhering to the IAB Europe Transparency and Consent Framework (TCF v2.2), allowing you to customize your vendor preferences or withdraw consent at any time.</li>
+          <li><strong>Data Subject Rights:</strong> Under the General Data Protection Regulation (GDPR) and UK Data Protection Act, you have the right to access, rectify, or request erasure of any personal data you have directly provided to us (e.g., via support correspondence). Inquiries may be submitted to <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a>.</li>
+        </ul>
+
+        <h2>5. California & US State Privacy Rights (CCPA / CPRA)</h2>
+        <p>Under the California Consumer Privacy Act (CCPA) as amended by the California Privacy Rights Act (CPRA), and related privacy laws in Virginia, Colorado, Connecticut, and Utah, residents of these jurisdictions possess specific privacy rights:</p>
+        <ul>
+          <li><strong>Right to Know & Access:</strong> You may request disclosure of any personal data collected about you over the preceding 12 months.</li>
+          <li><strong>Right to Delete & Correct:</strong> You may request the deletion or correction of personal information held by us.</li>
+          <li><strong>Right to Opt-Out of Sale or Sharing:</strong> DevKitra does not sell your personal data for monetary consideration. To the extent that third-party advertising cookies constitute "sharing" under California law for cross-context behavioral advertising, you may exercise your opt-out rights via <a href="https://optout.aboutads.info/" target="_blank" rel="noopener noreferrer">optout.aboutads.info</a> or via your browser's Global Privacy Control (GPC) signal.</li>
+        </ul>
+
+        <h2>6. Children's Online Privacy Protection (COPPA Compliance)</h2>
+        <p>DevKitra is a general-audience web gaming platform featuring family-friendly, non-violent arcade, reflex, and puzzle challenges. We do not knowingly collect, request, or maintain personally identifiable information from children under the age of 13. If you believe that a child has submitted personal details through email correspondence, please contact us immediately at <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a> so we can purge the information promptly.</p>
+
+        <h2>7. Edge Network Logs & Platform Security</h2>
+        <p>DevKitra is distributed across a secure global Content Delivery Network (Cloudflare). Cloudflare may automatically record standard, non-identifying server diagnostic logs (including client IP address, HTTP headers, browser user-agent string, referral URL, and request timestamp) strictly for DDoS mitigation, bot defense, rate limiting, and technical uptime monitoring.</p>
+
+        <h2>8. Updates to This Policy</h2>
+        <p>We may periodically update this Privacy Policy to reflect platform enhancements, operational changes, or evolving regulatory requirements. Any revisions will be reflected with an updated "Last Updated" date at the top of this page.</p>
+
+        <h2>9. Contact & Inquiries</h2>
+        <p>For any questions, privacy concerns, or data rights inquiries regarding DevKitra Gaming, please reach out to our team:</p>
+        <p>
+          <strong>DevKitra Gaming</strong><br />
+          Platform Inquiries & Privacy Officer: <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a><br />
+          Official Website: <a href="/" data-nav>https://devkitra.in</a><br />
+          Interactive Support: <a href="/contact" data-nav>Contact & Feedback Page</a>
+        </p>
       </div>
     </main>
   `;
@@ -2047,29 +2237,57 @@ function renderTermsPage() {
       <div class="static-card">
         <div class="eyebrow">TERMS OF SERVICE</div>
         <h1>Terms of Service</h1>
-        <p><em>Last Updated: November 4, 2026</em></p>
-        <p>By accessing or using DevKitra Gaming (<a href="/" data-nav>devkitra.in</a>), you agree to comply with and be bound by the following Terms of Service. If you do not agree to these terms, please do not use the website.</p>
+        <p><em>Effective Date: October 1, 2026 · Last Updated: November 6, 2026</em></p>
+        <p>Welcome to <strong>DevKitra Gaming</strong> (<a href="/" data-nav>https://devkitra.in</a>). By accessing, browsing, or playing games on DevKitra, you agree to be bound by these Terms of Service ("Terms") and our <a href="/privacy" data-nav>Privacy Policy</a>. If you do not agree with any portion of these Terms, please discontinue use of the platform.</p>
         
         <h2>1. Free Personal Use License</h2>
-        <p>DevKitra grants you a personal, non-exclusive, non-transferable, and revocable license to access and play our browser games strictly for non-commercial entertainment. You agree not to copy, reverse-engineer, frame, scrape, or redistribute any game code, audio assets, or proprietary materials without prior written consent.</p>
-        
-        <h2>2. Acceptable Conduct</h2>
-        <p>When playing or interacting with DevKitra, you agree not to attempt to disrupt server infrastructure, inject malicious scripts, or circumvent platform security measures.</p>
+        <p>DevKitra grants you a revocable, non-exclusive, non-transferable, and royalty-free license to access, view, and play our catalog of browser-based games strictly for personal, non-commercial entertainment. You agree not to:</p>
+        <ul>
+          <li>Sell, sub-license, rent, or commercially exploit any game, asset, or sound element from DevKitra.</li>
+          <li>Embed, iframe, or hotlink our games within external websites or commercial wrappers without prior explicit written authorization from DevKitra.</li>
+          <li>Reverse-engineer, decompile, or extract the proprietary source code of games published on the platform.</li>
+        </ul>
+
+        <h2>2. Acceptable Conduct & Prohibited Activities</h2>
+        <p>When interacting with DevKitra, you agree to use the platform in a lawful and respectful manner. Specifically, you agree not to:</p>
+        <ul>
+          <li>Launch denial-of-service (DDoS) attacks, automated scrapers, web spiders, or data mining operations against our edge infrastructure.</li>
+          <li>Inject malicious scripts, exploits, worms, or automated bots designed to alter platform behavior or spoof game scores.</li>
+          <li>Circumvent or tamper with security measures, headers, or client-side integrity checks.</li>
+        </ul>
 
         <h2>3. Intellectual Property Rights</h2>
-        <p>All games, logos, user interface designs, visual styling, sound synthesis algorithms, and documentation on DevKitra are protected by applicable intellectual property and copyright laws.</p>
+        <p>All brand names, trademarks, logos, custom user interface graphics, sound synthesis scripts, original gameplay designs, and website documentation on DevKitra are the intellectual property of DevKitra Gaming or its respective content licensors, protected under applicable domestic and international copyright and trademark laws.</p>
 
-        <h2>4. Third-Party Advertisements & Links</h2>
-        <p>DevKitra displays third-party advertisements (such as Google AdSense) and may provide external resource links. We are not responsible for the content, privacy practices, or goods offered by third-party advertisers or external websites.</p>
+        <h2 id="dmca">4. DMCA & Copyright Infringement Policy</h2>
+        <p>DevKitra respects the intellectual property rights of creators and adheres to the Digital Millennium Copyright Act (17 U.S.C. § 512). If you are a copyright owner or an authorized agent and believe that content hosted on DevKitra infringes your copyright, you may submit a formal notification containing the following statutory details:</p>
+        
+        <ol>
+          <li>A physical or electronic signature of a person authorized to act on behalf of the owner of an exclusive right that is allegedly infringed.</li>
+          <li>Clear identification of the copyrighted work claimed to have been infringed, or a representative list of such works.</li>
+          <li>Identification of the material that is claimed to be infringing, including the exact URL or route on DevKitra where the material is located.</li>
+          <li>Information reasonably sufficient to permit DevKitra to contact you, including your name, physical address, telephone number, and email address.</li>
+          <li>A statement that you have a good faith belief that use of the material in the manner complained of is not authorized by the copyright owner, its agent, or the law.</li>
+          <li>A statement that the information in the notification is accurate, and under penalty of perjury, that you are authorized to act on behalf of the owner of an exclusive right that is allegedly infringed.</li>
+        </ol>
 
-        <h2>5. Disclaimer of Warranties & Limitation of Liability</h2>
-        <p>DevKitra is provided on an "as-is" and "as-available" basis without warranties of any kind, whether express or implied. DevKitra shall not be held liable for any direct, indirect, incidental, or consequential damages resulting from your use of or inability to use the platform.</p>
+        <p>Please transmit formal copyright notices to our designated contact at:</p>
+        <p><strong>DMCA & Copyright Agent:</strong> <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a><br />Subject Line: <code>[DMCA Notice] DevKitra Content Review</code></p>
 
-        <h2>6. Modifications to Service & Terms</h2>
-        <p>We reserve the right to add, update, or discontinue games or modify these Terms at any time. Continued use of the platform constitutes acceptance of updated Terms.</p>
+        <h2>5. Third-Party Advertisements, Content & External Hyperlinks</h2>
+        <p>DevKitra displays third-party advertisements (such as Google AdSense) and may contain hyperlinks to external third-party websites or services. We do not endorse, sponsor, control, or assume liability for the content, privacy policies, products, or practices of any third-party advertiser or external website. Interactions with third-party advertisements are conducted solely between you and the respective advertiser.</p>
 
-        <h2>7. Contact</h2>
-        <p>For inquiries regarding these Terms of Service, please reach out to us at <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a>.</p>
+        <h2>6. Disclaimer of Warranties</h2>
+        <p>DevKitra is provided on an <strong>"as-is"</strong> and <strong>"as-available"</strong> basis without warranties of any kind, whether express, statutory, or implied. To the maximum extent permitted under applicable law, DevKitra disclaims all warranties, including but not limited to implied warranties of merchantability, fitness for a particular purpose, non-infringement, uptime availability, or error-free gameplay performance.</p>
+
+        <h2>7. Limitation of Liability</h2>
+        <p>In no event shall DevKitra Gaming, its developers, operators, or affiliates be liable for any direct, indirect, incidental, special, consequential, or punitive damages arising from your access to, use of, or inability to use the platform, including but not limited to loss of device data, loss of high scores, or interruptions in service.</p>
+
+        <h2>8. Modifications to Service & Terms</h2>
+        <p>We reserve the right to add, update, modify, or retire games, features, or sections of DevKitra at any time without prior notice. We may likewise modify these Terms periodically. Your continued use of the website following the posting of revised Terms constitutes your binding acceptance of the updated terms.</p>
+
+        <h2>9. Contact Information</h2>
+        <p>If you have any questions or legal inquiries regarding these Terms of Service, please contact our team at <a href="mailto:${SITE_EMAIL}">${SITE_EMAIL}</a> or visit our <a href="/contact" data-nav>Contact Page</a>.</p>
       </div>
     </main>
   `;
@@ -2085,8 +2303,8 @@ function renderContactPage() {
         <!-- Hero Header -->
         <header class="contact-hero">
           <div class="eyebrow">GET IN TOUCH</div>
-          <h1>Contact & Support</h1>
-          <p>Have a question, feedback, or a bug report? Reach out directly or compose a quick message below.</p>
+          <h1>Contact & Player Support</h1>
+          <p>Have a question, gameplay feedback, bug report, or business inquiry? We are here to help.</p>
         </header>
 
         <!-- Direct Email Card -->
@@ -2099,8 +2317,8 @@ function renderContactPage() {
             </div>
             <div>
               <div class="email-card-meta">
-                <span class="meta-label">DIRECT EMAIL</span>
-                <span class="meta-status"><span class="status-dot"></span>Replies within 24h</span>
+                <span class="meta-label">OFFICIAL INBOX</span>
+                <span class="meta-status"><span class="status-dot"></span>Replies within 24–48 hours</span>
               </div>
               <a href="mailto:${SITE_EMAIL}" class="email-card-link" id="contact-email-val">${SITE_EMAIL}</a>
             </div>
@@ -2125,7 +2343,7 @@ function renderContactPage() {
         <div class="contact-composer-card">
           <div class="composer-header">
             <h2>Quick Message Composer</h2>
-            <p>Prepares a structured draft for your email client with optional device specs.</p>
+            <p>Prepares a structured draft for your email client with optional browser diagnostic specs.</p>
           </div>
 
           <form id="contact-composer-form" class="composer-form" onsubmit="return false;">
@@ -2135,12 +2353,13 @@ function renderContactPage() {
                 <input type="text" id="contact-name" class="form-input" placeholder="e.g. Alex" autocomplete="name" />
               </div>
               <div class="form-group flex-1">
-                <label for="contact-topic" class="form-label">Inquiry Topic</label>
+                <label for="contact-topic" class="form-label">Inquiry Category</label>
                 <select id="contact-topic" class="form-select">
-                  <option value="Bug Report / Glitch">Bug Report / Glitch</option>
-                  <option value="Game Suggestion">Game Suggestion</option>
+                  <option value="Bug Report / Gameplay Issue">Bug Report / Gameplay Issue</option>
+                  <option value="Feature or Game Suggestion">Feature or Game Suggestion</option>
                   <option value="Developer Game Submission">Developer Game Submission</option>
-                  <option value="Performance Feedback">Performance / Audio Issue</option>
+                  <option value="Advertising & Business Partnership">Advertising & Business Partnership</option>
+                  <option value="Copyright & DMCA Inquiry">Copyright & DMCA Inquiry</option>
                   <option value="General Inquiry">General Inquiry / Other</option>
                 </select>
               </div>
@@ -2156,7 +2375,7 @@ function renderContactPage() {
 
             <div class="form-group">
               <label for="contact-message" class="form-label">Message Details <span class="label-required">*</span></label>
-              <textarea id="contact-message" class="form-textarea" rows="4" placeholder="Describe your question, bug report, or game proposal..."></textarea>
+              <textarea id="contact-message" class="form-textarea" rows="4" placeholder="Describe your question, bug report, proposal, or inquiry..."></textarea>
             </div>
 
             <div class="form-group checkbox-group">
